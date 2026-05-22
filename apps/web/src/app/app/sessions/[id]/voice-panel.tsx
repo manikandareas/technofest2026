@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -102,7 +102,6 @@ export function VoicePanel({
           connect
           token={token.token}
           serverUrl={livekitUrl}
-          onDisconnected={() => onStateChange("disconnected")}
           onError={(caught) => onError(caught.message)}
         >
           <RoomAudioRenderer />
@@ -187,6 +186,7 @@ function VoiceConnectionState({
   onStateChange: (state: VoiceUiState) => void;
 }) {
   const [showMicHelp, setShowMicHelp] = useState(false);
+  const hasConnectedRef = useRef(false);
   const connectionState = useConnectionState();
   const { state: agentState } = useVoiceAssistant();
   const { isMicrophoneEnabled, localParticipant } = useLocalParticipant();
@@ -221,7 +221,7 @@ function VoiceConnectionState({
 
   useEffect(() => {
     if (connectionState === ConnectionState.Disconnected) {
-      onStateChange("disconnected");
+      onStateChange(hasConnectedRef.current ? "disconnected" : "connecting");
       return;
     }
     if (connectionState === ConnectionState.Reconnecting) {
@@ -232,6 +232,7 @@ function VoiceConnectionState({
       onStateChange("connecting");
       return;
     }
+    hasConnectedRef.current = true;
     if (!effectiveMicEnabled) {
       if (agentState === "speaking") {
         onStateChange("patient_speaking");
