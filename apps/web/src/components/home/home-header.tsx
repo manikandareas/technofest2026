@@ -33,7 +33,7 @@ export function HomeHeader({
     <header className="relative z-20 shrink-0">
       <div className="relative flex items-start justify-between gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:gap-3 md:px-6 lg:px-8 lg:pt-8">
         <Link
-          href="/profile"
+          href="/settings"
           className="flex min-w-0 items-start gap-2.5 rounded-none outline-none focus-visible:ring-2 focus-visible:ring-white/60 md:gap-3"
           aria-label="Buka profil"
         >

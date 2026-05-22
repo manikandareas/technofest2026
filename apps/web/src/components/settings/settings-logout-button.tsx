@@ -1,35 +1,32 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { useTransition } from "react";
 
-import { signOutAction } from "@/app/profile/actions";
-import { SETTINGS_ASSETS } from "@/components/settings/settings-assets";
-import { settingsCardClass } from "@/components/settings/settings-styles";
+import { signOutAction } from "@/app/settings/actions";
+import { SettingsMenuIcon } from "@/components/settings/settings-menu-icon";
+import { Button } from "@/components/ui/8bit/button";
 
 export function SettingsLogoutButton() {
   const [pending, startTransition] = useTransition();
 
   return (
-    <button
+    <Button
       type="button"
+      font="retro"
+      variant="outline"
       disabled={pending}
       onClick={() => {
         startTransition(async () => {
           await signOutAction();
         });
       }}
-      className={`${settingsCardClass} flex w-full items-center gap-3 px-3 py-3 text-left outline-none transition-transform focus-visible:ring-2 focus-visible:ring-[#228be6]/70 active:scale-[0.99] disabled:opacity-60 sm:px-4 sm:py-3.5`}
+      className="h-auto min-h-11 w-full justify-start gap-3 border-destructive/80 bg-card px-4 py-3.5 text-destructive hover:bg-destructive/5 sm:min-h-[2.75rem] sm:px-5 sm:py-4"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={SETTINGS_ASSETS.iconLogout}
-        alt=""
-        className="size-8 shrink-0 object-contain pixelated"
-        aria-hidden
-      />
-      <span className="text-sm font-semibold leading-tight sm:text-base">
-        {pending ? "Keluar..." : "Keluar"}
+      <SettingsMenuIcon icon={LogOut} tone="danger" />
+      <span className="text-sm font-semibold leading-tight sm:text-base lg:text-lg">
+        {pending ? "Keluar..." : "Keluar dari akun"}
       </span>
-    </button>
+    </Button>
   );
 }

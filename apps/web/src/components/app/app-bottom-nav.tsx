@@ -28,7 +28,7 @@ const NAV_ITEMS = [
     },
   },
   {
-    href: "/profile",
+    href: "/settings",
     label: "Setting",
     iconSrc: HOME_ASSETS.navIconSetting,
     sprite: false as const,

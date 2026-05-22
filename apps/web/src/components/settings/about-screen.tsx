@@ -1,40 +1,56 @@
-import Image from "next/image";
+import { HeartPulse } from "lucide-react";
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/8bit/card";
+import { Separator } from "@/components/ui/8bit/separator";
 import { SettingsDetailScreen } from "@/components/settings/settings-detail-screen";
-import { SETTINGS_ASSETS } from "@/components/settings/settings-assets";
-import { settingsCardClass } from "@/components/settings/settings-styles";
+import { SettingsMenuIcon } from "@/components/settings/settings-menu-icon";
+import {
+  settingsDetailCardClass,
+  settingsMutedTextClass,
+} from "@/components/settings/settings-styles";
 
 export function AboutScreen() {
   return (
     <SettingsDetailScreen title="TENTANG">
-      <article className={`${settingsCardClass} space-y-4 px-3 py-4 sm:px-4 sm:py-5`}>
-        <div className="flex items-center gap-3">
-          <Image
-            src={SETTINGS_ASSETS.iconAbout}
-            alt=""
-            width={48}
-            height={48}
-            className="size-12 shrink-0 object-contain pixelated"
-            aria-hidden
-          />
-          <div className="space-y-1">
-            <p className="retro text-sm leading-tight sm:text-base">PixelAid</p>
-            <p className="text-xs leading-snug text-[#1a233e]/70 sm:text-sm">
-              Simulasi dokter virtual berbasis suara
-            </p>
+      <Card font="retro" className={`${settingsDetailCardClass} w-full`}>
+        <CardHeader className="gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
+          <div className="flex items-center gap-3">
+            <SettingsMenuIcon
+              icon={HeartPulse}
+              tone="primary"
+              className="size-12 rounded-2xl sm:size-14 lg:size-16 lg:rounded-[1.125rem]"
+            />
+            <div className="min-w-0 space-y-1">
+              <CardTitle font="retro" className="text-sm sm:text-base lg:text-lg">
+                PixelAid
+              </CardTitle>
+              <CardDescription className={settingsMutedTextClass}>
+                Simulasi dokter virtual berbasis suara
+              </CardDescription>
+            </div>
           </div>
-        </div>
+        </CardHeader>
 
-        <p className="text-xs leading-relaxed text-[#1a233e]/85 sm:text-sm">
-          PixelAid membantu mahasiswa kedokteran berlatih anamnesis, pemeriksaan,
-          dan diagnosis melalui kasus interaktif dengan pasien virtual.
-        </p>
+        <CardContent className="space-y-4 px-4 sm:px-5">
+          <Separator />
+          <p className={settingsMutedTextClass}>
+            PixelAid membantu mahasiswa kedokteran berlatih anamnesis, pemeriksaan,
+            dan diagnosis melalui kasus interaktif dengan pasien virtual.
+          </p>
+        </CardContent>
 
-        <div className="rounded-[1rem] border-2 border-[#d8dee9] bg-[#f8f9fb] px-3 py-3 text-xs leading-relaxed text-[#1a233e]/80 sm:text-sm">
-          <p className="font-semibold">Hackathon UMKT 2026</p>
-          <p className="mt-1">Versi demo TechnoFest 2026</p>
-        </div>
-      </article>
+        <CardFooter className="flex-col items-stretch gap-1 px-4 pb-4 sm:px-5 sm:pb-5">
+          <p className="text-xs font-semibold leading-snug sm:text-sm">Hackathon UMKT 2026</p>
+          <p className={settingsMutedTextClass}>Versi demo TechnoFest 2026</p>
+        </CardFooter>
+      </Card>
     </SettingsDetailScreen>
   );
 }

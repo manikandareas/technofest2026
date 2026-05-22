@@ -206,6 +206,7 @@ def select_examination(
             "category": exam.category,
             "delay_seconds": exam.delay_seconds,
             "result": exam.result,
+            "asset": exam.asset,
             "score_key": exam.score_key,
             "requested_at": _iso(now),
             "resulted_at": _iso(due_at(exam.delay_seconds, now)),
@@ -1027,6 +1028,7 @@ def _exam_response(row: StoreRow) -> ExaminationEvent:
         label=str(row["label"]),
         status=status_value,
         result=str(row["result"]) if status_value == "resulted" else None,
+        asset=row.get("asset") if status_value == "resulted" else None,
         requested_at=str(row["requested_at"]),
         resulted_at=str(row["resulted_at"]),
     )

@@ -157,13 +157,16 @@ export type Database = {
         Row: {
           base_xp: number
           case_data: Json
+          case_thumbnail_url: string | null
           chief_complaint: string
           condition_badge: string
+          consultation_avatar_url: string | null
           created_at: string
           difficulty: string
           estimated_duration_minutes: number
           id: string
           patient_age: number
+          patient_avatar_url: string | null
           patient_gender: string
           patient_name: string
           specialist_id: string
@@ -174,13 +177,16 @@ export type Database = {
         Insert: {
           base_xp?: number
           case_data?: Json
+          case_thumbnail_url?: string | null
           chief_complaint: string
           condition_badge: string
+          consultation_avatar_url?: string | null
           created_at?: string
           difficulty: string
           estimated_duration_minutes: number
           id: string
           patient_age: number
+          patient_avatar_url?: string | null
           patient_gender: string
           patient_name: string
           specialist_id: string
@@ -191,13 +197,16 @@ export type Database = {
         Update: {
           base_xp?: number
           case_data?: Json
+          case_thumbnail_url?: string | null
           chief_complaint?: string
           condition_badge?: string
+          consultation_avatar_url?: string | null
           created_at?: string
           difficulty?: string
           estimated_duration_minutes?: number
           id?: string
           patient_age?: number
+          patient_avatar_url?: string | null
           patient_gender?: string
           patient_name?: string
           specialist_id?: string
@@ -255,6 +264,7 @@ export type Database = {
       }
       examination_events: {
         Row: {
+          asset: Json | null
           category: string
           created_at: string
           delay_seconds: number
@@ -269,6 +279,7 @@ export type Database = {
           session_id: string
         }
         Insert: {
+          asset?: Json | null
           category: string
           created_at?: string
           delay_seconds?: number
@@ -283,6 +294,7 @@ export type Database = {
           session_id: string
         }
         Update: {
+          asset?: Json | null
           category?: string
           created_at?: string
           delay_seconds?: number

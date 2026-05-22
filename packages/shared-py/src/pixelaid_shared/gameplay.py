@@ -37,6 +37,7 @@ class ExaminationConfig(BaseModel):
     category: str
     delay_seconds: int
     result: str
+    asset: dict[str, str] | None = None
     score_key: str | None = None
     guard_terms: list[str] = Field(default_factory=list)
 

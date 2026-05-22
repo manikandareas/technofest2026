@@ -222,7 +222,8 @@ def _load_cases() -> list[CaseBrief]:
             client.table("cases")
             .select(
                 "id,specialist_id,patient_name,patient_age,patient_gender,chief_complaint,"
-                "triage_note,difficulty,condition_badge,estimated_duration_minutes"
+                "triage_note,difficulty,condition_badge,estimated_duration_minutes,"
+                "patient_avatar_url,case_thumbnail_url,consultation_avatar_url"
             )
             .eq("status", "published")
             .execute()

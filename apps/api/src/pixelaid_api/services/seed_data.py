@@ -60,6 +60,9 @@ def _load_seed_data() -> tuple[list[PublicSpecialist], list[CaseBrief]]:
             estimated_duration_minutes=_duration_minutes(
                 int(row["estimated_duration_seconds"])
             ),
+            patient_avatar_url=row.get("patient_avatar_url"),
+            case_thumbnail_url=row.get("case_thumbnail_url"),
+            consultation_avatar_url=row.get("consultation_avatar_url"),
             learning_objectives=[
                 str(item)
                 for item in (

@@ -460,6 +460,7 @@ def _examinations(case_data: dict[str, Any]) -> list[ExaminationConfig]:
             category=str(item.get("category") or "examination"),
             delay_seconds=int(item.get("delay_seconds") or 0),
             result=str(item.get("result") or ""),
+            asset=item.get("asset") if isinstance(item.get("asset"), dict) else None,
             score_key=str(item.get("key") or item.get("id") or f"exam_{index + 1}"),
             guard_terms=_as_list(item.get("label")),
         )

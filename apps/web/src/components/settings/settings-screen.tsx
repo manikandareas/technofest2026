@@ -1,3 +1,5 @@
+import { Info, Music, Shield } from "lucide-react";
+
 import {
   SettingsMenuGroup,
   SettingsMenuLink,
@@ -6,9 +8,9 @@ import {
 import { SettingsMusicToggle } from "@/components/settings/settings-music-toggle";
 import { SettingsLogoutButton } from "@/components/settings/settings-logout-button";
 import { SettingsProfileCard } from "@/components/settings/settings-profile-card";
-import { SETTINGS_ASSETS } from "@/components/settings/settings-assets";
 import {
-  settingsPanelClass,
+  settingsContentPanelClass,
+  settingsSectionClass,
   settingsSectionLabelClass,
 } from "@/components/settings/settings-styles";
 import {
@@ -30,10 +32,10 @@ export function SettingsScreen({
     <SpecialistsScreenLayout
       backHref="/app/home"
       backLabel="Kembali ke home"
-      title="SETTING"
+      title="PENGATURAN"
     >
-      <section className={settingsPanelClass}>
-        <div className="space-y-2">
+      <section className={`${settingsContentPanelClass} flex w-full flex-col gap-5 sm:gap-6`}>
+        <div className={settingsSectionClass}>
           <p className={settingsSectionLabelClass}>Akun</p>
           <SettingsProfileCard
             displayName={displayName}
@@ -42,34 +44,40 @@ export function SettingsScreen({
           />
         </div>
 
-        <div className="space-y-2">
-          <p className={settingsSectionLabelClass}>Pengaturan</p>
+        <div className={settingsSectionClass}>
+          <p className={settingsSectionLabelClass}>Preferensi</p>
+          <SettingsMenuGroup>
+            <SettingsMenuRow
+              icon={Music}
+              label="Musik latar"
+              action={<SettingsMusicToggle />}
+            />
+          </SettingsMenuGroup>
+        </div>
+
+        <div className={settingsSectionClass}>
+          <p className={settingsSectionLabelClass}>Privasi & Info</p>
           <SettingsMenuGroup>
             <SettingsMenuLink
-              href="/profile/privacy"
-              iconSrc={SETTINGS_ASSETS.iconPrivacy}
+              href="/settings/privacy"
+              icon={Shield}
               label="Privasi"
+              variant="grouped"
             />
-            <SettingsMenuRow
-              iconSrc={SETTINGS_ASSETS.iconMusic}
-              label="Musik"
-              action={<SettingsMusicToggle />}
+            <SettingsMenuLink
+              href="/settings/about"
+              icon={Info}
+              label="Tentang PixelAid"
+              variant="grouped"
               withDivider
             />
           </SettingsMenuGroup>
         </div>
 
-        <div className="space-y-2">
-          <p className={settingsSectionLabelClass}>Lainnya</p>
-          <SettingsMenuLink
-            href="/profile/about"
-            iconSrc={SETTINGS_ASSETS.iconAbout}
-            label="Tentang"
-            showChevron={false}
-          />
+        <div className={settingsSectionClass}>
+          <p className={settingsSectionLabelClass}>Sesi</p>
+          <SettingsLogoutButton />
         </div>
-
-        <SettingsLogoutButton />
       </section>
     </SpecialistsScreenLayout>
   );

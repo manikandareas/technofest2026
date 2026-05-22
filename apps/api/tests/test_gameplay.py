@@ -12,6 +12,7 @@ from pixelaid_api.services.profiles import clear_memory_profiles
 from pixelaid_api.services import rate_limits
 from pixelaid_api.services import supabase as supabase_service
 from pixelaid_api.settings import Settings
+from pixelaid_shared import gameplay as shared_gameplay
 from pixelaid_shared.cases import get_case_config
 from pixelaid_shared.gameplay import (
     FeedbackInput,
@@ -50,6 +51,7 @@ def reset_memory_store(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def patch_utc_now(monkeypatch: pytest.MonkeyPatch, moment: datetime) -> None:
     monkeypatch.setattr(clock, "utc_now", lambda: moment)
+    monkeypatch.setattr(shared_gameplay, "utc_now", lambda: moment)
 
 
 def test_anonymous_user_completes_published_case(monkeypatch) -> None:
@@ -123,6 +125,45 @@ def test_anonymous_user_completes_published_case(monkeypatch) -> None:
 
     leaderboard = client.get("/api/leaderboard").json()
     assert leaderboard["entries"] == []
+
+
+def test_imaging_examination_asset_is_returned_after_delay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(gameplay, "get_supabase_admin", lambda: None)
+    monkeypatch.setattr(supabase_service, "get_supabase_admin", lambda: None)
+    now = datetime(2026, 5, 22, 8, 0, tzinfo=timezone.utc)
+    patch_utc_now(monkeypatch, now)
+    client = TestClient(app)
+    session_id = client.post(
+        "/api/case-sessions",
+        headers=ANON_AUTH,
+        json={"case_id": "internal-medicine-pneumonia"},
+    ).json()["id"]
+    client.get(f"/api/case-sessions/{session_id}", headers=ANON_AUTH)
+
+    requested = client.post(
+        f"/api/case-sessions/{session_id}/examinations",
+        headers=ANON_AUTH,
+        json={"examination_id": "chest_xray"},
+    )
+    assert requested.status_code == 200
+    pending_exam = requested.json()["examinations"][0]
+    assert pending_exam["status"] == "pending"
+    assert pending_exam["result"] is None
+    assert pending_exam["asset"] is None
+
+    patch_utc_now(monkeypatch, now + timedelta(seconds=21))
+    resulted = client.get(f"/api/case-sessions/{session_id}", headers=ANON_AUTH)
+    assert resulted.status_code == 200
+    resulted_exam = resulted.json()["examinations"][0]
+    assert resulted_exam["status"] == "resulted"
+    assert "Infiltrat patchy" in resulted_exam["result"]
+    assert resulted_exam["asset"] == {
+        "type": "image",
+        "url": "/assets/examinations/hasan/chest-xray-infiltrate.png",
+        "alt": "Chest X-Ray Hasan dengan infiltrat paru kanan bawah.",
+    }
 
 
 def test_timer_is_server_authoritative_and_blocks_expired_mutations(

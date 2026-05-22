@@ -12,6 +12,7 @@ export {
 } from "./card";
 export { Input, type BitInputProps } from "./input";
 export { Label, type BitLabelProps } from "./label";
+export { Switch } from "./switch";
 export { Separator } from "./separator";
 export { ChevronLeftIcon } from "./chevron-left-icon";
 export {

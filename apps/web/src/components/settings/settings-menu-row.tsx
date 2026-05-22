@@ -1,65 +1,97 @@
-import Image from "next/image";
+import type { LucideIcon } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { SPECIALISTS_ASSETS } from "@/components/specialists/specialists-assets";
+import { Card, CardContent } from "@/components/ui/8bit/card";
 import { Separator } from "@/components/ui/8bit/separator";
 import { cn } from "@/lib/utils";
 
-import { settingsCardClass } from "./settings-styles";
+import { SettingsMenuIcon } from "./settings-menu-icon";
+import {
+  settingsCardContentClass,
+  settingsCardLinkClass,
+  settingsDetailCardClass,
+} from "./settings-styles";
 
 type SettingsMenuLinkProps = {
   href: string;
-  iconSrc: string;
+  icon: LucideIcon;
   label: string;
   showChevron?: boolean;
   tone?: "default" | "danger";
+  variant?: "standalone" | "grouped";
+  withDivider?: boolean;
   className?: string;
 };
 
-export function SettingsMenuLink({
-  href,
-  iconSrc,
+function SettingsMenuLinkContent({
+  icon,
   label,
   showChevron = true,
   tone = "default",
-  className,
-}: SettingsMenuLinkProps) {
+}: Pick<
+  SettingsMenuLinkProps,
+  "icon" | "label" | "showChevron" | "tone"
+>) {
   return (
-    <Link
-      href={href}
-      className={cn(
-        settingsCardClass,
-        "flex items-center gap-3 px-3 py-3 outline-none transition-transform focus-visible:ring-2 focus-visible:ring-[#228be6]/70 active:scale-[0.99] sm:px-4 sm:py-3.5",
-        className,
-      )}
-    >
-      <Image
-        src={iconSrc}
-        alt=""
-        width={32}
-        height={32}
-        className="size-8 shrink-0 object-contain pixelated"
-        aria-hidden
-      />
+    <>
+      <SettingsMenuIcon icon={icon} tone={tone} />
       <span
         className={cn(
-          "min-w-0 flex-1 text-sm font-semibold leading-tight sm:text-base",
-          tone === "danger" && "text-[#c92a2a]",
+          "min-w-0 flex-1 text-sm font-semibold leading-tight sm:text-base lg:text-lg",
+          tone === "danger" && "text-destructive",
         )}
       >
         {label}
       </span>
       {showChevron ? (
-        <Image
-          src={SPECIALISTS_ASSETS.iconChevronRight}
-          alt=""
-          width={20}
-          height={24}
-          className="size-4 shrink-0 object-contain pixelated opacity-90 sm:size-5"
+        <ChevronRight
+          className="size-5 shrink-0 text-muted-foreground opacity-80"
           aria-hidden
         />
       ) : null}
+    </>
+  );
+}
+
+export function SettingsMenuLink({
+  href,
+  icon,
+  label,
+  showChevron = true,
+  tone = "default",
+  variant = "standalone",
+  withDivider = false,
+  className,
+}: SettingsMenuLinkProps) {
+  const row = (
+    <div className={settingsCardContentClass}>
+      <SettingsMenuLinkContent
+        icon={icon}
+        label={label}
+        showChevron={showChevron}
+        tone={tone}
+      />
+    </div>
+  );
+
+  if (variant === "grouped") {
+    return (
+      <>
+        {withDivider ? <Separator /> : null}
+        <Link href={href} className={cn(settingsCardLinkClass, className)}>
+          {row}
+        </Link>
+      </>
+    );
+  }
+
+  return (
+    <Link href={href} className={cn(settingsCardLinkClass, className)}>
+      <Card font="retro" className={cn(settingsDetailCardClass, "w-full")}>
+        <CardContent className="p-0">{row}</CardContent>
+      </Card>
     </Link>
   );
 }
@@ -70,38 +102,31 @@ type SettingsMenuGroupProps = {
 
 export function SettingsMenuGroup({ children }: SettingsMenuGroupProps) {
   return (
-    <div className={settingsCardClass}>
-      {children}
-    </div>
+    <Card font="retro" className={cn(settingsDetailCardClass, "w-full")}>
+      <div className="divide-y divide-border/40">{children}</div>
+    </Card>
   );
 }
 
 type SettingsMenuRowProps = {
-  iconSrc: string;
+  icon: LucideIcon;
   label: string;
   action: ReactNode;
   withDivider?: boolean;
 };
 
 export function SettingsMenuRow({
-  iconSrc,
+  icon,
   label,
   action,
   withDivider = false,
 }: SettingsMenuRowProps) {
   return (
     <>
-      {withDivider ? <Separator className="bg-[#d8dee9]" /> : null}
-      <div className="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5">
-        <Image
-          src={iconSrc}
-          alt=""
-          width={32}
-          height={32}
-          className="size-8 shrink-0 object-contain pixelated"
-          aria-hidden
-        />
-        <span className="min-w-0 flex-1 text-sm font-semibold leading-tight sm:text-base">
+      {withDivider ? <Separator /> : null}
+      <div className={settingsCardContentClass}>
+        <SettingsMenuIcon icon={icon} />
+        <span className="min-w-0 flex-1 text-sm font-semibold leading-tight sm:text-base lg:text-lg">
           {label}
         </span>
         <div className="shrink-0">{action}</div>

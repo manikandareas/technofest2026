@@ -21,6 +21,9 @@ type CaseInput = {
     age: number;
     gender: string;
   };
+  patient_avatar_url?: string;
+  case_thumbnail_url?: string;
+  consultation_avatar_url?: string;
   difficulty: "easy" | "medium" | "hard";
   availability: {
     is_published?: boolean;
@@ -96,6 +99,15 @@ function validate(data: DataInput): void {
     assertString(item.condition_badge, `${item.id}.condition_badge`);
     assertNumber(item.base_xp, `${item.id}.base_xp`);
     assertNumber(item.estimated_duration_seconds, `${item.id}.estimated_duration_seconds`);
+    for (const key of [
+      "patient_avatar_url",
+      "case_thumbnail_url",
+      "consultation_avatar_url",
+    ] as const) {
+      if (item[key] !== undefined) {
+        assertString(item[key], `${item.id}.${key}`);
+      }
+    }
     if (!specialistIds.has(item.specialist_id)) {
       throw new Error(`${item.id}.specialist_id does not exist: ${item.specialist_id}`);
     }
@@ -167,6 +179,9 @@ function buildSql(data: DataInput): string {
         String(durationMinutes),
         sqlString(status),
         String(item.base_xp),
+        item.patient_avatar_url ? sqlString(item.patient_avatar_url) : "null",
+        item.case_thumbnail_url ? sqlString(item.case_thumbnail_url) : "null",
+        item.consultation_avatar_url ? sqlString(item.consultation_avatar_url) : "null",
         sqlJson(buildCaseData(item)),
       ].join(", ")})`;
     })
@@ -210,6 +225,9 @@ insert into public.cases (
   estimated_duration_minutes,
   status,
   base_xp,
+  patient_avatar_url,
+  case_thumbnail_url,
+  consultation_avatar_url,
   case_data
 )
 values

@@ -24,6 +24,9 @@ class CaseCard(BaseModel):
     difficulty: str
     condition_badge: str
     estimated_duration_minutes: int
+    patient_avatar_url: str | None = None
+    case_thumbnail_url: str | None = None
+    consultation_avatar_url: str | None = None
 
 
 class CaseBrief(CaseCard):
@@ -91,12 +94,19 @@ class ExaminationOption(BaseModel):
     delay_seconds: int
 
 
+class ExaminationAsset(BaseModel):
+    type: Literal["image"]
+    url: str
+    alt: str
+
+
 class ExaminationEvent(BaseModel):
     id: str
     examination_id: str
     label: str
     status: Literal["pending", "resulted"]
     result: str | None = None
+    asset: ExaminationAsset | None = None
     requested_at: str
     resulted_at: str
 

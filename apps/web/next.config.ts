@@ -8,6 +8,20 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "standalone",
   outputFileTracingRoot: workspaceRoot,
+  async redirects() {
+    return [
+      {
+        source: "/profile",
+        destination: "/settings",
+        permanent: true,
+      },
+      {
+        source: "/profile/:path*",
+        destination: "/settings/:path*",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

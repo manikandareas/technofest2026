@@ -55,32 +55,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/public/cases/{case_id}": {
+    "/api/public/cases/demo": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Public Case */
-        get: operations["public_case_api_public_cases__case_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/public/specialists/{specialist_id}/cases": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Public Specialist Cases */
-        get: operations["public_specialist_cases_api_public_specialists__specialist_id__cases_get"];
+        /** Public Demo Case */
+        get: operations["public_demo_case_api_public_cases_demo_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -559,6 +542,12 @@ export interface components {
             condition_badge: string;
             /** Estimated Duration Minutes */
             estimated_duration_minutes: number;
+            /** Patient Avatar Url */
+            patient_avatar_url?: string | null;
+            /** Case Thumbnail Url */
+            case_thumbnail_url?: string | null;
+            /** Consultation Avatar Url */
+            consultation_avatar_url?: string | null;
             /** Learning Objectives */
             learning_objectives?: string[];
         };
@@ -586,6 +575,12 @@ export interface components {
             condition_badge: string;
             /** Estimated Duration Minutes */
             estimated_duration_minutes: number;
+            /** Patient Avatar Url */
+            patient_avatar_url?: string | null;
+            /** Case Thumbnail Url */
+            case_thumbnail_url?: string | null;
+            /** Consultation Avatar Url */
+            consultation_avatar_url?: string | null;
         };
         /** CaseResultResponse */
         CaseResultResponse: {
@@ -673,6 +668,18 @@ export interface components {
             /** Case Id */
             case_id: string;
         };
+        /** ExaminationAsset */
+        ExaminationAsset: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "image";
+            /** Url */
+            url: string;
+            /** Alt */
+            alt: string;
+        };
         /** ExaminationEvent */
         ExaminationEvent: {
             /** Id */
@@ -688,6 +695,7 @@ export interface components {
             status: "pending" | "resulted";
             /** Result */
             result?: string | null;
+            asset?: components["schemas"]["ExaminationAsset"] | null;
             /** Requested At */
             requested_at: string;
             /** Resulted At */
@@ -1127,13 +1135,11 @@ export interface operations {
             };
         };
     };
-    public_case_api_public_cases__case_id__get: {
+    public_demo_case_api_public_cases_demo_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                case_id: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -1145,46 +1151,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaseBrief"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    public_specialist_cases_api_public_specialists__specialist_id__cases_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                specialist_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CaseBrief"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

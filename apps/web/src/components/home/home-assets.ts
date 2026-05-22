@@ -4,6 +4,7 @@ export const HOME_ASSETS = {
   sceneBgMobile: "/assets/home/scene-bg.png",
   sceneBgDesktop: "/assets/home/scene-bg-desktop.png",
   doctorCharacter: "/assets/home/doctor-character-main.png",
+  doctorCharacterSprites: "/assets/home/doctor-character-sprites.png",
   avatarDefault: "/assets/home/figma/avatar-frame.png",
   iconStars: "/assets/home/figma/icon-stars.png",
   iconTrophy: "/assets/home/figma/icon-trophy.png",

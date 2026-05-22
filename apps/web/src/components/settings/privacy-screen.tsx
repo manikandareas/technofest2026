@@ -1,5 +1,19 @@
+import { CheckCircle2, ShieldCheck } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/8bit/card";
+import { Badge } from "@/components/ui/8bit/badge";
 import { SettingsDetailScreen } from "@/components/settings/settings-detail-screen";
-import { settingsCardClass } from "@/components/settings/settings-styles";
+import { SettingsMenuIcon } from "@/components/settings/settings-menu-icon";
+import {
+  settingsDetailCardClass,
+  settingsMutedTextClass,
+} from "@/components/settings/settings-styles";
 
 const PRIVACY_POINTS = [
   "Transkrip konsultasi disimpan untuk progres latihan dan feedback pribadi.",
@@ -11,25 +25,39 @@ const PRIVACY_POINTS = [
 export function PrivacyScreen() {
   return (
     <SettingsDetailScreen title="PRIVASI">
-      <article className={`${settingsCardClass} space-y-4 px-3 py-4 sm:px-4 sm:py-5`}>
-        <p className="retro text-sm leading-relaxed sm:text-base">
-          Privasi simulasi PixelAid
-        </p>
-        <p className="text-xs leading-relaxed text-[#1a233e]/80 sm:text-sm">
-          PixelAid dirancang untuk latihan klinis virtual. Informasi yang kamu
-          lihat di simulasi bukan rekam medis pasien sungguhan.
-        </p>
-        <ul className="space-y-2 text-xs leading-relaxed text-[#1a233e]/85 sm:text-sm">
-          {PRIVACY_POINTS.map((point) => (
-            <li key={point} className="flex gap-2">
-              <span aria-hidden className="retro shrink-0 text-[#228be6]">
-                •
-              </span>
-              <span>{point}</span>
-            </li>
-          ))}
-        </ul>
-      </article>
+      <Card font="retro" className={`${settingsDetailCardClass} w-full`}>
+        <CardHeader className="gap-3 px-4 pt-4 sm:px-5 sm:pt-5">
+          <div className="flex items-start gap-3">
+            <SettingsMenuIcon icon={ShieldCheck} tone="primary" />
+            <div className="min-w-0 space-y-2">
+              <Badge font="retro" variant="secondary" className="w-fit text-[0.625rem] sm:text-xs">
+                Simulasi
+              </Badge>
+              <CardTitle font="retro" className="text-sm sm:text-base lg:text-lg">
+                Privasi simulasi PixelAid
+              </CardTitle>
+              <CardDescription className={settingsMutedTextClass}>
+                PixelAid dirancang untuk latihan klinis virtual. Informasi yang kamu
+                lihat di simulasi bukan rekam medis pasien sungguhan.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-3 px-4 pb-4 sm:px-5 sm:pb-5">
+          <ul className="space-y-2.5">
+            {PRIVACY_POINTS.map((point) => (
+              <li key={point} className="flex gap-2.5">
+                <CheckCircle2
+                  className="mt-0.5 size-4 shrink-0 text-primary stroke-[2.5]"
+                  aria-hidden
+                />
+                <span className={settingsMutedTextClass}>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </SettingsDetailScreen>
   );
 }

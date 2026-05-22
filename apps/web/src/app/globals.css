@@ -279,3 +279,46 @@
     overflow: visible;
   }
 }
+
+/* Home doctor idle: one horizontal row, 5 fixed-width frames. */
+@keyframes doctor-character-idle {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: calc(-1 * var(--doctor-sprite-sheet-width)) 0;
+  }
+}
+
+.doctor-character-sprite-slot {
+  container: doctor-character-sprite / size;
+}
+
+.doctor-character-idle-sprite {
+  animation: doctor-character-idle 1.1s steps(5) infinite;
+  background-image: var(--doctor-character-sprite-image);
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: var(--doctor-sprite-sheet-width)
+    var(--doctor-sprite-sheet-height);
+  flex: none;
+  height: var(--doctor-sprite-frame-height);
+  transform-origin: bottom center;
+  width: var(--doctor-sprite-frame-width);
+}
+
+@container doctor-character-sprite (width >= 0) {
+  .doctor-character-idle-sprite {
+    scale: min(
+      calc(100cqw / var(--doctor-sprite-frame-width)),
+      calc(100cqh / var(--doctor-sprite-frame-height))
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doctor-character-idle-sprite {
+    animation: none;
+  }
+}

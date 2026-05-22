@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { AppScreenNavFooter } from "@/components/app/app-screen-nav-footer";
 
+import { DoctorCharacterSprite } from "./doctor-character-sprite";
 import { HOME_ASSETS } from "./home-assets";
 import { HomeHeader } from "./home-header";
 import { HomeStartButton } from "./home-start-button";
@@ -62,14 +63,7 @@ export function HomeScreen({
                 aria-hidden
                 className="absolute bottom-[2%] left-1/2 h-[10%] w-[65%] -translate-x-1/2 rounded-[50%] bg-[#1a3a6b]/55 blur-[2px]"
               />
-              <Image
-                src={HOME_ASSETS.doctorCharacter}
-                alt="Dokter PixelAid"
-                fill
-                priority
-                className="object-contain object-bottom pixelated drop-shadow-[0_6px_0_rgba(0,0,0,0.3)]"
-                sizes="(max-width: 640px) 62vw, (max-width: 1024px) 50vw, 36vw"
-              />
+              <DoctorCharacterSprite />
             </div>
           </div>
         </div>

@@ -4,7 +4,10 @@ import {
   SpecialistsScreenLayout,
 } from "@/components/specialists/specialists-screen-layout";
 
-import { settingsPanelClass } from "./settings-styles";
+import {
+  settingsContentPanelClass,
+  settingsDetailStackClass,
+} from "./settings-styles";
 
 type SettingsDetailScreenProps = {
   title: string;
@@ -15,7 +18,7 @@ type SettingsDetailScreenProps = {
 
 export function SettingsDetailScreen({
   title,
-  backHref = "/profile",
+  backHref = "/settings",
   backLabel = "Kembali ke pengaturan",
   children,
 }: SettingsDetailScreenProps) {
@@ -25,7 +28,9 @@ export function SettingsDetailScreen({
       backLabel={backLabel}
       title={title}
     >
-      <section className={settingsPanelClass}>{children}</section>
+      <section className={`${settingsContentPanelClass} ${settingsDetailStackClass}`}>
+        {children}
+      </section>
     </SpecialistsScreenLayout>
   );
 }

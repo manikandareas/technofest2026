@@ -78,7 +78,7 @@ function footerHrefFor(label: string) {
   }
 
   if (label === "Profil") {
-    return "/profile";
+    return "/settings";
   }
 
   if (label === "Onboarding") {

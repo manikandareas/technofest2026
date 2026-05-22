@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { updateProfileAction } from "@/app/profile/actions";
+import { updateProfileAction } from "@/app/settings/actions";
 import { Button } from "@/components/ui/8bit/button";
 import { Input } from "@/components/ui/8bit/input";
 import { Label } from "@/components/ui/8bit/label";
@@ -27,15 +27,15 @@ export function AccountNameForm({ initialName }: AccountNameFormProps) {
           maxLength={80}
           autoComplete="name"
           font="retro"
-          className="bg-white text-sm sm:text-base"
+          className="bg-background text-sm sm:text-base"
         />
       </div>
 
       {state.error ? (
-        <p className="text-xs font-semibold text-[#c92a2a] sm:text-sm">{state.error}</p>
+        <p className="text-xs font-semibold text-destructive sm:text-sm">{state.error}</p>
       ) : null}
       {state.success ? (
-        <p className="text-xs font-semibold text-[#2b8a3e] sm:text-sm">
+        <p className="text-xs font-semibold text-emerald-600 sm:text-sm">
           Profil berhasil diperbarui.
         </p>
       ) : null}
@@ -44,7 +44,7 @@ export function AccountNameForm({ initialName }: AccountNameFormProps) {
         type="submit"
         font="retro"
         disabled={pending}
-        className="w-full border-foreground bg-[#228be6] text-white hover:bg-[#1c7ed6]"
+        className="w-full"
       >
         {pending ? "Menyimpan..." : "Simpan Profil"}
       </Button>

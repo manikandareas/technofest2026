@@ -311,7 +311,10 @@
             "trombosit dan hematokrit"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/raka/avatar.png",
+      "case_thumbnail_url": "/assets/cases/internal-medicine-dengue-warning-signs/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/raka/consultation-avatar.png"
     },
     {
       "id": "internal-medicine-diabetes-hyperglycemia",
@@ -521,7 +524,10 @@
             "riwayat keluarga"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/dewi/avatar.png",
+      "case_thumbnail_url": "/assets/cases/internal-medicine-diabetes-hyperglycemia/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/dewi/consultation-avatar.png"
     },
     {
       "id": "internal-medicine-pneumonia",
@@ -647,7 +653,12 @@
             "delay_seconds": 20,
             "relevance": "high",
             "score_delta": 15,
-            "result": "Infiltrat patchy pada lapang bawah paru kanan."
+            "result": "Infiltrat patchy pada lapang bawah paru kanan.",
+            "asset": {
+              "type": "image",
+              "url": "/assets/examinations/hasan/chest-xray-infiltrate.png",
+              "alt": "Chest X-Ray Hasan dengan infiltrat paru kanan bawah."
+            }
           }
         ],
         "quiz": [
@@ -730,7 +741,10 @@
             "chest X-ray"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/hasan/avatar.png",
+      "case_thumbnail_url": "/assets/cases/internal-medicine-pneumonia/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/hasan/consultation-avatar.png"
     },
     {
       "id": "obgyn-first-trimester-bleeding",
@@ -854,7 +868,12 @@
             "delay_seconds": 20,
             "relevance": "high",
             "score_delta": 18,
-            "result": "Kantung kehamilan intrauterin terlihat, denyut belum jelas pada simulasi ini, tidak tampak cairan bebas."
+            "result": "Kantung kehamilan intrauterin terlihat, denyut belum jelas pada simulasi ini, tidak tampak cairan bebas.",
+            "asset": {
+              "type": "image",
+              "url": "/assets/examinations/nadia/obgyn-ultrasound-early-pregnancy.png",
+              "alt": "USG obstetri awal Nadia dengan kantung kehamilan intrauterin."
+            }
           }
         ],
         "quiz": [
@@ -938,7 +957,10 @@
             "USG"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/nadia/avatar.png",
+      "case_thumbnail_url": "/assets/cases/obgyn-first-trimester-bleeding/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/nadia/consultation-avatar.png"
     },
     {
       "id": "obgyn-preeclampsia-suspicion",
@@ -1144,7 +1166,10 @@
             "rujukan"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/ayu/avatar.png",
+      "case_thumbnail_url": "/assets/cases/obgyn-preeclampsia-suspicion/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/ayu/consultation-avatar.png"
     },
     {
       "id": "obgyn-vaginal-discharge",
@@ -1351,7 +1376,10 @@
             "risiko IMS"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/laras/avatar.png",
+      "case_thumbnail_url": "/assets/cases/obgyn-vaginal-discharge/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/laras/consultation-avatar.png"
     },
     {
       "id": "pediatrics-febrile-seizure",
@@ -1559,7 +1587,10 @@
             "edukasi aman"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/arka-caregiver/avatar.png",
+      "case_thumbnail_url": "/assets/cases/pediatrics-febrile-seizure/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/arka-caregiver/consultation-avatar.png"
     },
     {
       "id": "pediatrics-acute-diarrhea-dehydration",
@@ -1767,7 +1798,10 @@
             "oralit"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/mika-caregiver/avatar.png",
+      "case_thumbnail_url": "/assets/cases/pediatrics-acute-diarrhea-dehydration/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/mika-caregiver/consultation-avatar.png"
     },
     {
       "id": "pediatrics-asthma-exacerbation",
@@ -1895,7 +1929,12 @@
             "delay_seconds": 20,
             "relevance": "low",
             "score_delta": 2,
-            "result": "Tidak tampak konsolidasi jelas."
+            "result": "Tidak tampak konsolidasi jelas.",
+            "asset": {
+              "type": "image",
+              "url": "/assets/examinations/bima/chest-xray-no-consolidation.png",
+              "alt": "Chest X-Ray Bima tanpa konsolidasi jelas."
+            }
           }
         ],
         "quiz": [
@@ -1979,7 +2018,10 @@
             "riwayat asma"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/bima-caregiver/avatar.png",
+      "case_thumbnail_url": "/assets/cases/pediatrics-asthma-exacerbation/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/bima-caregiver/consultation-avatar.png"
     },
     {
       "id": "general-surgery-appendicitis",
@@ -2100,7 +2142,12 @@
             "delay_seconds": 20,
             "relevance": "high",
             "score_delta": 15,
-            "result": "Gambaran mendukung inflamasi apendiks pada simulasi ini."
+            "result": "Gambaran mendukung inflamasi apendiks pada simulasi ini.",
+            "asset": {
+              "type": "image",
+              "url": "/assets/examinations/fajar/abdominal-ultrasound-appendix.png",
+              "alt": "USG abdomen Fajar yang mengarah ke inflamasi apendiks."
+            }
           }
         ],
         "quiz": [
@@ -2184,7 +2231,10 @@
             "konsultasi bedah"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/fajar/avatar.png",
+      "case_thumbnail_url": "/assets/cases/general-surgery-appendicitis/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/fajar/consultation-avatar.png"
     },
     {
       "id": "general-surgery-acute-cholecystitis",
@@ -2307,7 +2357,12 @@
             "delay_seconds": 20,
             "relevance": "high",
             "score_delta": 18,
-            "result": "Batu kandung empedu dengan dinding menebal ringan pada simulasi."
+            "result": "Batu kandung empedu dengan dinding menebal ringan pada simulasi.",
+            "asset": {
+              "type": "image",
+              "url": "/assets/examinations/ratna/hepatobiliary-ultrasound-gallstones.png",
+              "alt": "USG hepatobilier Ratna dengan batu kandung empedu dan dinding menebal ringan."
+            }
           }
         ],
         "quiz": [
@@ -2391,7 +2446,10 @@
             "ikterus"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/ratna/avatar.png",
+      "case_thumbnail_url": "/assets/cases/general-surgery-acute-cholecystitis/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/ratna/consultation-avatar.png"
     },
     {
       "id": "general-surgery-laceration",
@@ -2514,7 +2572,12 @@
             "delay_seconds": 20,
             "relevance": "medium",
             "score_delta": 8,
-            "result": "Tidak tampak benda asing radiopak besar pada simulasi ini."
+            "result": "Tidak tampak benda asing radiopak besar pada simulasi ini.",
+            "asset": {
+              "type": "image",
+              "url": "/assets/examinations/yusuf/soft-tissue-xray-no-foreign-body.png",
+              "alt": "X-Ray jaringan lunak lengan Yusuf tanpa benda asing radiopak besar."
+            }
           }
         ],
         "quiz": [
@@ -2598,7 +2661,10 @@
             "irigasi"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/yusuf/avatar.png",
+      "case_thumbnail_url": "/assets/cases/general-surgery-laceration/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/yusuf/consultation-avatar.png"
     },
     {
       "id": "anesthesiology-preoperative-asthma",
@@ -2807,7 +2873,10 @@
             "riwayat anestesi"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/maya/avatar.png",
+      "case_thumbnail_url": "/assets/cases/anesthesiology-preoperative-asthma/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/maya/consultation-avatar.png"
     },
     {
       "id": "anesthesiology-postoperative-pain",
@@ -3014,7 +3083,10 @@
             "perdarahan"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/tono/avatar.png",
+      "case_thumbnail_url": "/assets/cases/anesthesiology-postoperative-pain/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/tono/consultation-avatar.png"
     },
     {
       "id": "anesthesiology-procedural-sedation-risk",
@@ -3220,7 +3292,10 @@
             "consent"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/salsa/avatar.png",
+      "case_thumbnail_url": "/assets/cases/anesthesiology-procedural-sedation-risk/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/salsa/consultation-avatar.png"
     },
     {
       "id": "ophthalmology-conjunctivitis",
@@ -3430,7 +3505,10 @@
             "lensa kontak"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/rini/avatar.png",
+      "case_thumbnail_url": "/assets/cases/ophthalmology-conjunctivitis/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/rini/consultation-avatar.png"
     },
     {
       "id": "ophthalmology-acute-angle-closure-suspicion",
@@ -3641,7 +3719,10 @@
             "TIO/rujukan"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/surya/avatar.png",
+      "case_thumbnail_url": "/assets/cases/ophthalmology-acute-angle-closure-suspicion/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/surya/consultation-avatar.png"
     },
     {
       "id": "ophthalmology-corneal-abrasion",
@@ -3850,7 +3931,10 @@
             "lensa kontak"
           ]
         }
-      }
+      },
+      "patient_avatar_url": "/assets/patients/dimas/avatar.png",
+      "case_thumbnail_url": "/assets/cases/ophthalmology-corneal-abrasion/thumbnail.png",
+      "consultation_avatar_url": "/assets/patients/dimas/consultation-avatar.png"
     }
   ]
 }
