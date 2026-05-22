@@ -5,7 +5,11 @@ from typing import Any, cast
 
 from fastapi import HTTPException, status
 from pixelaid_api.models import AuthUser, CaseBrief, Profile, PublicSpecialist
-from pixelaid_api.services.profiles import ensure_memory_profile
+from pixelaid_api.services.profiles import (
+    avatar_url_for,
+    display_name_for,
+    ensure_memory_profile,
+)
 from pixelaid_api.services.seed_data import CASES, SPECIALISTS
 from pixelaid_api.settings import Settings, get_settings
 from supabase import Client, create_client
@@ -55,6 +59,8 @@ async def verify_bearer_token(token: str, settings: Settings) -> AuthUser:
     return AuthUser(
         id=str(user.id),
         email=getattr(user, "email", None),
+        display_name=_user_metadata_text(user, "display_name"),
+        avatar_url=_user_metadata_text(user, "avatar_url"),
         is_anonymous=_is_anonymous_user(user, token),
     )
 
@@ -141,13 +147,23 @@ def ensure_profile(user: AuthUser) -> Profile:
         )
         existing = cast(dict[str, Any] | None, getattr(existing_response, "data", None))
     except Exception:
-        return Profile(id=user.id, email=user.email, display_name=user.email, xp=0)
+        return Profile(
+            id=user.id,
+            email=user.email,
+            display_name=display_name_for(user),
+            avatar_url=avatar_url_for(user),
+            xp=0,
+        )
     if existing:
         desired_updates: dict[str, Any] = {}
         if existing.get("is_anonymous") != user.is_anonymous:
             desired_updates["is_anonymous"] = user.is_anonymous
         if user.email and existing.get("email") != user.email:
             desired_updates["email"] = user.email
+        if not existing.get("display_name") and display_name_for(user):
+            desired_updates["display_name"] = display_name_for(user)
+        if not existing.get("avatar_url") and avatar_url_for(user):
+            desired_updates["avatar_url"] = avatar_url_for(user)
         if desired_updates:
             data = cast(
                 list[dict[str, Any]],
@@ -163,7 +179,8 @@ def ensure_profile(user: AuthUser) -> Profile:
     row = {
         "id": user.id,
         "email": user.email,
-        "display_name": user.email.split("@")[0] if user.email else None,
+        "display_name": display_name_for(user),
+        "avatar_url": avatar_url_for(user),
         "is_anonymous": user.is_anonymous,
     }
     data = cast(
@@ -236,6 +253,17 @@ def _is_anonymous_user(user: object, token: str) -> bool:
     if isinstance(user_metadata, dict) and "is_anonymous" in user_metadata:
         return bool(user_metadata["is_anonymous"])
     return _is_anonymous_token(token)
+
+
+def _user_metadata_text(user: object, key: str) -> str | None:
+    user_metadata = getattr(user, "user_metadata", None)
+    if not isinstance(user_metadata, dict):
+        return None
+    value = user_metadata.get(key)
+    if not isinstance(value, str):
+        return None
+    value = value.strip()
+    return value or None
 
 
 def _is_anonymous_token(token: str) -> bool:

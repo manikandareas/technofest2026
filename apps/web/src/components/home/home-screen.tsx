@@ -1,12 +1,11 @@
 import Image from "next/image";
-import Link from "next/link";
 
 import { AppScreenNavFooter } from "@/components/app/app-screen-nav-footer";
-import { BgmProvider } from "@/components/audio/bgm-provider";
 
 import { HOME_ASSETS } from "./home-assets";
 import { HomeHeader } from "./home-header";
 import { HomeStartButton } from "./home-start-button";
+import { HomeWardrobePanel } from "./home-wardrobe-panel";
 
 type HomeScreenProps = {
   displayName: string;
@@ -26,8 +25,7 @@ export function HomeScreen({
   startLabel,
 }: HomeScreenProps) {
   return (
-    <BgmProvider>
-      <div className="relative min-h-dvh w-full bg-[#02153d]">
+    <div className="relative min-h-dvh w-full bg-[#02153d]">
       <div className="pointer-events-none absolute inset-0">
         <Image
           src={HOME_ASSETS.sceneBgMobile}
@@ -56,24 +54,7 @@ export function HomeScreen({
         />
 
         <div className="relative min-h-0 flex-1">
-          <Link
-            href="/profile"
-            className="absolute right-[4.5%] top-[25%] z-10 size-[3.25rem] overflow-hidden rounded-[17px] outline-none focus-visible:ring-2 focus-visible:ring-white/70 md:right-[6%] md:top-[22%] md:size-14 lg:right-[8%]"
-            aria-label="Kostum dan profil"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={HOME_ASSETS.iconWardrobe}
-              alt=""
-              className="absolute max-w-none pixelated"
-              style={{
-                width: "147.34%",
-                height: "147.34%",
-                left: "-23.53%",
-                top: "-23.81%",
-              }}
-            />
-          </Link>
+          <HomeWardrobePanel />
 
           <div className="pointer-events-none absolute inset-x-0 bottom-[calc(7.25rem+env(safe-area-inset-bottom))] flex justify-center md:bottom-[5.75rem] lg:bottom-[7.5rem]">
             <div className="relative h-[min(44vh,22rem)] w-[min(48vw,11.5rem)] sm:h-[min(46vh,23rem)] sm:w-[min(46vw,12rem)] md:h-[min(48vh,25rem)] md:w-[min(42vw,13rem)] lg:h-[min(50vh,27rem)] lg:w-[min(30vw,14rem)] xl:h-[min(52vh,30rem)] xl:w-[min(26vw,15rem)]">
@@ -97,7 +78,6 @@ export function HomeScreen({
           <HomeStartButton href={startHref} label={startLabel} />
         </AppScreenNavFooter>
       </main>
-      </div>
-    </BgmProvider>
+    </div>
   );
 }

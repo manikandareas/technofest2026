@@ -1,16 +1,13 @@
-.retro,
-.font-display {
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+.retro {
   font-family:
-    var(--font-press-start),
-    var(--font-mono),
+    "Press Start 2P",
     system-ui,
     -apple-system,
     sans-serif;
   line-height: 1.5;
   letter-spacing: 0.5px;
-  -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: geometricPrecision;
 }
 
 .pixelated {

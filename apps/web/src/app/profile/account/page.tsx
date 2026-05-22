@@ -1,4 +1,4 @@
-import { SettingsScreen } from "@/components/settings/settings-screen";
+import { AccountScreen } from "@/components/settings/account-screen";
 import { getApiClient } from "@/lib/api/server";
 
 export const dynamic = "force-dynamic";
@@ -12,20 +12,23 @@ function resolveDisplayName(
   return "Peserta";
 }
 
-export default async function ProfilePage() {
+export default async function ProfileAccountPage() {
   const api = await getApiClient();
   const { data } = await api.GET("/api/me").catch(() => ({ data: undefined }));
 
   const profile = data?.profile;
   const progress = data?.progress;
   const displayName = resolveDisplayName(profile?.display_name, profile?.email);
-  const totalXp = progress?.total_xp ?? profile?.xp ?? 0;
 
   return (
-    <SettingsScreen
+    <AccountScreen
       displayName={displayName}
-      totalXp={totalXp}
+      email={profile?.email}
       avatarUrl={profile?.avatar_url}
+      totalXp={progress?.total_xp ?? profile?.xp ?? 0}
+      level={progress?.level ?? 1}
+      completedCases={progress?.completed_cases ?? 0}
+      averageBestScore={progress?.average_best_score ?? 0}
     />
   );
 }

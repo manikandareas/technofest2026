@@ -17,6 +17,15 @@ function safeNext(formData: FormData, fallback: string) {
   return safeNextFromForm(formData, fallback);
 }
 
+function displayNameFromForm(formData: FormData, email: string) {
+  const name = String(formData.get("name") ?? "").trim();
+  return name || email.split("@")[0] || "PixelAid User";
+}
+
+function dicebearPixelAvatarUrl(name: string) {
+  return `https://api.dicebear.com/9.x/pixel-art/svg?seed=${encodeURIComponent(name)}`;
+}
+
 export async function signInWithPassword(
   _state: AuthState,
   formData: FormData,
@@ -39,11 +48,19 @@ export async function signUpWithPassword(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const displayName = displayNameFromForm(formData, email);
+  const avatarUrl = dicebearPixelAvatarUrl(displayName);
   const supabase = await createSupabaseServerClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   if (claimsData?.claims?.is_anonymous) {
     const { error } = await supabase.auth.updateUser(
-      { email },
+      {
+        email,
+        data: {
+          display_name: displayName,
+          avatar_url: avatarUrl,
+        },
+      },
       {
         emailRedirectTo: redirectUrl(
           `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
@@ -62,6 +79,10 @@ export async function signUpWithPassword(
     email,
     password,
     options: {
+      data: {
+        display_name: displayName,
+        avatar_url: avatarUrl,
+      },
       emailRedirectTo: redirectUrl(
         `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
       ),

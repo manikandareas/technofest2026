@@ -2,7 +2,9 @@ from fastapi.testclient import TestClient
 import pytest
 
 from pixelaid_api.main import app
+from pixelaid_api.models import AuthUser
 from pixelaid_api.services import gameplay
+from pixelaid_api.services.profiles import ensure_memory_profile
 from pixelaid_api.services import supabase as supabase_service
 
 DEV_AUTH = {"Authorization": "Bearer dev:test-user"}
@@ -59,6 +61,22 @@ def test_authenticated_me_bootstraps_profile() -> None:
 
     assert response.status_code == 200
     assert response.json()["profile"]["id"] == "test-user"
+
+
+def test_profile_bootstrap_adds_dicebear_avatar_from_display_name() -> None:
+    profile = ensure_memory_profile(
+        AuthUser(
+            id="named-user",
+            email="named@example.com",
+            display_name="PixelAid Tester",
+        )
+    )
+
+    assert profile.display_name == "PixelAid Tester"
+    assert (
+        profile.avatar_url
+        == "https://api.dicebear.com/9.x/pixel-art/svg?seed=PixelAid%20Tester"
+    )
 
 
 def test_profile_update() -> None:

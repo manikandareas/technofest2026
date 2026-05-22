@@ -20,6 +20,12 @@ export function AuthForm({ mode, next, action }: AuthFormProps) {
   return (
     <form action={formAction} className="space-y-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
+      {mode === "sign-in" ? null : (
+        <div className="space-y-2">
+          <Label htmlFor="name">Nama</Label>
+          <Input id="name" name="name" type="text" required autoComplete="name" />
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" required autoComplete="email" />

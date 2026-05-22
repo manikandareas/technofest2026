@@ -62,6 +62,8 @@ class AuthUser(BaseModel):
 
     id: str
     email: str | None = None
+    display_name: str | None = None
+    avatar_url: str | None = None
     is_anonymous: bool = False
 
 

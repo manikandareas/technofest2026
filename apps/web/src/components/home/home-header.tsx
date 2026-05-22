@@ -1,6 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/8bit/badge";
 
 import { HOME_ASSETS } from "./home-assets";
@@ -22,6 +27,7 @@ export function HomeHeader({
   const formattedName = displayName.startsWith("Dr.")
     ? displayName
     : `Dr. ${displayName}`;
+  const avatarInitial = displayName.replace(/^Dr\.\s*/i, "").charAt(0).toUpperCase();
 
   return (
     <header className="relative z-20 shrink-0">
@@ -31,16 +37,16 @@ export function HomeHeader({
           className="flex min-w-0 items-start gap-2.5 rounded-none outline-none focus-visible:ring-2 focus-visible:ring-white/60 md:gap-3"
           aria-label="Buka profil"
         >
-          <div className="relative size-16 shrink-0 lg:size-[4.5rem]">
-            <Image
+          <Avatar className="size-16 shrink-0 bg-[#f4c44f] lg:size-[4.5rem]">
+            <AvatarImage
               src={avatarUrl ?? HOME_ASSETS.avatarDefault}
               alt=""
-              fill
               className="object-cover object-center pixelated"
-              sizes="72px"
-              priority
             />
-          </div>
+            <AvatarFallback className="bg-[#f4c44f] text-foreground pixelated">
+              {avatarInitial}
+            </AvatarFallback>
+          </Avatar>
 
           <div className="min-w-0 space-y-1 pt-0.5 text-white drop-shadow-[1px_1px_0_#000]">
             <p className="retro truncate text-xs leading-tight md:text-sm lg:text-base">

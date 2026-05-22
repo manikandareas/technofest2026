@@ -3,10 +3,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AppScreenNavFooter } from "@/components/app/app-screen-nav-footer";
-import { BgmProvider } from "@/components/audio/bgm-provider";
-import { CASES_ASSETS } from "@/components/cases/cases-assets";
 import { HOME_ASSETS } from "@/components/home/home-assets";
 import { Button } from "@/components/ui/8bit/button";
+import { ChevronLeftIcon } from "@/components/ui/8bit/chevron-left-icon";
 
 const headerBackButtonClass =
   "size-9 shrink-0 border-transparent bg-[rgba(0,24,61,0.46)] text-white drop-shadow-[1px_1px_0_#000] hover:bg-[rgba(0,24,61,0.62)] sm:size-10 md:size-11 lg:size-12";
@@ -74,14 +73,7 @@ function SpecialistsScreenHeader({
           className={headerBackButtonClass}
         >
           <Link href={backHref} aria-label={backLabel}>
-            <Image
-              src={CASES_ASSETS.iconBack}
-              alt=""
-              width={20}
-              height={20}
-              className="size-5 object-contain pixelated sm:size-6"
-              aria-hidden
-            />
+            <ChevronLeftIcon />
           </Link>
         </Button>
 
@@ -105,8 +97,7 @@ export function SpecialistsScreenLayout({
   showBottomNav = true,
 }: SpecialistsScreenLayoutProps) {
   return (
-    <BgmProvider>
-      <div className="relative min-h-dvh w-full bg-[#02153d]">
+    <div className="relative min-h-dvh w-full bg-[#02153d]">
         <SpecialistsSceneBackground />
 
         <main className="relative mx-auto flex min-h-dvh w-full max-w-[393px] flex-col md:max-w-3xl lg:max-w-5xl xl:max-w-6xl">
@@ -123,7 +114,6 @@ export function SpecialistsScreenLayout({
             {footer}
           </AppScreenNavFooter>
         </main>
-      </div>
-    </BgmProvider>
+    </div>
   );
 }

@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { AlertTriangle, DoorOpen, Pause } from "lucide-react";
 
-import { BgmProvider } from "@/components/audio/bgm-provider";
 import { resolvePatientAvatar } from "@/components/cases/cases-assets";
 import { HOME_ASSETS } from "@/components/home/home-assets";
 import { SessionExamineDrawer } from "@/components/sessions/session-examine-drawer";
@@ -147,8 +146,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
   }
 
   return (
-    <BgmProvider>
-      <div className="relative min-h-dvh w-full overflow-hidden bg-[#02153d]">
+    <div className="relative min-h-dvh w-full overflow-hidden bg-[#02153d]">
         <ConsultationSceneBackground />
 
         <main className="relative mx-auto flex min-h-dvh w-full max-w-[393px] flex-col md:max-w-3xl lg:max-w-5xl xl:max-w-6xl">
@@ -386,6 +384,5 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
           </AlertDialog.Portal>
         </AlertDialog.Root>
       </div>
-    </BgmProvider>
   );
 }
