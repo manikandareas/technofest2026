@@ -129,7 +129,7 @@ def test_anonymous_user_completes_published_case(monkeypatch) -> None:
     assert leaderboard["entries"] == []
 
 
-def test_imaging_examination_asset_is_returned_after_delay(
+def test_imaging_examination_asset_is_returned_immediately(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(gameplay, "get_supabase_admin", lambda: None)
@@ -150,15 +150,7 @@ def test_imaging_examination_asset_is_returned_after_delay(
         json={"examination_id": "chest_xray"},
     )
     assert requested.status_code == 200
-    pending_exam = requested.json()["examinations"][0]
-    assert pending_exam["status"] == "pending"
-    assert pending_exam["result"] is None
-    assert pending_exam["asset"] is None
-
-    patch_utc_now(monkeypatch, now + timedelta(seconds=21))
-    resulted = client.get(f"/api/case-sessions/{session_id}", headers=ANON_AUTH)
-    assert resulted.status_code == 200
-    resulted_exam = resulted.json()["examinations"][0]
+    resulted_exam = requested.json()["examinations"][0]
     assert resulted_exam["status"] == "resulted"
     assert "Infiltrat patchy" in resulted_exam["result"]
     assert resulted_exam["asset"] == {

@@ -1,18 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { Clock3, ImageIcon, Stethoscope } from "lucide-react";
+import { ChevronRight, ImageIcon, Loader2, Stethoscope } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/8bit/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 
 import { SessionDrawerHeader } from "./session-drawer-header";
+import { SessionResponsivePanel } from "./session-responsive-panel";
 import { sessionToolbarIconButtonClass } from "./sessions-assets";
+
+type ExaminationAsset = {
+  type: "image";
+  url: string;
+  alt: string;
+};
 
 type ExaminationOption = {
   id: string;
@@ -22,19 +25,16 @@ type ExaminationOption = {
   asset?: ExaminationAsset | null;
 };
 
-type ExaminationAsset = {
-  type: "image";
-  url: string;
-  alt: string;
-};
-
 type ExaminationEvent = {
   id: string;
+  examination_id: string;
   label: string;
   status: string;
   result?: string | null;
   asset?: ExaminationAsset | null;
 };
+
+type ExamListState = "available" | "ordering" | "pending" | "resulted";
 
 type SessionExamineDrawerProps = {
   options: ExaminationOption[];
@@ -45,6 +45,40 @@ type SessionExamineDrawerProps = {
   onSelectExamination: (examinationId: string) => void;
 };
 
+function ExaminationDetailContent({ exam }: { exam: ExaminationEvent }) {
+  return (
+    <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 sm:px-4">
+      {exam.asset?.type === "image" ? (
+        <figure className="overflow-hidden rounded-[1rem] border-2 border-foreground/10 bg-[#101827]">
+          <div className="relative min-h-[14rem] w-full sm:min-h-[18rem]">
+            <Image
+              src={exam.asset.url}
+              alt={exam.asset.alt}
+              fill
+              className="object-contain object-center pixelated p-2"
+              sizes="(min-width: 1024px) 36rem, 92vw"
+              priority
+            />
+          </div>
+          <figcaption className="flex items-start gap-2 border-t border-foreground/10 bg-white px-3 py-3 text-sm leading-6 text-[#1a233e]">
+            <ImageIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+            {exam.asset.alt}
+          </figcaption>
+        </figure>
+      ) : null}
+
+      <div className="rounded-[1.25rem] border-2 border-foreground/10 bg-white p-4 text-sm leading-7 text-[#1a233e]">
+        <p className="mb-2 font-semibold">Hasil pemeriksaan</p>
+        {exam.result ? (
+          <p className="whitespace-pre-wrap">{exam.result}</p>
+        ) : (
+          <p className="text-muted-foreground">Hasil pemeriksaan belum tersedia.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function SessionExamineDrawer({
   options,
   examinations,
@@ -53,97 +87,151 @@ export function SessionExamineDrawer({
   isPending,
   onSelectExamination,
 }: SessionExamineDrawerProps) {
-  const statusLabel = (status: string) => (status === "resulted" ? "Selesai" : "Diproses");
+  const [orderingExamId, setOrderingExamId] = useState<string | null>(null);
+  const [detailExamId, setDetailExamId] = useState<string | null>(null);
+
+  const examItems = useMemo(
+    () =>
+      options.map((option) => {
+        const event = examinations.find((exam) => exam.examination_id === option.id) ?? null;
+        let state: ExamListState = "available";
+
+        if (orderingExamId === option.id && !event) {
+          state = "ordering";
+        } else if (event?.status === "resulted") {
+          state = "resulted";
+        } else if (event?.status === "pending") {
+          state = "pending";
+        } else if (selectedExamIds.has(option.id)) {
+          state = "pending";
+        }
+
+        return { option, event, state };
+      }),
+    [examinations, options, orderingExamId, selectedExamIds],
+  );
+
+  const detailExam = useMemo(() => {
+    if (!detailExamId) {
+      return null;
+    }
+    return examinations.find((exam) => exam.examination_id === detailExamId) ?? null;
+  }, [detailExamId, examinations]);
+
+  useEffect(() => {
+    if (!orderingExamId) {
+      return;
+    }
+    if (selectedExamIds.has(orderingExamId)) {
+      setOrderingExamId(null);
+      return;
+    }
+    if (!isPending) {
+      setOrderingExamId(null);
+    }
+  }, [isPending, orderingExamId, selectedExamIds]);
+
+  function handleExamClick(optionId: string, state: ExamListState) {
+    if (state === "available") {
+      setOrderingExamId(optionId);
+      onSelectExamination(optionId);
+      return;
+    }
+    if (state === "resulted") {
+      setDetailExamId(optionId);
+    }
+  }
+
+  const trigger = (
+    <Button
+      type="button"
+      size="sm"
+      variant="secondary"
+      font="retro"
+      className={sessionToolbarIconButtonClass}
+      aria-label="Buka pemeriksaan"
+    >
+      <Stethoscope aria-hidden />
+      <span className="text-[0.5625rem] leading-tight sm:text-[0.6875rem]">Examine</span>
+    </Button>
+  );
 
   return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          font="retro"
-          className={sessionToolbarIconButtonClass}
-          aria-label="Buka pemeriksaan"
-        >
-          <Stethoscope className="size-5 sm:size-6" aria-hidden />
-          <span className="text-[0.625rem] leading-none sm:text-[0.6875rem]">Examine</span>
-        </Button>
-      </DrawerTrigger>
+    <>
+      <SessionResponsivePanel title="Examine" trigger={trigger}>
+        <SessionDrawerHeader icon={<Stethoscope className="size-4" aria-hidden />} title="Examine" />
 
-      <DrawerContent className="max-h-[88dvh] border-foreground bg-[#eef3ff] px-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <SessionDrawerHeader
-          icon={<Stethoscope className="size-4" aria-hidden />}
-          title="Examine"
-        />
-
-        <div className="space-y-3 px-3 pb-3 pt-3 sm:px-4">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 sm:px-4">
           <div className="grid gap-2">
-            {options.map((exam) => (
-              <Button
-                key={exam.id}
-                type="button"
-                variant="secondary"
-                font="retro"
-                className="h-auto min-h-10 justify-between whitespace-normal text-left"
-                disabled={isPending || disabled || selectedExamIds.has(exam.id)}
-                onClick={() => onSelectExamination(exam.id)}
-              >
-                <span className="flex min-w-0 flex-col gap-0.5">
-                  <span>{exam.label}</span>
-                  <span className="text-[0.625rem] uppercase tracking-normal text-muted-foreground">
-                    {exam.category.replaceAll("_", " ")}
-                  </span>
-                </span>
-                <span className="flex shrink-0 items-center gap-1 font-mono text-xs">
-                  <Clock3 className="size-3" aria-hidden />
-                  {exam.delay_seconds}s
-                </span>
-              </Button>
-            ))}
-          </div>
+            {examItems.map(({ option, state }) => {
+              const isLoading = state === "ordering" || state === "pending";
+              const isDisabled =
+                state === "resulted"
+                  ? false
+                  : state === "available"
+                    ? disabled || isPending
+                    : true;
 
-          <div className="space-y-2">
-            {examinations.map((exam) => (
-              <div
-                key={exam.id}
-                className="rounded-[1rem] border-2 border-foreground/10 bg-white p-3 text-sm"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-medium">{exam.label}</p>
-                  <Badge variant={exam.status === "resulted" ? "default" : "secondary"}>
-                    {statusLabel(exam.status)}
-                  </Badge>
-                </div>
-                {exam.asset?.type === "image" ? (
-                  <figure className="mt-3 overflow-hidden rounded-lg border border-foreground/10 bg-[#101827]">
-                    <div className="relative aspect-[4/3] w-full">
-                      <Image
-                        src={exam.asset.url}
-                        alt={exam.asset.alt}
-                        fill
-                        className="object-cover pixelated"
-                        sizes="(min-width: 640px) 28rem, 92vw"
-                      />
-                    </div>
-                    <figcaption className="flex items-start gap-2 bg-white px-3 py-2 text-xs leading-5 text-muted-foreground">
-                      <ImageIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-                      {exam.asset.alt}
-                    </figcaption>
-                  </figure>
-                ) : null}
-                {exam.result ? (
-                  <p className="mt-2 leading-6 text-muted-foreground">{exam.result}</p>
-                ) : (
-                  <p className="mt-2 leading-6 text-muted-foreground">
-                    Hasil pemeriksaan sedang diproses.
-                  </p>
-                )}
-              </div>
-            ))}
+              return (
+                <Button
+                  key={option.id}
+                  type="button"
+                  variant="secondary"
+                  font="retro"
+                  className="h-auto min-h-11 justify-between whitespace-normal text-left"
+                  disabled={isDisabled}
+                  onClick={() => handleExamClick(option.id, state)}
+                >
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span>{option.label}</span>
+                    <span className="text-[0.625rem] uppercase tracking-normal text-muted-foreground">
+                      {option.category.replaceAll("_", " ")}
+                    </span>
+                  </span>
+
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                        <span className="text-xs">Memproses...</span>
+                      </>
+                    ) : state === "resulted" ? (
+                      <>
+                        <Badge variant="default">Selesai</Badge>
+                        <ChevronRight className="size-4" aria-hidden />
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Pilih</span>
+                    )}
+                  </span>
+                </Button>
+              );
+            })}
           </div>
         </div>
-      </DrawerContent>
-    </Drawer>
+      </SessionResponsivePanel>
+
+      <SessionResponsivePanel
+        hideTrigger
+        size="detail"
+        open={detailExamId !== null && detailExam !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDetailExamId(null);
+          }
+        }}
+        title={detailExam?.label ?? "Detail pemeriksaan"}
+      >
+        {detailExam ? (
+          <>
+            <SessionDrawerHeader
+              icon={<Stethoscope className="size-4" aria-hidden />}
+              title={detailExam.label}
+            />
+            <ExaminationDetailContent exam={detailExam} />
+          </>
+        ) : null}
+      </SessionResponsivePanel>
+    </>
   );
 }

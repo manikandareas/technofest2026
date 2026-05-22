@@ -18,7 +18,9 @@ import {
 import { Badge } from "@/components/ui/8bit/badge";
 import { Button } from "@/components/ui/8bit/button";
 import { SpecialistsScreenLayout } from "@/components/specialists/specialists-screen-layout";
+import { SessionLoadRecover } from "@/components/sessions/session-load-recover";
 import { getApiClient } from "@/lib/api/server";
+import { withReadRetries } from "@/lib/api/retry-read";
 import { cn } from "@/lib/utils";
 import { startCaseSession } from "../../../cases/actions";
 import { ResultFeedbackRefresh } from "./result-feedback-refresh";
@@ -141,23 +143,43 @@ export default async function SessionResultPage({
 }) {
   const { id } = await params;
   const { result } = await searchParams;
-  const api = await getApiClient();
   const resultId = result;
 
   if (!resultId) {
     notFound();
   }
 
-  const { data, error } = await api
-    .GET("/api/case-results/{result_id}", {
-      params: { path: { result_id: resultId } },
-    })
-    .catch(() => ({ data: undefined, error: true }));
+  const loadResult = await withReadRetries(
+    async () => {
+      const api = await getApiClient();
+      return api.GET("/api/case-results/{result_id}", {
+        params: { path: { result_id: resultId } },
+      });
+    },
+    {
+      isDefinitiveNotFound: (attempt) => attempt.response?.status === 404,
+    },
+  );
 
-  if (error || !data || data.session_id !== id) {
+  if (loadResult.status === "not_found") {
     notFound();
   }
 
+  if (loadResult.status === "transient") {
+    return (
+      <SessionLoadRecover
+        title="Hasil belum siap"
+        message="Evaluasi kasus masih diproses. Halaman akan dicoba muat ulang otomatis."
+      />
+    );
+  }
+
+  const data = loadResult.data;
+  if (data.session_id !== id) {
+    notFound();
+  }
+
+  const api = await getApiClient();
   const meResult = await api.GET("/api/me").catch(() => ({ data: undefined }));
   const isAnonymous = Boolean(meResult.data?.profile.is_anonymous);
   const currentResultPath = `/app/sessions/${id}/result?result=${encodeURIComponent(resultId)}`;

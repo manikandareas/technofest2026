@@ -7,7 +7,7 @@ export default function NotFound() {
       <section className="w-full max-w-md space-y-4 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Halaman tidak ditemukan</h1>
         <p className="text-sm leading-6 text-muted-foreground">
-          Case atau hasil yang diminta tidak tersedia untuk sesi saat ini.
+          Halaman yang Anda cari tidak ada atau sudah tidak tersedia.
         </p>
         <Button asChild>
           <Link href="/app/home">Kembali ke home</Link>

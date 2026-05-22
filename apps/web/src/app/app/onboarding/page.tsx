@@ -380,15 +380,19 @@ export default function OnboardingPage() {
         </header>
 
         {/* Specialists style Content Panel */}
-        <section className="relative z-10 flex-1 flex flex-col justify-between px-3 pb-6 sm:px-4 md:px-6 lg:px-8 xl:px-10 gap-4 w-full">
+        <section className="relative z-10 flex-1 flex flex-col justify-between px-3 pb-6 sm:px-4 sm:pb-8 md:px-6 lg:px-8 xl:px-10 gap-6 w-full">
           
           {/* Mobile Layout (Stacked) */}
-          <div className="md:hidden flex flex-col justify-between flex-1 gap-4">
-            {/* Dr. Pixel Dialogue Box (Mobile, borderless background approach) */}
-            <div className="relative border-2 border-primary bg-card/90 p-3.5 flex gap-3.5 items-center shadow-[3px_3px_0_rgba(0,0,0,0.15)] shrink-0">
-              <div className="pointer-events-none absolute inset-0.5 border border-primary/10" aria-hidden="true" />
+          <div className="md:hidden flex flex-col justify-between flex-1 gap-5">
+            {/* Dr. Pixel Dialogue Box (Mobile, retro pixel dialog container with outstanding contrast) */}
+            <div className="relative border-y-4 border-primary bg-card p-4 flex gap-3.5 items-center shadow-[4px_4px_0_rgba(0,0,0,0.15)] shrink-0">
+              <div className="pointer-events-none absolute inset-y-0 -mx-1 border-x-4 border-primary" aria-hidden="true" />
+              <div className="absolute top-0.5 left-0.5 size-1 bg-secondary" />
+              <div className="absolute top-0.5 right-0.5 size-1 bg-secondary" />
+              <div className="absolute bottom-0.5 left-0.5 size-1 bg-secondary" />
+              <div className="absolute bottom-0.5 right-0.5 size-1 bg-secondary" />
               
-              <div className="relative size-10 shrink-0 rounded-full overflow-hidden border border-primary/30 bg-primary/5">
+              <div className="relative size-12 shrink-0 rounded-none overflow-hidden border-2 border-primary bg-primary/5">
                 <Image
                   src={HOME_ASSETS.doctorCharacter}
                   alt="Dr. Pixel"
@@ -397,26 +401,32 @@ export default function OnboardingPage() {
                 />
               </div>
               
-              <div className="flex-1 space-y-0.5 text-left min-w-0">
-                <p className="retro text-[0.55rem] font-bold text-accent tracking-widest">
+              <div className="flex-1 space-y-1 text-left min-w-0">
+                <p className="retro text-[0.6rem] font-bold text-accent tracking-widest uppercase">
                   DR. PIXEL
                 </p>
-                <p key={activeSlide} className="text-[0.6875rem] leading-relaxed text-foreground font-medium animate-[fadeIn_0.3s_ease-out]">
-                  {currentSlide.doctorSpeech}
+                <p key={activeSlide} className="text-[0.75rem] leading-relaxed text-foreground font-semibold animate-[fadeIn_0.3s_ease-out]">
+                  "{currentSlide.doctorSpeech}"
                 </p>
               </div>
             </div>
 
-            {/* Main Interactive Slide Panel (Mobile, completely open sleek console, no cards!) */}
-            <div className="flex-1 flex flex-col justify-between py-2">
+            {/* Main Interactive Slide Panel (Mobile, Solid Retro Console Card) */}
+            <div className="relative flex-1 flex flex-col justify-between border-y-4 border-primary bg-card/95 p-4.5 shadow-[4px_4px_0_rgba(0,0,0,0.15)] text-foreground">
+              <div className="pointer-events-none absolute inset-y-0 -mx-1 border-x-4 border-primary" aria-hidden="true" />
+              <div className="absolute top-0.5 left-0.5 size-1 bg-secondary" />
+              <div className="absolute top-0.5 right-0.5 size-1 bg-secondary" />
+              <div className="absolute bottom-0.5 left-0.5 size-1 bg-secondary" />
+              <div className="absolute bottom-0.5 right-0.5 size-1 bg-secondary" />
               
               {/* Header Info Banner */}
-              <div className="border-b border-primary/25 pb-2 flex flex-row justify-between items-center w-full shrink-0">
-                <div className="retro text-[0.625rem] text-foreground flex items-center gap-1.5 uppercase font-bold">
+              <div className="border-b-2 border-primary/20 pb-2.5 flex flex-row justify-between items-center w-full shrink-0">
+                <div className="retro text-xs text-foreground flex items-center gap-1.5 uppercase font-bold">
                   <currentSlide.icon className={cn("size-4", currentSlide.iconColor)} />
                   {currentSlide.title}
                 </div>
-                <span className={cn("inline-flex items-center gap-1 border px-1.5 py-0.5 text-[0.45rem] font-bold uppercase leading-none retro", currentSlide.borderColor, currentSlide.bgColor, currentSlide.iconColor)}>
+                <span className={cn("inline-flex items-center gap-1 border-y border-primary/40 bg-primary/5 px-2 py-0.5 text-[0.5rem] font-bold uppercase leading-none retro relative")}>
+                  <span className="pointer-events-none absolute inset-y-0 -mx-0.5 border-x border-primary/40" aria-hidden="true" />
                   {currentSlide.badge}
                 </span>
               </div>
@@ -498,17 +508,16 @@ export default function OnboardingPage() {
                   )}
                 </div>
 
-                {/* Info Text */}
-                <div className="space-y-2 text-center max-w-[40ch]">
-                  <p key={activeSlide} className="text-xs leading-relaxed text-foreground font-medium animate-[fadeIn_0.3s_ease-out]">
+                {/* Info Text with High Contrast Container */}
+                <div className="space-y-2 text-center max-w-[40ch] bg-accent/5 border border-primary/10 p-3 shadow-inner">
+                  <p key={activeSlide} className="text-xs sm:text-sm leading-relaxed text-foreground font-semibold animate-[fadeIn_0.3s_ease-out]">
                     {currentSlide.content}
                   </p>
-                  <div className="h-0.5 w-10 bg-primary/20 mx-auto rounded-full" />
                 </div>
               </div>
 
               {/* Footer Controls & Navigation */}
-              <div className="border-t border-primary/25 pt-3 flex flex-col gap-3 w-full shrink-0">
+              <div className="border-t-2 border-primary/25 pt-3.5 flex flex-col gap-3.5 w-full shrink-0">
                 {/* Step Indicators */}
                 <div className="flex justify-center items-center gap-3 py-1">
                   {ONBOARDING_SLIDES.map((slide, idx) => (
@@ -537,12 +546,12 @@ export default function OnboardingPage() {
                       <Button
                         variant="secondary"
                         font="retro"
-                        size="default"
+                        size="sm"
                         onClick={handleBack}
                         disabled={isPending}
-                        className="border-2 border-primary/50 text-foreground text-[0.625rem]"
+                        className="border-2 border-primary/50 text-foreground text-[0.75rem] px-3 h-9"
                       >
-                        <ArrowLeft className="size-3 mr-1" />
+                        <ArrowLeft className="size-3.5 mr-1" />
                         KEMBALI
                       </Button>
                     ) : (
@@ -554,11 +563,11 @@ export default function OnboardingPage() {
                     <Button
                       variant="default"
                       font="retro"
-                      size="default"
+                      size="sm"
                       onClick={handleNext}
                       disabled={disableNext}
                       className={cn(
-                        "text-[0.625rem] text-primary-foreground",
+                        "text-[0.75rem] text-primary-foreground px-4 h-9",
                         isLastSlide ? "bg-accent! text-accent-foreground!" : "bg-primary!"
                       )}
                     >
@@ -581,7 +590,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 {error ? (
-                  <p className="rounded-xl border border-destructive/40 bg-background/95 px-3 py-2 text-center text-xs text-destructive">
+                  <p className="border border-destructive/40 bg-background/95 px-3 py-2 text-center text-xs text-destructive">
                     {error}
                   </p>
                 ) : null}
@@ -620,7 +629,7 @@ export default function OnboardingPage() {
               </div>
 
               {/* Speech Bubble with custom pixel-art speech tail */}
-              <div className="relative w-full border-2 border-primary bg-card/90 p-5 shadow-[4px_4px_0_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0_rgba(0,0,0,0.3)] flex flex-col justify-center min-h-[140px] shrink-0">
+              <div className="relative w-full border-2 border-primary bg-card p-5 shadow-[4px_4px_0_rgba(0,0,0,0.15)] flex flex-col justify-center min-h-[140px] shrink-0">
                 <div className="pointer-events-none absolute inset-0.5 border border-primary/10" aria-hidden="true" />
                 
                 {/* Pixel-art tail pointing up to character */}
@@ -637,16 +646,21 @@ export default function OnboardingPage() {
                   <p className="retro text-[0.625rem] font-bold text-accent tracking-widest uppercase">
                     Dr. Pixel
                   </p>
-                  <p key={activeSlide} className="text-xs lg:text-sm leading-relaxed text-foreground font-medium animate-[fadeIn_0.3s_ease-out]">
-                    {currentSlide.doctorSpeech}
+                  <p key={activeSlide} className="text-xs lg:text-sm leading-relaxed text-foreground font-semibold animate-[fadeIn_0.3s_ease-out]">
+                    "{currentSlide.doctorSpeech}"
                   </p>
                 </div>
               </div>
 
             </div>
 
-            {/* Right Column: Sleek Open Terminal Console (7 cols, no cards!) */}
-            <div className="md:col-span-7 lg:col-span-7 flex flex-col h-full py-4 justify-between">
+            {/* Right Column: Sleek Open Terminal Console wrapped in a Solid Retro Card Container (7 cols) */}
+            <div className="md:col-span-7 lg:col-span-7 relative flex flex-col h-full p-6 justify-between border-y-4 border-primary bg-card/95 shadow-[6px_6px_0_rgba(0,0,0,0.15)] text-foreground">
+              <div className="pointer-events-none absolute inset-y-0 -mx-1 border-x-4 border-primary" aria-hidden="true" />
+              <div className="absolute top-1 left-1 size-1 bg-secondary" />
+              <div className="absolute top-1 right-1 size-1 bg-secondary" />
+              <div className="absolute bottom-1 left-1 size-1 bg-secondary" />
+              <div className="absolute bottom-1 right-1 size-1 bg-secondary" />
               
               {/* Sleek Elegant Header Divider */}
               <div className="border-b-2 border-primary/20 pb-3 flex flex-row justify-between items-center w-full shrink-0">
@@ -654,7 +668,8 @@ export default function OnboardingPage() {
                   <currentSlide.icon className={cn("size-5", currentSlide.iconColor)} />
                   {currentSlide.title}
                 </div>
-                <span className={cn("inline-flex items-center gap-1 border px-2 py-0.5 text-[0.55rem] font-mono font-bold uppercase leading-none retro relative", currentSlide.borderColor, currentSlide.bgColor, currentSlide.iconColor)}>
+                <span className={cn("inline-flex items-center gap-1 border-y border-primary/40 bg-primary/5 px-2.5 py-0.5 text-[0.55rem] font-mono font-bold uppercase leading-none retro relative")}>
+                  <span className="pointer-events-none absolute inset-y-0 -mx-0.5 border-x border-primary/40" aria-hidden="true" />
                   {currentSlide.badge}
                 </span>
               </div>
@@ -735,12 +750,11 @@ export default function OnboardingPage() {
                   )}
                 </div>
 
-                {/* Informational Text */}
-                <div className="space-y-3 text-center max-w-[55ch]">
-                  <p key={activeSlide} className="text-sm lg:text-base leading-relaxed text-foreground font-medium animate-[fadeIn_0.3s_ease-out]">
+                {/* Informational Text with High Contrast Container */}
+                <div className="space-y-3 text-center max-w-[55ch] bg-accent/5 border border-primary/15 p-4 shadow-inner">
+                  <p key={activeSlide} className="text-sm lg:text-base leading-relaxed text-foreground font-semibold animate-[fadeIn_0.3s_ease-out]">
                     {currentSlide.content}
                   </p>
-                  <div className="h-1 w-16 bg-primary/20 mx-auto rounded-full" />
                 </div>
               </div>
 
@@ -783,7 +797,7 @@ export default function OnboardingPage() {
                         size="default"
                         onClick={handleBack}
                         disabled={isPending}
-                        className="border-2 border-primary/50 text-foreground text-xs"
+                        className="border-2 border-primary/50 text-foreground text-xs px-4"
                       >
                         <ArrowLeft className="size-4 mr-1" />
                         KEMBALI
@@ -801,7 +815,7 @@ export default function OnboardingPage() {
                       onClick={handleNext}
                       disabled={disableNext}
                       className={cn(
-                        "text-xs text-primary-foreground",
+                        "text-xs text-primary-foreground px-5",
                         isLastSlide ? "bg-accent! text-accent-foreground!" : "bg-primary!"
                       )}
                     >
@@ -824,7 +838,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
                 {error ? (
-                  <p className="rounded-xl border border-destructive/40 bg-background/95 px-3 py-2 text-center text-sm text-destructive">
+                  <p className="border border-destructive/40 bg-background/95 px-3 py-2 text-center text-sm text-destructive">
                     {error}
                   </p>
                 ) : null}
