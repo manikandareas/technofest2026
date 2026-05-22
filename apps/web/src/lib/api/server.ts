@@ -3,9 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function getApiClient() {
   const supabase = await createSupabaseServerClient().catch(() => null);
-  const claimsResponse = supabase ? await supabase.auth.getClaims() : null;
-  const session =
-    claimsResponse?.data && !claimsResponse.error ? await supabase?.auth.getSession() : null;
+  const session = supabase ? await supabase.auth.getSession() : null;
   const accessToken = session?.data.session?.access_token;
 
   return createPixelAidApiClient({
