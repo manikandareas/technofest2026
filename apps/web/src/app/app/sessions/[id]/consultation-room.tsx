@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { AlertTriangle, DoorOpen, Pause } from "lucide-react";
 
-import { resolvePatientAvatar } from "@/components/cases/cases-assets";
+import { resolvePatientConsultationAvatar } from "@/components/cases/cases-assets";
 import { HOME_ASSETS } from "@/components/home/home-assets";
 import { SessionExamineDrawer } from "@/components/sessions/session-examine-drawer";
 import { SessionMedicalRecordDrawer } from "@/components/sessions/session-medical-record-drawer";
@@ -119,7 +119,10 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
     }
     return session.case.chief_complaint;
   }, [session.case.chief_complaint, session.messages]);
-  const patientAvatarSrc = resolvePatientAvatar(session.case.patient_name);
+  const patientAvatarSrc = resolvePatientConsultationAvatar(
+    session.case.patient_name,
+    session.case.consultation_avatar_url,
+  );
 
   function run(action: () => Promise<CaseSession | unknown>) {
     setError(null);
@@ -155,6 +158,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
               patientName={session.case.patient_name}
               patientAge={session.case.patient_age}
               conditionBadge={session.case.condition_badge}
+              avatarUrl={session.case.patient_avatar_url}
             />
             {session.status === "in_consultation" ? (
               <SessionTimerControls

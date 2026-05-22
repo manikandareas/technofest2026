@@ -91,10 +91,15 @@ def test_profile_update() -> None:
 
 
 def test_onboarding_complete() -> None:
-    response = TestClient(app).post("/api/me/onboarding-complete", headers=DEV_AUTH)
+    response = TestClient(app).post(
+        "/api/me/onboarding-complete",
+        headers=DEV_AUTH,
+        json={"gender": "male"},
+    )
 
     assert response.status_code == 200
     assert response.json()["onboarding_completed"] is True
+    assert response.json()["gender"] == "male"
 
 
 def test_authenticated_specialist_cases() -> None:

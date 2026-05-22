@@ -317,6 +317,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingCompleteRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2359,6 +2369,23 @@
         ],
         "title": "MedicalRecordResponse"
       },
+      "OnboardingCompleteRequest": {
+        "properties": {
+          "gender": {
+            "type": "string",
+            "enum": [
+              "male",
+              "female"
+            ],
+            "title": "Gender"
+          }
+        },
+        "type": "object",
+        "required": [
+          "gender"
+        ],
+        "title": "OnboardingCompleteRequest"
+      },
       "Profile": {
         "properties": {
           "id": {
@@ -2397,6 +2424,21 @@
               }
             ],
             "title": "Avatar Url"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "male",
+                  "female"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender"
           },
           "is_anonymous": {
             "type": "boolean",

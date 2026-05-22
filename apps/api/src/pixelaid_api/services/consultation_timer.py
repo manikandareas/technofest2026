@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import HTTPException, status
 from pixelaid_api.services import clock
-from pixelaid_shared.cases import get_case_config
+from pixelaid_api.services.case_configs import resolve_case_config
 
 StoreRow = dict[str, Any]
 UpdateSession = Callable[[str, StoreRow], StoreRow]
@@ -60,7 +60,7 @@ def ensure_started(row: StoreRow, update_session: UpdateSession) -> StoreRow:
     state = dict(row.get("session_state") or {})
     if state.get("timer_started_at") and state.get("timer_budget_seconds"):
         return row
-    config = get_case_config(str(row["case_id"]))
+    config = resolve_case_config(str(row["case_id"]))
     state["timer_started_at"] = _iso(clock.utc_now())
     state["timer_budget_seconds"] = int(
         row.get("remaining_seconds") or config.timer_seconds

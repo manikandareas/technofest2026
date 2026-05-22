@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 const footerColumns = [
   {
@@ -110,14 +111,21 @@ export function LandingFooter() {
               whileHover={
                 reduce
                   ? undefined
-                  : { letterSpacing: "0.02em", transition: { duration: 0.35 } }
+                  : { scale: 1.05, transition: { duration: 0.2 } }
               }
             >
               <Link
                 href="/"
-                className="retro inline-block text-sm text-foreground sm:text-base"
+                className="flex items-center outline-none group"
+                aria-label="PixelAid"
               >
-                PixelAid
+                <Image
+                  src="/logo.png"
+                  alt="PixelAid Logo"
+                  width={60}
+                  height={60}
+                  className="pixelated object-contain transition-transform group-hover:scale-110"
+                />
               </Link>
             </motion.div>
             <p className="mt-4 max-w-xs text-sm leading-snug text-muted-foreground">

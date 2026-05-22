@@ -1,26 +1,107 @@
-/** Static assets exported from Figma (Hackhaton UMKT 2026 — Case Brief). */
+/** Static assets exported from Figma (Hackhaton UMKT 2026 - Case Brief). */
 export const CASES_ASSETS = {
   iconBack: "/assets/specialists/figma/icon-back.png",
   iconStopwatch: "/assets/cases/figma/icon-stopwatch.png",
   iconLearning: "/assets/home/figma/icon-stars.png",
-  avatars: {
-    raka: "/assets/cases/figma/avatar-raka.png",
-  },
+  avatarFallback: "/assets/patients/raka/avatar.png",
 } as const;
 
-export type CaseAvatarId = keyof typeof CASES_ASSETS.avatars;
+type PatientAssetId =
+  | "arka-caregiver"
+  | "ayu"
+  | "bima-caregiver"
+  | "dewi"
+  | "dimas"
+  | "fajar"
+  | "hasan"
+  | "laras"
+  | "maya"
+  | "mika-caregiver"
+  | "nadia"
+  | "raka"
+  | "ratna"
+  | "rini"
+  | "salsa"
+  | "surya"
+  | "tono"
+  | "yusuf";
 
-const PATIENT_AVATAR_BY_NAME: Record<string, CaseAvatarId> = {
+const PATIENT_ASSET_BY_NAME: Record<string, PatientAssetId> = {
+  "ibu arka": "arka-caregiver",
+  "ibu bima": "bima-caregiver",
+  "ibu mika": "mika-caregiver",
+  arka: "arka-caregiver",
+  ayu: "ayu",
+  bima: "bima-caregiver",
+  dewi: "dewi",
+  dimas: "dimas",
+  fajar: "fajar",
+  hasan: "hasan",
+  laras: "laras",
+  maya: "maya",
+  mika: "mika-caregiver",
+  nadia: "nadia",
   raka: "raka",
+  ratna: "ratna",
+  rini: "rini",
+  salsa: "salsa",
+  surya: "surya",
+  tono: "tono",
+  yusuf: "yusuf",
 };
 
-export function resolvePatientAvatar(patientName: string): string {
-  const key = patientName.trim().split(/\s+/)[0]?.toLowerCase() ?? "";
-  const avatarId = PATIENT_AVATAR_BY_NAME[key];
-  if (avatarId) {
-    return CASES_ASSETS.avatars[avatarId];
+function normalizePatientName(patientName: string): string {
+  return patientName
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function resolvePatientAssetId(patientName: string): PatientAssetId | null {
+  const normalized = normalizePatientName(patientName);
+  const exact = PATIENT_ASSET_BY_NAME[normalized];
+  if (exact) {
+    return exact;
   }
-  return CASES_ASSETS.avatars.raka;
+
+  const firstName = normalized.split(/\s+/)[0] ?? "";
+  return PATIENT_ASSET_BY_NAME[firstName] ?? null;
+}
+
+export function resolvePatientAvatar(
+  patientName: string,
+  apiAvatarUrl?: string | null,
+): string {
+  if (apiAvatarUrl) {
+    return apiAvatarUrl;
+  }
+
+  const assetId = resolvePatientAssetId(patientName);
+  if (assetId) {
+    return `/assets/patients/${assetId}/avatar.png`;
+  }
+
+  return CASES_ASSETS.avatarFallback;
+}
+
+export function resolvePatientConsultationAvatar(
+  patientName: string,
+  apiAvatarUrl?: string | null,
+): string {
+  if (apiAvatarUrl) {
+    return apiAvatarUrl;
+  }
+
+  const assetId = resolvePatientAssetId(patientName);
+  if (assetId) {
+    return `/assets/patients/${assetId}/consultation-avatar.png`;
+  }
+
+  return CASES_ASSETS.avatarFallback;
 }
 
 export function formatCaseDisplayId(caseId: string): string {

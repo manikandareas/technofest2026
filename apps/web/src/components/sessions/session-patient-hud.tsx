@@ -6,14 +6,16 @@ type SessionPatientHudProps = {
   patientName: string;
   patientAge: number;
   conditionBadge: string;
+  avatarUrl?: string | null;
 };
 
 export function SessionPatientHud({
   patientName,
   patientAge,
   conditionBadge,
+  avatarUrl,
 }: SessionPatientHudProps) {
-  const avatarSrc = resolvePatientAvatar(patientName);
+  const avatarSrc = resolvePatientAvatar(patientName, avatarUrl);
 
   return (
     <div className="flex min-w-0 max-w-[min(100%,14rem)] items-center gap-2 rounded-[1rem] border-2 border-white/20 bg-[rgba(0,24,61,0.58)] px-2 py-1.5 text-white shadow-[2px_2px_0_rgba(0,0,0,0.35)] backdrop-blur-sm sm:max-w-[16rem] sm:gap-2.5 sm:px-2.5 sm:py-2">

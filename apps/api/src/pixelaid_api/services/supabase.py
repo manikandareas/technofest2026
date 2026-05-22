@@ -140,7 +140,7 @@ def ensure_profile(user: AuthUser) -> Profile:
     try:
         existing_response = (
             client.table("profiles")
-            .select("id,email,display_name,avatar_url,is_anonymous,onboarding_completed,xp")
+            .select("id,email,display_name,avatar_url,gender,is_anonymous,onboarding_completed,xp")
             .eq("id", user.id)
             .maybe_single()
             .execute()
@@ -206,8 +206,8 @@ def update_profile(user: AuthUser, values: dict[str, Any]) -> Profile:
     return Profile(**data[0])
 
 
-def complete_onboarding(user: AuthUser) -> Profile:
-    return update_profile(user, {"onboarding_completed": True})
+def complete_onboarding(user: AuthUser, gender: str) -> Profile:
+    return update_profile(user, {"gender": gender, "onboarding_completed": True})
 
 
 def _load_cases() -> list[CaseBrief]:

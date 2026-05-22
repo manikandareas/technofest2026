@@ -38,6 +38,7 @@ class Profile(BaseModel):
     email: str | None = None
     display_name: str | None = None
     avatar_url: str | None = None
+    gender: Literal["male", "female"] | None = None
     is_anonymous: bool = False
     onboarding_completed: bool = False
     xp: int = 0
@@ -53,6 +54,10 @@ class ProgressResponse(BaseModel):
 class ProfileUpdate(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=80)
     avatar_url: str | None = Field(default=None, max_length=500)
+
+
+class OnboardingCompleteRequest(BaseModel):
+    gender: Literal["male", "female"]
 
 
 class MeResponse(BaseModel):

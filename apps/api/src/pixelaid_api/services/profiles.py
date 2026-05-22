@@ -69,6 +69,7 @@ def ensure_memory_profile_for_actor(actor: SessionActor) -> None:
             "email": actor.email,
             "display_name": display_name_for(actor) or actor.user_id,
             "avatar_url": avatar_url_for(actor),
+            "gender": None,
             "is_anonymous": actor.is_anonymous,
             "xp": 0,
         },

@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from pixelaid_api.main import app, create_app
 from pixelaid_api.services import gameplay
+from pixelaid_api.services import case_configs
 from pixelaid_api.services import clock
 from pixelaid_api.services.profiles import clear_memory_profiles
 from pixelaid_api.services import rate_limits
@@ -214,6 +215,74 @@ def test_timer_is_server_authoritative_and_blocks_expired_mutations(
     assert ended.status_code == 200
     assert ended.json()["status"] == "quiz"
     assert ended.json()["remaining_seconds"] == 0
+
+
+def test_session_timer_uses_database_case_data_when_available(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    case_id = "database-timer-case"
+    db_timer_minutes = 100
+
+    class Query:
+        def __init__(self, table_name: str) -> None:
+            self.table_name = table_name
+
+        def select(self, *_args: object, **_kwargs: object) -> "Query":
+            return self
+
+        def eq(self, *_args: object, **_kwargs: object) -> "Query":
+            return self
+
+        def maybe_single(self) -> "Query":
+            return self
+
+        def execute(self) -> object:
+            data: dict[str, object] | list[dict[str, object]] | None
+            if self.table_name == "cases":
+                data = {
+                    "id": case_id,
+                    "patient_name": "DB Patient",
+                    "patient_age": 21,
+                    "patient_gender": "male",
+                    "chief_complaint": "Keluhan dari database.",
+                    "estimated_duration_minutes": db_timer_minutes,
+                    "case_data": {
+                        "estimated_duration_seconds": 360,
+                        "case_data": {
+                            "medical_record": {"triage": "Stabil."},
+                            "allowed_patient_facts": {"onset": "hari ini"},
+                            "examinations": [
+                                {
+                                    "key": "vitals",
+                                    "label": "Check vitals",
+                                    "category": "vital_signs",
+                                    "delay_seconds": 0,
+                                    "result": "Stabil.",
+                                }
+                            ],
+                            "quiz": [
+                                {
+                                    "question": "Diagnosis?",
+                                    "options": ["A", "B"],
+                                    "answer": "A",
+                                    "explanation": "A benar.",
+                                }
+                            ],
+                        },
+                    },
+                }
+            else:
+                data = None
+
+            return type("Response", (), {"data": data})()
+
+    class Client:
+        def table(self, table_name: str) -> Query:
+            return Query(table_name)
+
+    monkeypatch.setattr(case_configs, "get_supabase_admin", lambda: Client())
+
+    assert case_configs.resolve_case_config(case_id).timer_seconds == db_timer_minutes * 60
 
 
 def test_timer_extension_after_expiry_restarts_once(

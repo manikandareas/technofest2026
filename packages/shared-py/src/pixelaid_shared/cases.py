@@ -547,7 +547,7 @@ def _forbidden_terms(case_data: dict[str, Any]) -> list[str]:
     return terms
 
 
-def _case_config_from_data(item: dict[str, Any]) -> CaseGameplayConfig:
+def case_config_from_data(item: dict[str, Any]) -> CaseGameplayConfig:
     case_data = item.get("case_data") or {}
     if not isinstance(case_data, dict):
         case_data = {}
@@ -586,7 +586,7 @@ def _load_case_configs_from_data_json() -> dict[str, CaseGameplayConfig] | None:
     if not isinstance(cases, list):
         return None
     configs = {
-        str(item["id"]): _case_config_from_data(item)
+        str(item["id"]): case_config_from_data(item)
         for item in cases
         if isinstance(item, dict) and item.get("id")
     }

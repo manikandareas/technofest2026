@@ -44,10 +44,10 @@ from pixelaid_api.services.profiles import (
     memory_profiles,
 )
 from pixelaid_api.services.rate_limits import RateLimit, assert_rate_limit
+from pixelaid_api.services.case_configs import case_exists, resolve_case_config
 from pixelaid_api.services.supabase import get_case, get_supabase_admin
 from pixelaid_api.settings import Settings, get_settings
 from pixelaid_api.services import clock
-from pixelaid_shared.cases import CASE_CONFIGS, get_case_config
 from pixelaid_shared.gameplay import (
     calculate_score,
     calculate_retry_xp,
@@ -82,7 +82,7 @@ def create_session(
     settings: Settings | None = None,
 ) -> CaseSessionResponse:
     case_id = _resolve_case_id(case_id)
-    if case_id not in CASE_CONFIGS:
+    if not case_exists(case_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Case not found."
         )
@@ -101,7 +101,7 @@ def create_session(
         )
 
     client = get_supabase_admin()
-    config = get_case_config(case_id)
+    config = resolve_case_config(case_id)
     row = {
         "id": str(uuid4()),
         "user_id": actor.user_id,
@@ -147,7 +147,7 @@ def send_message(
     if row["status"] == "brief":
         row = _update_session(session_id, {"status": "in_consultation"})
     row = consultation_timer.assert_time_available(row, _update_session)
-    config = get_case_config(str(row["case_id"]))
+    config = resolve_case_config(str(row["case_id"]))
     reply, rubric_key = patient_response(config, content)
     state = dict(row.get("session_state") or {})
     covered = set(state.get("covered_interview_keys") or [])
@@ -182,7 +182,7 @@ def select_examination(
 ) -> CaseSessionResponse:
     row = _require_status(_get_owned_session(session_id, actor), {"in_consultation"})
     row = consultation_timer.assert_time_available(row, _update_session)
-    config = get_case_config(str(row["case_id"]))
+    config = resolve_case_config(str(row["case_id"]))
     exam = next(
         (item for item in config.examinations if item.id == examination_id), None
     )
@@ -288,7 +288,7 @@ def submit_quiz(
     row = _require_status(_get_owned_session(session_id, actor), {"quiz"})
     if row.get("result_id"):
         return get_result(str(row["result_id"]), actor)
-    config = get_case_config(str(row["case_id"]))
+    config = resolve_case_config(str(row["case_id"]))
     state = row.get("session_state") or {}
     completed_exam_keys = {
         str(exam.get("score_key"))
@@ -661,7 +661,7 @@ async def _ensure_livekit_agent_dispatch(
 def voice_agent_context(session_id: str) -> VoiceAgentContextResponse:
     row = _get_session_row(session_id)
     _require_status(row, {"brief", "in_consultation"})
-    config = get_case_config(str(row["case_id"]))
+    config = resolve_case_config(str(row["case_id"]))
     completed_exams = [
         exam
         for exam in _load_exams(session_id)
@@ -710,7 +710,7 @@ def store_voice_transcript(
         row = _update_session(session_id, {"status": "in_consultation"})
 
     stored: list[ConversationMessage] = []
-    config = get_case_config(str(row["case_id"]))
+    config = resolve_case_config(str(row["case_id"]))
     state = dict(row.get("session_state") or {})
     covered = set(state.get("covered_interview_keys") or [])
     for message in messages:
@@ -969,7 +969,7 @@ def _load_exams(session_id: str) -> list[StoreRow]:
 
 
 def _session_response(row: StoreRow) -> CaseSessionResponse:
-    config = get_case_config(str(row["case_id"]))
+    config = resolve_case_config(str(row["case_id"]))
     state = row.get("session_state") or {}
     result_id = row.get("result_id")
     if not result_id:

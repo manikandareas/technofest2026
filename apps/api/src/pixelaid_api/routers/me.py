@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Depends
 from pixelaid_api.dependencies import get_current_user
-from pixelaid_api.models import AuthUser, MeResponse, Profile, ProfileUpdate
+from pixelaid_api.models import (
+    AuthUser,
+    MeResponse,
+    OnboardingCompleteRequest,
+    Profile,
+    ProfileUpdate,
+)
 from pixelaid_api.services import gameplay
 from pixelaid_api.services.supabase import (
     complete_onboarding,
@@ -30,5 +36,8 @@ async def patch_profile(
 
 
 @router.post("/onboarding-complete", response_model=Profile)
-async def onboarding_complete(user: AuthUser = Depends(get_current_user)) -> Profile:
-    return complete_onboarding(user)
+async def onboarding_complete(
+    payload: OnboardingCompleteRequest,
+    user: AuthUser = Depends(get_current_user),
+) -> Profile:
+    return complete_onboarding(user, payload.gender)

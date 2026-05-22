@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 
@@ -32,8 +33,14 @@ export function LandingHeader() {
             mass: 0.55,
           }}
         >
-          <Link href="/" className="retro text-sm text-foreground sm:text-base">
-            PixelAid
+          <Link href="/" className="flex items-center outline-none group" aria-label="PixelAid">
+            <Image
+              src="/logo.png"
+              alt="PixelAid Logo"
+              width={64}
+              height={64}
+              className="pixelated object-contain transition-transform group-hover:scale-110"
+            />
           </Link>
         </motion.div>
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">

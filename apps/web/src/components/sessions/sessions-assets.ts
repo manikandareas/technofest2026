@@ -3,7 +3,6 @@ import { CASES_ASSETS } from "@/components/cases/cases-assets";
 /** Static assets for consultation room (Figma node 40:3). */
 export const SESSIONS_ASSETS = {
   iconStopwatch: CASES_ASSETS.iconStopwatch,
-  patientAvatars: CASES_ASSETS.avatars,
 } as const;
 
 export function formatSessionClock(remainingSeconds: number): string {

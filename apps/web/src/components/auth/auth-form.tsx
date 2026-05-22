@@ -1,9 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Input, Label } from "@/components/ui/8bit";
 
 type AuthFormProps = {
   mode: "sign-in" | "register" | "upgrade";
@@ -22,17 +20,17 @@ export function AuthForm({ mode, next, action }: AuthFormProps) {
       {next ? <input type="hidden" name="next" value={next} /> : null}
       {mode === "sign-in" ? null : (
         <div className="space-y-2">
-          <Label htmlFor="name">Nama</Label>
+          <Label htmlFor="name" font="retro" className="text-[10px] sm:text-xs tracking-wider">Nama</Label>
           <Input id="name" name="name" type="text" required autoComplete="name" />
         </div>
       )}
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" font="retro" className="text-[10px] sm:text-xs tracking-wider">Email</Label>
         <Input id="email" name="email" type="email" required autoComplete="email" />
       </div>
       {mode === "upgrade" ? null : (
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" font="retro" className="text-[10px] sm:text-xs tracking-wider">Password</Label>
           <Input
             id="password"
             name="password"
@@ -44,9 +42,11 @@ export function AuthForm({ mode, next, action }: AuthFormProps) {
         </div>
       )}
       {state.error ? (
-        <p className="text-sm font-medium text-destructive">{state.error}</p>
+        <p className="text-center text-[10px] sm:text-xs font-bold text-destructive retro leading-relaxed">
+          {state.error}
+        </p>
       ) : null}
-      <Button className="w-full" type="submit" disabled={pending}>
+      <Button className="w-full" type="submit" disabled={pending} font="retro">
         {pending
           ? "Memproses..."
           : mode === "sign-in"

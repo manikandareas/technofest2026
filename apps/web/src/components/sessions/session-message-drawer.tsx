@@ -71,6 +71,11 @@ export function SessionMessageDrawer({
         />
 
         <div className="flex min-h-[18rem] flex-1 flex-col px-3 pb-3 pt-3 sm:px-4">
+          <div className="mb-3 rounded-[1rem] border-2 border-[#339af0]/25 bg-white px-3 py-2 text-xs leading-5 text-[#1a233e] sm:text-sm">
+            Transcript teks konsultasi dapat disimpan untuk scoring dan debugging. Raw audio tidak
+            disimpan di PixelAid.
+          </div>
+
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-[1.25rem] border-2 border-foreground/10 bg-white p-3 sm:p-4">
             {messages.length === 0 ? (
               <p className="text-sm text-muted-foreground">

@@ -805,6 +805,14 @@ export interface components {
             /** Allergies */
             allergies: string[];
         };
+        /** OnboardingCompleteRequest */
+        OnboardingCompleteRequest: {
+            /**
+             * Gender
+             * @enum {string}
+             */
+            gender: "male" | "female";
+        };
         /** Profile */
         Profile: {
             /** Id */
@@ -815,6 +823,8 @@ export interface components {
             display_name?: string | null;
             /** Avatar Url */
             avatar_url?: string | null;
+            /** Gender */
+            gender?: ("male" | "female") | null;
             /**
              * Is Anonymous
              * @default false
@@ -1292,7 +1302,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingCompleteRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

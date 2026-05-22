@@ -5,7 +5,7 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/components/ui/avatar";
+} from "@/components/ui/8bit/avatar";
 import { Badge } from "@/components/ui/8bit/badge";
 import { Card, CardContent } from "@/components/ui/8bit/card";
 import { HOME_ASSETS } from "@/components/home/home-assets";
@@ -40,13 +40,13 @@ export function SettingsProfileCard({
     >
       <Card font="retro" className={`${settingsDetailCardClass} w-full`}>
         <CardContent className={`${settingsCardContentClass} p-0`}>
-          <Avatar className="size-14 shrink-0 bg-[#eef3ff] sm:size-16 lg:size-[4.5rem]">
+          <Avatar className="size-14 shrink-0 bg-secondary/20 sm:size-16 lg:size-[4.5rem]" variant="pixel">
             <AvatarImage
               src={avatarUrl ?? HOME_ASSETS.avatarDefault}
               alt=""
               className="object-cover object-center pixelated"
             />
-            <AvatarFallback className="bg-[#eef3ff] text-foreground pixelated">
+            <AvatarFallback className="bg-secondary/20 text-foreground pixelated">
               {avatarInitial}
             </AvatarFallback>
           </Avatar>
@@ -58,7 +58,7 @@ export function SettingsProfileCard({
             <Badge
               font="retro"
               variant="secondary"
-              className="inline-flex h-5 min-w-[5.5rem] items-center gap-1 border-transparent bg-[#eef1f6] px-2 py-0 text-[0.625rem] leading-none text-foreground sm:text-[0.6875rem]"
+              className="inline-flex h-5 min-w-[5.5rem] items-center gap-1 border-transparent bg-secondary/20 px-2 py-0 text-[0.625rem] leading-none text-foreground sm:text-[0.6875rem]"
             >
               <Star className="size-3 shrink-0 fill-current stroke-[2.5]" aria-hidden />
               {totalXp.toLocaleString("id-ID")} XP
