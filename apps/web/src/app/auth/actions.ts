@@ -1,6 +1,7 @@
 "use server";
 
 import { safeNextFromForm } from "@/lib/navigation/safe-next";
+import { apiCatchMessage } from "@/lib/api/action-result";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -46,14 +47,18 @@ export async function signInWithPassword(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const next = safeNext(formData, "/app");
+  const { error } = await createSupabaseServerClient()
+    .then((supabase) => supabase.auth.signInWithPassword({ email, password }))
+    .catch((caught) => ({
+      error: { message: apiCatchMessage(caught, "Login belum bisa diproses. Coba lagi.") },
+    }));
 
   if (error) {
     return { error: error.message };
   }
 
-  redirect(safeNext(formData, "/app"));
+  redirect(next);
 }
 
 export async function signUpWithPassword(
@@ -64,69 +69,77 @@ export async function signUpWithPassword(
   const password = String(formData.get("password") ?? "");
   const displayName = displayNameFromForm(formData, email);
   const avatarUrl = dicebearPixelAvatarUrl(displayName);
-  const supabase = await createSupabaseServerClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  if (claimsData?.claims?.is_anonymous) {
-    const { error } = await supabase.auth.updateUser(
-      {
+  const next = safeNext(formData, "/app/onboarding");
+
+  const result = await createSupabaseServerClient()
+    .then(async (supabase) => {
+      const { data: claimsData } = await supabase.auth.getClaims();
+      if (claimsData?.claims?.is_anonymous) {
+        const { error } = await supabase.auth.updateUser(
+          {
+            email,
+            data: {
+              display_name: displayName,
+              avatar_url: avatarUrl,
+            },
+          },
+          {
+            emailRedirectTo: await redirectUrl(
+              `/auth/callback?next=${encodeURIComponent(next)}`,
+            ),
+          },
+        );
+
+        return { error };
+      }
+
+      const { error } = await supabase.auth.signUp({
         email,
-        data: {
-          display_name: displayName,
-          avatar_url: avatarUrl,
+        password,
+        options: {
+          data: {
+            display_name: displayName,
+            avatar_url: avatarUrl,
+          },
+          emailRedirectTo: await redirectUrl(
+            `/auth/callback?next=${encodeURIComponent(next)}`,
+          ),
         },
-      },
-      {
-        emailRedirectTo: await redirectUrl(
-          `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
-        ),
-      },
-    );
+      });
 
-    if (error) {
-      return { error: error.message };
-    }
+      return { error };
+    })
+    .catch((caught) => ({
+      error: { message: apiCatchMessage(caught, "Registrasi belum bisa diproses. Coba lagi.") },
+    }));
 
-    redirect(safeNext(formData, "/app/onboarding"));
+  if (result.error) {
+    return { error: result.error.message };
   }
 
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        display_name: displayName,
-        avatar_url: avatarUrl,
-      },
-      emailRedirectTo: await redirectUrl(
-        `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
-      ),
-    },
-  });
-
-  if (error) {
-    return { error: error.message };
-  }
-
-  redirect(safeNext(formData, "/app/onboarding"));
+  redirect(next);
 }
 
 export async function signInWithGoogle(): Promise<void> {
-  const supabase = await createSupabaseServerClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const redirectTo = await redirectUrl("/auth/callback?next=/app");
-  const { data, error } = claimsData?.claims?.is_anonymous
-    ? await supabase.auth.linkIdentity({
-        provider: "google",
-        options: { redirectTo },
-      })
-    : await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo },
-      });
+  const result = await createSupabaseServerClient()
+    .then(async (supabase) => {
+      const { data: claimsData } = await supabase.auth.getClaims();
+      const redirectTo = await redirectUrl("/auth/callback?next=/app");
+      return claimsData?.claims?.is_anonymous
+        ? supabase.auth.linkIdentity({
+            provider: "google",
+            options: { redirectTo },
+          })
+        : supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo },
+          });
+    })
+    .catch(() => ({ data: null, error: true }));
 
-  if (error || !data.url) {
+  if (result.error || !result.data?.url) {
     redirect("/sign-in?error=google_oauth_unavailable");
   }
 
-  redirect(data.url);
+  redirect(result.data.url);
 }

@@ -16,6 +16,7 @@ import { SessionTimerControls } from "@/components/sessions/session-timer-contro
 import { sessionToolbarIconButtonClass } from "@/components/sessions/sessions-assets";
 import { Button } from "@/components/ui/8bit/button";
 import * as AlertDialog from "@/components/ui/alert-dialog";
+import type { ActionResult } from "@/lib/api/action-result";
 
 import {
   endConsultation,
@@ -183,11 +184,22 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
     voiceToken,
   ]);
 
-  function run(action: () => Promise<CaseSession | unknown>) {
+  function run(action: () => Promise<ActionResult<CaseSession> | CaseSession | unknown>) {
     setError(null);
     startTransition(async () => {
       try {
-        const next = await action();
+        const result = await action();
+        const next =
+          result && typeof result === "object" && "error" in result
+            ? (result as ActionResult<CaseSession>).data
+            : result;
+        if (result && typeof result === "object" && "error" in result) {
+          const actionResult = result as ActionResult<CaseSession>;
+          if (actionResult.error) {
+            setError(actionResult.error);
+            return;
+          }
+        }
         if (next && typeof next === "object" && "id" in next) {
           applySession(next as CaseSession);
           if ((next as CaseSession).is_paused) {
@@ -426,7 +438,10 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
                     disabled={isPending}
                     onClick={() =>
                       run(async () => {
-                        await extendTimer(session.id);
+                        const extended = await extendTimer(session.id);
+                        if (extended.error) {
+                          return extended;
+                        }
                         return getSessionSnapshot(session.id);
                       })
                     }

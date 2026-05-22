@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { PixelAidApiComponents } from "@technofest2026/contracts";
 
 import { getSessionSnapshot } from "./actions";
@@ -21,6 +21,7 @@ export function useConsultationTimer({
   onRefreshError,
 }: UseConsultationTimerOptions) {
   const [displaySeconds, setDisplaySeconds] = useState(session.remaining_seconds);
+  const refreshInFlight = useRef(false);
   const isConsultationActive = session.status === "in_consultation";
   const remainingSeconds = isConsultationActive ? displaySeconds : session.remaining_seconds;
   const isExpired = isConsultationActive && !session.is_paused && remainingSeconds <= 0;
@@ -50,12 +51,24 @@ export function useConsultationTimer({
       return;
     }
     const interval = window.setInterval(() => {
+      if (refreshInFlight.current) {
+        return;
+      }
+
+      refreshInFlight.current = true;
       getSessionSnapshot(session.id)
-        .then((next) => {
-          applySession(next);
+        .then((result) => {
+          if (result.error || !result.data) {
+            onRefreshError?.(result.error ?? "Sesi belum bisa diperbarui. Coba lagi sebentar.");
+            return;
+          }
+          applySession(result.data);
         })
-        .catch(() => onRefreshError?.("Session refresh failed."));
-    }, 2500);
+        .catch(() => onRefreshError?.("Sesi belum bisa diperbarui. Coba lagi sebentar."))
+        .finally(() => {
+          refreshInFlight.current = false;
+        });
+    }, 5000);
     return () => window.clearInterval(interval);
   }, [applySession, isConsultationActive, onRefreshError, session.id]);
 

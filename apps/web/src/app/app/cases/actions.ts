@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { apiCatchMessage, apiErrorMessage } from "@/lib/api/action-result";
 import { getApiClient } from "@/lib/api/server";
 import { getServerClaims } from "@/lib/supabase/server";
 
@@ -10,17 +11,20 @@ async function createCaseSession(caseId: string) {
     redirect(`/auth/guest?next=${encodeURIComponent(`/app/cases/${caseId}/brief`)}`);
   }
 
-  const api = await getApiClient();
-  const { data, error } = await api.POST("/api/case-sessions", {
-    body: { case_id: caseId },
-  });
+  const api = await getApiClient("gameAction");
+  const { data, error } = await api
+    .POST("/api/case-sessions", {
+      body: { case_id: caseId },
+    })
+    .catch((caught) => ({
+      data: undefined,
+      error: apiCatchMessage(caught, "Konsultasi belum bisa dimulai. Coba lagi."),
+    }));
 
   if (error || !data) {
-    const detail =
-      error && typeof error === "object" && "detail" in error
-        ? String(error.detail)
-        : "API did not return a session.";
-    return { error: `Unable to start case session: ${detail}` };
+    return {
+      error: apiErrorMessage(error, "Konsultasi belum bisa dimulai. Coba lagi."),
+    };
   }
 
   return { sessionId: data.id };

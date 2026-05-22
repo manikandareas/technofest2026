@@ -10,7 +10,7 @@ export type ApiClientOptions = {
   timeoutMs?: number;
 };
 
-const DEFAULT_TIMEOUT_MS = 12_000;
+const DEFAULT_TIMEOUT_MS = 20_000;
 
 async function fetchWithTimeout(input: Request, timeoutMs: number): Promise<Response> {
   const controller = new AbortController();

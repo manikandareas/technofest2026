@@ -51,7 +51,9 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth
+    .getUser()
+    .catch(() => ({ data: { user: null } }));
 
   if (!user && !isPublicRoute(request.nextUrl.pathname)) {
     const signInUrl = request.nextUrl.clone();

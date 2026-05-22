@@ -1,73 +1,74 @@
-import data from "../../../../../docs/data.json";
+export const fallbackSpecialists = [
+  {
+    id: "internal-medicine",
+    name: "Penyakit Dalam",
+    description: "Latihan kasus penyakit dalam saat data live belum dapat dimuat.",
+    icon: "stethoscope",
+    status: "available",
+    case_count: 1,
+  },
+  {
+    id: "obgyn",
+    name: "OBGYN / Reproduksi Wanita",
+    description: "Latihan kasus kehamilan dan kesehatan reproduksi saat data live belum dapat dimuat.",
+    icon: "venus",
+    status: "available",
+    case_count: 0,
+  },
+  {
+    id: "pediatrics",
+    name: "Kesehatan Anak",
+    description: "Latihan kasus anak saat data live belum dapat dimuat.",
+    icon: "baby",
+    status: "available",
+    case_count: 0,
+  },
+  {
+    id: "general-surgery",
+    name: "Bedah Umum",
+    description: "Latihan kasus bedah umum saat data live belum dapat dimuat.",
+    icon: "scissors",
+    status: "available",
+    case_count: 0,
+  },
+  {
+    id: "anesthesiology",
+    name: "Anestesi",
+    description: "Latihan kasus anestesi saat data live belum dapat dimuat.",
+    icon: "syringe",
+    status: "available",
+    case_count: 0,
+  },
+  {
+    id: "ophthalmology",
+    name: "Kesehatan Mata",
+    description: "Latihan kasus mata saat data live belum dapat dimuat.",
+    icon: "eye",
+    status: "available",
+    case_count: 0,
+  },
+];
 
-type DataSpecialist = {
-  id: string;
-  name?: string;
-  display_name?: string;
-  description: string;
-  icon?: string;
-  status: string;
-};
-
-type DataCase = {
-  id: string;
-  specialist_id: string;
-  title: string;
-  patient: {
-    name: string;
-    age: number;
-    gender: string;
-  };
-  difficulty: string;
-  availability?: {
-    is_published?: boolean;
-  };
-  chief_complaint: string;
-  triage_note: string;
-  condition_badge: string;
-  estimated_duration_seconds: number;
-  patient_avatar_url?: string;
-  case_thumbnail_url?: string;
-  consultation_avatar_url?: string;
-  case_data?: {
-    learning_focus?: string[];
-  };
-};
-
-const fallbackData = data as {
-  specialists: DataSpecialist[];
-  cases: DataCase[];
-};
-
-const publishedCases = fallbackData.cases.filter(
-  (item) => item.availability?.is_published !== false,
-);
-
-export const fallbackSpecialists = fallbackData.specialists.map((specialist) => ({
-  id: specialist.id,
-  name: specialist.display_name ?? specialist.name ?? specialist.id,
-  description: specialist.description,
-  icon: specialist.icon ?? "stethoscope",
-  status: specialist.status,
-  case_count: publishedCases.filter((item) => item.specialist_id === specialist.id).length,
-}));
-
-export const fallbackCases = publishedCases.map((item) => ({
-  id: item.id,
-  specialist_id: item.specialist_id,
-  specialist_name:
-    fallbackSpecialists.find((specialist) => specialist.id === item.specialist_id)?.name ??
-    "Specialist",
-  patient_name: item.patient.name,
-  patient_age: item.patient.age,
-  patient_gender: item.patient.gender,
-  chief_complaint: item.chief_complaint,
-  triage_note: item.triage_note,
-  difficulty: item.difficulty,
-  condition_badge: item.condition_badge,
-  estimated_duration_minutes: Math.ceil(item.estimated_duration_seconds / 60),
-  patient_avatar_url: item.patient_avatar_url ?? null,
-  case_thumbnail_url: item.case_thumbnail_url ?? null,
-  consultation_avatar_url: item.consultation_avatar_url ?? null,
-  learning_objectives: item.case_data?.learning_focus ?? [],
-}));
+export const fallbackCases = [
+  {
+    id: "internal-medicine-dengue-warning-signs",
+    specialist_id: "internal-medicine",
+    specialist_name: "Penyakit Dalam",
+    patient_name: "Raka",
+    patient_age: 23,
+    patient_gender: "male",
+    chief_complaint: "Demam tinggi sejak 3 hari.",
+    triage_note: "Data live belum dapat dimuat. Coba muat ulang jika daftar kasus tidak lengkap.",
+    difficulty: "easy",
+    condition_badge: "Infeksi akut",
+    estimated_duration_minutes: 5,
+    patient_avatar_url: "/assets/patients/raka/avatar.png",
+    case_thumbnail_url: "/assets/cases/internal-medicine-dengue-warning-signs/thumbnail.png",
+    consultation_avatar_url: "/assets/patients/raka/consultation-avatar.png",
+    learning_objectives: [
+      "Gali pola demam dan tanda bahaya.",
+      "Nilai status hidrasi dan perdarahan.",
+      "Pilih pemeriksaan awal yang relevan.",
+    ],
+  },
+];
