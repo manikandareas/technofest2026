@@ -15,6 +15,7 @@ export default async function RegisterPage({
   const next = safeNextQuery((await searchParams).next);
   const claims = await getServerClaims().catch(() => null);
   const isUpgrade = Boolean(claims?.is_anonymous);
+  const signupNext = "/app/onboarding";
   return (
     <main className="grid min-h-dvh place-items-center bg-background px-5 py-10">
       <div className="flex flex-col items-center gap-6 w-full max-w-md">
@@ -36,10 +37,10 @@ export default async function RegisterPage({
           <AuthForm
             mode={isUpgrade ? "upgrade" : "register"}
             action={signUpWithPassword}
-            next={next}
+            next={signupNext}
           />
           <Separator />
-          <GoogleButton isUpgrade={isUpgrade} />
+          <GoogleButton isUpgrade={isUpgrade} next={signupNext} />
           <p className="text-center text-xs sm:text-sm text-muted-foreground">
             Sudah punya akun?{" "}
             <Link

@@ -32,7 +32,7 @@ export default async function SignInPage({
           <CardContent className="space-y-5">
           <AuthForm mode="sign-in" action={signInWithPassword} next={next} />
           <Separator />
-          <GoogleButton />
+          <GoogleButton next={next} />
           <p className="text-center text-xs sm:text-sm text-muted-foreground">
             Belum punya akun?{" "}
             <Link
