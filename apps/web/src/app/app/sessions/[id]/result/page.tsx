@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, RotateCcw, Star, Trophy } from "lucide-react";
+import { Award, RotateCcw, Star } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/server";
 import { startCaseSession } from "../../../cases/actions";
-import { claimPendingGuestResult, savePendingClaim } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +15,10 @@ export default async function SessionResultPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ result?: string; claim?: string }>;
+  searchParams: Promise<{ result?: string }>;
 }) {
   const { id } = await params;
-  const { result, claim } = await searchParams;
+  const { result } = await searchParams;
   const api = await getApiClient();
   const resultId = result;
 
@@ -32,33 +31,6 @@ export default async function SessionResultPage({
       params: { path: { result_id: resultId } },
     })
     .catch(() => ({ data: undefined, error: true }));
-
-  if ((error || !data) && claim === "1") {
-    return (
-      <main className="min-h-dvh bg-background">
-        <AppHeader />
-        <section className="mx-auto grid min-h-[70dvh] w-full max-w-xl place-items-center px-5 py-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Claim demo result</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm leading-6 text-muted-foreground">
-                Simpan hasil demo ke akun ini agar XP, history, dan leaderboard ikut
-                diperbarui.
-              </p>
-              <form action={claimPendingGuestResult}>
-                <Button type="submit" className="w-full">
-                  <Trophy className="size-4" />
-                  Claim result
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </section>
-      </main>
-    );
-  }
 
   if (error || !data || data.session_id !== id) {
     notFound();
@@ -147,14 +119,6 @@ export default async function SessionResultPage({
                 <p className="font-mono text-lg">{data.best_score}</p>
               </div>
             </div>
-            {data.claim_available && data.claim_token ? (
-              <form action={savePendingClaim.bind(null, id, data.id, data.claim_token)}>
-                <Button type="submit" className="w-full">
-                  <Trophy className="size-4" />
-                  Simpan progress
-                </Button>
-              </form>
-            ) : null}
             <form action={startCaseSession.bind(null, data.case.id)}>
               <Button type="submit" className="w-full">
                 <RotateCcw className="size-4" />

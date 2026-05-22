@@ -4,23 +4,31 @@ import { AuthForm } from "@/components/auth/auth-form";
 import { GoogleButton } from "@/components/auth/google-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { getServerClaims } from "@/lib/supabase/server";
+import { safeNextQuery } from "@/lib/navigation/safe-next";
 
 export default async function RegisterPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const next = safeNext((await searchParams).next);
+  const next = safeNextQuery((await searchParams).next);
+  const claims = await getServerClaims().catch(() => null);
+  const isUpgrade = Boolean(claims?.is_anonymous);
   return (
     <main className="grid min-h-dvh place-items-center bg-background px-5 py-10">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Buat akun PixelAid</CardTitle>
+          <CardTitle>{isUpgrade ? "Upgrade akun PixelAid" : "Buat akun PixelAid"}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <AuthForm mode="register" action={signUpWithPassword} next={next} />
+          <AuthForm
+            mode={isUpgrade ? "upgrade" : "register"}
+            action={signUpWithPassword}
+            next={next}
+          />
           <Separator />
-          <GoogleButton />
+          <GoogleButton isUpgrade={isUpgrade} />
           <p className="text-center text-sm text-muted-foreground">
             Sudah punya akun?{" "}
             <Link
@@ -34,11 +42,4 @@ export default async function RegisterPage({
       </Card>
     </main>
   );
-}
-
-function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
-    return undefined;
-  }
-  return value;
 }

@@ -75,27 +75,6 @@
         }
       }
     },
-    "/api/public/cases/demo": {
-      "get": {
-        "tags": [
-          "public"
-        ],
-        "summary": "Public Demo Case",
-        "operationId": "public_demo_case_api_public_cases_demo_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CaseBrief"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/public/cases/{case_id}": {
       "get": {
         "tags": [
@@ -537,22 +516,6 @@
               ],
               "title": "Authorization"
             }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
-            }
           }
         ],
         "requestBody": {
@@ -621,22 +584,6 @@
               ],
               "title": "Authorization"
             }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
-            }
           }
         ],
         "responses": {
@@ -694,22 +641,6 @@
                 }
               ],
               "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
             }
           }
         ],
@@ -779,22 +710,6 @@
               ],
               "title": "Authorization"
             }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
-            }
           }
         ],
         "responses": {
@@ -852,22 +767,6 @@
                 }
               ],
               "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
             }
           }
         ],
@@ -937,9 +836,51 @@
               ],
               "title": "Authorization"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimerExtendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/case-sessions/{session_id}/pause": {
+      "post": {
+        "tags": [
+          "case-sessions"
+        ],
+        "summary": "Pause Consultation",
+        "operationId": "pause_consultation_api_case_sessions__session_id__pause_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
           },
           {
-            "name": "x-guest-session",
+            "name": "authorization",
             "in": "header",
             "required": false,
             "schema": {
@@ -951,7 +892,7 @@
                   "type": "null"
                 }
               ],
-              "title": "X-Guest-Session"
+              "title": "Authorization"
             }
           }
         ],
@@ -961,7 +902,65 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TimerExtendResponse"
+                  "$ref": "#/components/schemas/CaseSessionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/case-sessions/{session_id}/resume": {
+      "post": {
+        "tags": [
+          "case-sessions"
+        ],
+        "summary": "Resume Consultation",
+        "operationId": "resume_consultation_api_case_sessions__session_id__resume_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseSessionResponse"
                 }
               }
             }
@@ -1010,22 +1009,6 @@
                 }
               ],
               "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
             }
           }
         ],
@@ -1084,22 +1067,6 @@
                 }
               ],
               "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
             }
           }
         ],
@@ -1169,22 +1136,6 @@
               ],
               "title": "Authorization"
             }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
-            }
           }
         ],
         "responses": {
@@ -1233,22 +1184,6 @@
                 }
               ],
               "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
             }
           }
         ],
@@ -1308,22 +1243,6 @@
               ],
               "title": "Authorization"
             }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
-            }
           }
         ],
         "responses": {
@@ -1371,74 +1290,6 @@
         }
       }
     },
-    "/api/demo/{session_id}/claim": {
-      "post": {
-        "tags": [
-          "case-sessions"
-        ],
-        "summary": "Claim Demo Result",
-        "operationId": "claim_demo_result_api_demo__session_id__claim_post",
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Session Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ClaimGuestResultRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClaimGuestResultResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/livekit/token": {
       "post": {
         "tags": [
@@ -1461,22 +1312,6 @@
                 }
               ],
               "title": "Authorization"
-            }
-          },
-          {
-            "name": "x-guest-session",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Guest-Session"
             }
           }
         ],
@@ -1757,10 +1592,6 @@
             "type": "integer",
             "title": "Estimated Duration Minutes"
           },
-          "is_demo": {
-            "type": "boolean",
-            "title": "Is Demo"
-          },
           "learning_objectives": {
             "items": {
               "type": "string"
@@ -1781,8 +1612,7 @@
           "triage_note",
           "difficulty",
           "condition_badge",
-          "estimated_duration_minutes",
-          "is_demo"
+          "estimated_duration_minutes"
         ],
         "title": "CaseBrief"
       },
@@ -1831,10 +1661,6 @@
           "estimated_duration_minutes": {
             "type": "integer",
             "title": "Estimated Duration Minutes"
-          },
-          "is_demo": {
-            "type": "boolean",
-            "title": "Is Demo"
           }
         },
         "type": "object",
@@ -1849,8 +1675,7 @@
           "triage_note",
           "difficulty",
           "condition_badge",
-          "estimated_duration_minutes",
-          "is_demo"
+          "estimated_duration_minutes"
         ],
         "title": "CaseCard"
       },
@@ -1910,38 +1735,6 @@
             "type": "boolean",
             "title": "Is Retry",
             "default": false
-          },
-          "is_claimed": {
-            "type": "boolean",
-            "title": "Is Claimed",
-            "default": false
-          },
-          "claim_available": {
-            "type": "boolean",
-            "title": "Claim Available",
-            "default": false
-          },
-          "claim_token": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Claim Token"
-          },
-          "claim_expires_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Claim Expires At"
           }
         },
         "type": "object",
@@ -1988,6 +1781,11 @@
           "used_extension": {
             "type": "boolean",
             "title": "Used Extension"
+          },
+          "is_paused": {
+            "type": "boolean",
+            "title": "Is Paused",
+            "default": false
           },
           "medical_record_opened": {
             "type": "boolean",
@@ -2052,35 +1850,6 @@
         ],
         "title": "CaseSessionResponse"
       },
-      "ClaimGuestResultRequest": {
-        "properties": {
-          "token": {
-            "type": "string",
-            "title": "Token"
-          }
-        },
-        "type": "object",
-        "required": [
-          "token"
-        ],
-        "title": "ClaimGuestResultRequest"
-      },
-      "ClaimGuestResultResponse": {
-        "properties": {
-          "result": {
-            "$ref": "#/components/schemas/CaseResultResponse"
-          },
-          "progress": {
-            "$ref": "#/components/schemas/ProgressResponse"
-          }
-        },
-        "type": "object",
-        "required": [
-          "result",
-          "progress"
-        ],
-        "title": "ClaimGuestResultResponse"
-      },
       "ConversationMessage": {
         "properties": {
           "id": {
@@ -2119,17 +1888,6 @@
           "case_id": {
             "type": "string",
             "title": "Case Id"
-          },
-          "guest_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Guest Id"
           }
         },
         "type": "object",
@@ -2518,6 +2276,11 @@
               }
             ],
             "title": "Avatar Url"
+          },
+          "is_anonymous": {
+            "type": "boolean",
+            "title": "Is Anonymous",
+            "default": false
           },
           "onboarding_completed": {
             "type": "boolean",

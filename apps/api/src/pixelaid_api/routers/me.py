@@ -14,6 +14,8 @@ router = APIRouter(prefix="/api/me", tags=["me"])
 @router.get("", response_model=MeResponse)
 async def me(user: AuthUser = Depends(get_current_user)) -> MeResponse:
     profile = ensure_profile(user)
+    if not user.is_anonymous and gameplay.get_supabase_admin() is None:
+        gameplay.refresh_leaderboard_for_user(user.id)
     progress = gameplay.progress(user.id)
     profile.xp = progress.total_xp
     return MeResponse(profile=profile, progress=progress)

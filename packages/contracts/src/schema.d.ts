@@ -55,23 +55,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/public/cases/demo": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Public Demo Case */
-        get: operations["public_demo_case_api_public_cases_demo_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/public/cases/{case_id}": {
         parameters: {
             query?: never;
@@ -310,6 +293,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/case-sessions/{session_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pause Consultation */
+        post: operations["pause_consultation_api_case_sessions__session_id__pause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/case-sessions/{session_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume Consultation */
+        post: operations["resume_consultation_api_case_sessions__session_id__resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/case-sessions/{session_id}/end-consultation": {
         parameters: {
             query?: never;
@@ -412,23 +429,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/demo/{session_id}/claim": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Claim Demo Result */
-        post: operations["claim_demo_result_api_demo__session_id__claim_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/livekit/token": {
         parameters: {
             query?: never;
@@ -525,8 +525,6 @@ export interface components {
             condition_badge: string;
             /** Estimated Duration Minutes */
             estimated_duration_minutes: number;
-            /** Is Demo */
-            is_demo: boolean;
             /** Learning Objectives */
             learning_objectives?: string[];
         };
@@ -554,8 +552,6 @@ export interface components {
             condition_badge: string;
             /** Estimated Duration Minutes */
             estimated_duration_minutes: number;
-            /** Is Demo */
-            is_demo: boolean;
         };
         /** CaseResultResponse */
         CaseResultResponse: {
@@ -590,20 +586,6 @@ export interface components {
              * @default false
              */
             is_retry: boolean;
-            /**
-             * Is Claimed
-             * @default false
-             */
-            is_claimed: boolean;
-            /**
-             * Claim Available
-             * @default false
-             */
-            claim_available: boolean;
-            /** Claim Token */
-            claim_token?: string | null;
-            /** Claim Expires At */
-            claim_expires_at?: string | null;
         };
         /** CaseSessionResponse */
         CaseSessionResponse: {
@@ -619,6 +601,11 @@ export interface components {
             remaining_seconds: number;
             /** Used Extension */
             used_extension: boolean;
+            /**
+             * Is Paused
+             * @default false
+             */
+            is_paused: boolean;
             /** Medical Record Opened */
             medical_record_opened: boolean;
             medical_record: components["schemas"]["MedicalRecordResponse"];
@@ -632,16 +619,6 @@ export interface components {
             quiz: components["schemas"]["QuizQuestionResponse"][];
             /** Result Id */
             result_id?: string | null;
-        };
-        /** ClaimGuestResultRequest */
-        ClaimGuestResultRequest: {
-            /** Token */
-            token: string;
-        };
-        /** ClaimGuestResultResponse */
-        ClaimGuestResultResponse: {
-            result: components["schemas"]["CaseResultResponse"];
-            progress: components["schemas"]["ProgressResponse"];
         };
         /** ConversationMessage */
         ConversationMessage: {
@@ -661,8 +638,6 @@ export interface components {
         CreateCaseSessionRequest: {
             /** Case Id */
             case_id: string;
-            /** Guest Id */
-            guest_id?: string | null;
         };
         /** ExaminationEvent */
         ExaminationEvent: {
@@ -798,6 +773,11 @@ export interface components {
             display_name?: string | null;
             /** Avatar Url */
             avatar_url?: string | null;
+            /**
+             * Is Anonymous
+             * @default false
+             */
+            is_anonymous: boolean;
             /**
              * Onboarding Completed
              * @default false
@@ -1113,26 +1093,6 @@ export interface operations {
             };
         };
     };
-    public_demo_case_api_public_cases_demo_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CaseBrief"];
-                };
-            };
-        };
-    };
     public_case_api_public_cases__case_id__get: {
         parameters: {
             query?: never;
@@ -1394,7 +1354,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1430,7 +1389,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 session_id: string;
@@ -1464,7 +1422,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 session_id: string;
@@ -1502,7 +1459,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 session_id: string;
@@ -1536,7 +1492,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 session_id: string;
@@ -1574,7 +1529,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 session_id: string;
@@ -1603,12 +1557,77 @@ export interface operations {
             };
         };
     };
+    pause_consultation_api_case_sessions__session_id__pause_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseSessionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resume_consultation_api_case_sessions__session_id__resume_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseSessionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     end_consultation_api_case_sessions__session_id__end_consultation_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 session_id: string;
@@ -1642,7 +1661,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 session_id: string;
@@ -1680,7 +1698,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 result_id: string;
@@ -1714,7 +1731,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -1746,7 +1762,6 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path: {
                 result_id: string;
@@ -1795,49 +1810,11 @@ export interface operations {
             };
         };
     };
-    claim_demo_result_api_demo__session_id__claim_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                authorization?: string | null;
-            };
-            path: {
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ClaimGuestResultRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClaimGuestResultResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     create_livekit_token_api_livekit_token_post: {
         parameters: {
             query?: never;
             header?: {
                 authorization?: string | null;
-                "x-guest-session"?: string | null;
             };
             path?: never;
             cookie?: never;

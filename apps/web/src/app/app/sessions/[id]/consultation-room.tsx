@@ -1,91 +1,50 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import {
-  LiveKitRoom,
-  RoomAudioRenderer,
-  useAudioPlayback,
-  useConnectionState,
-  useVoiceAssistant,
-} from "@livekit/components-react";
-import { ConnectionState } from "livekit-client";
-import {
+  AlertTriangle,
   Clock,
   FileText,
-  Mic,
-  MicOff,
+  Pause,
+  Play,
   Send,
   Stethoscope,
   TimerReset,
-  Volume2,
 } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import * as AlertDialog from "@/components/ui/alert-dialog";
+
 import {
   endConsultation,
   extendTimer,
   getSessionSnapshot,
   openMedicalRecord,
+  pauseConsultation,
+  resumeConsultation,
   selectExamination,
   sendMessage,
   startVoiceSession,
   submitQuiz,
 } from "./actions";
+import { useConsultationTimer, type CaseSession } from "./use-consultation-timer";
+import { VoicePanel, type VoiceToken, type VoiceUiState } from "./voice-panel";
 
-type Session = {
-  id: string;
-  status: "brief" | "in_consultation" | "quiz" | "completed" | "abandoned";
-  remaining_seconds: number;
-  used_extension: boolean;
-  medical_record_opened: boolean;
-  medical_record: {
-    summary: string;
-    history: string[];
-    medications: string[];
-    allergies: string[];
-  };
-  examination_options: Array<{
-    id: string;
-    label: string;
-    category: string;
-    delay_seconds: number;
-  }>;
-  examinations: Array<{
-    id: string;
-    examination_id: string;
-    label: string;
-    status: "pending" | "resulted";
-    result?: string | null;
-    resulted_at: string;
-  }>;
-  messages: Array<{ id: string; role: string; content: string; created_at: string }>;
-  quiz: Array<{
-    id: string;
-    prompt: string;
-    options: Array<{ id: string; label: string }>;
-  }>;
-};
+function formatTranscriptTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  return new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
 
-type VoiceToken = {
-  token: string;
-  url: string;
-  room_name: string;
-  identity: string;
-  expires_in_seconds: number;
-};
-
-type VoiceUiState =
-  | "idle"
-  | "connecting"
-  | "listening"
-  | "patient_thinking"
-  | "patient_speaking"
-  | "reconnecting"
-  | "error";
-
-export function ConsultationRoom({ initialSession }: { initialSession: Session }) {
+export function ConsultationRoom({ initialSession }: { initialSession: CaseSession }) {
   const [session, setSession] = useState(initialSession);
   const [question, setQuestion] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -93,33 +52,44 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
   const [voiceToken, setVoiceToken] = useState<VoiceToken | null>(null);
   const [voiceState, setVoiceState] = useState<VoiceUiState>("idle");
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const stopVoice = useCallback(() => {
+    setVoiceToken(null);
+    setVoiceState("idle");
+  }, []);
+
+  const {
+    remainingSeconds,
+    isExpired,
+    isConsultationLocked,
+    shouldWarnTime,
+    clockLabel,
+    applySession,
+  } = useConsultationTimer({
+    session,
+    onSessionChange: setSession,
+    onConsultationLocked: stopVoice,
+    onRefreshError: (message) => setError(message),
+  });
+
   const selectedExamIds = useMemo(
     () => new Set(session.examinations.map((exam) => exam.examination_id)),
     [session.examinations],
   );
+  const isQuizComplete = session.quiz.length > 0 && session.quiz.every((item) => answers[item.id]);
 
-  useEffect(() => {
-    if (!voiceToken || session.status === "quiz") {
-      return;
-    }
-    const interval = window.setInterval(() => {
-      getSessionSnapshot(session.id)
-        .then((next) => setSession(next as Session))
-        .catch(() => {
-          setVoiceError("Transcript refresh failed.");
-        });
-    }, 2500);
-    return () => window.clearInterval(interval);
-  }, [session.id, session.status, voiceToken]);
-
-  function run(action: () => Promise<Session | unknown>) {
+  function run(action: () => Promise<CaseSession | unknown>) {
     setError(null);
     startTransition(async () => {
       try {
         const next = await action();
         if (next && typeof next === "object" && "id" in next) {
-          setSession(next as Session);
+          applySession(next as CaseSession);
+          if ((next as CaseSession).is_paused) {
+            stopVoice();
+          }
         }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Action failed.");
@@ -127,39 +97,86 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
     });
   }
 
-  const minutes = Math.floor(session.remaining_seconds / 60);
-  const seconds = String(session.remaining_seconds % 60).padStart(2, "0");
-  const isQuizComplete = session.quiz.length > 0 && session.quiz.every((item) => answers[item.id]);
-
   return (
-    <section className="mx-auto grid w-full max-w-7xl gap-5 px-5 py-6 lg:grid-cols-[1fr_24rem]">
+    <section className="mx-auto grid w-full max-w-7xl gap-5 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
       <div className="space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <Badge>{session.status === "quiz" ? "Quiz" : "Text consultation"}</Badge>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-              {session.status === "quiz" ? "Final quiz" : "Ruang konsultasi"}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2 rounded-md border px-3 py-2 font-mono text-lg">
-            <Clock className="size-4" />
-            {minutes}:{seconds}
+        <div className="rounded-md border bg-card p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <Badge>
+                {session.status === "quiz" ? "Quiz" : session.is_paused ? "Paused" : "Consultation"}
+              </Badge>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+                {session.status === "quiz" ? "Final quiz" : "Ruang konsultasi"}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {session.is_paused
+                  ? "Konsultasi dijeda. Resume untuk melanjutkan timer dan kontrol klinis."
+                  : "Gunakan voice atau teks untuk menggali informasi pasien."}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex h-11 items-center gap-2 rounded-md border px-3 font-mono text-lg">
+                <Clock className="size-4" />
+                {clockLabel}
+              </div>
+              {session.status === "in_consultation" ? (
+                session.is_paused ? (
+                  <Button
+                    disabled={isPending}
+                    onClick={() => run(() => resumeConsultation(session.id))}
+                  >
+                    <Play className="size-4" />
+                    Resume
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    disabled={isPending || remainingSeconds <= 0}
+                    onClick={() => run(() => pauseConsultation(session.id))}
+                  >
+                    <Pause className="size-4" />
+                    Pause
+                  </Button>
+                )
+              ) : null}
+            </div>
           </div>
         </div>
-        {error ? <p className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">{error}</p> : null}
+        {shouldWarnTime ? (
+          <p className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+            <AlertTriangle className="size-4" />
+            Waktu konsultasi tersisa kurang dari 60 detik.
+          </p>
+        ) : null}
+        {session.is_paused ? (
+          <p className="flex items-center gap-2 rounded-md border border-sky-300 bg-sky-50 p-3 text-sm text-sky-950">
+            <Pause className="size-4" />
+            Input, pemeriksaan, rekam medis, dan voice dinonaktifkan sampai konsultasi dilanjutkan.
+          </p>
+        ) : null}
+        {error ? (
+          <p className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">
+            {error}
+          </p>
+        ) : null}
         {session.status !== "quiz" ? (
           <VoicePanel
             token={voiceToken}
             uiState={voiceState}
             error={voiceError}
             isPending={isPending}
+            disabled={isConsultationLocked}
             onStateChange={setVoiceState}
             onError={(message) => {
               setVoiceError(message);
               setVoiceState("error");
-              setVoiceToken(null);
+              stopVoice();
             }}
             onStart={() => {
+              if (isConsultationLocked) {
+                return;
+              }
               setVoiceError(null);
               setVoiceState("connecting");
               startTransition(async () => {
@@ -174,10 +191,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
                 }
               });
             }}
-            onStop={() => {
-              setVoiceToken(null);
-              setVoiceState("idle");
-            }}
+            onStop={stopVoice}
           />
         ) : null}
         {session.status === "quiz" ? (
@@ -191,7 +205,10 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
                   <legend className="font-medium">{questionItem.prompt}</legend>
                   <div className="grid gap-2">
                     {questionItem.options.map((option) => (
-                      <label key={option.id} className="flex items-center gap-3 rounded-md border p-3 text-sm">
+                      <label
+                        key={option.id}
+                        className="flex items-center gap-3 rounded-md border p-3 text-sm"
+                      >
                         <input
                           type="radio"
                           name={questionItem.id}
@@ -244,7 +261,12 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
                     className={message.role === "user" ? "ml-auto max-w-[80%] text-right" : "max-w-[80%]"}
                   >
                     <p className="text-xs uppercase text-muted-foreground">{message.role}</p>
-                    <p className="rounded-md border bg-background p-3 text-sm leading-6">{message.content}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {formatTranscriptTime(message.created_at)}
+                    </p>
+                    <p className="rounded-md border bg-background p-3 text-sm leading-6">
+                      {message.content}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -255,10 +277,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
                   const content = question.trim();
                   if (!content) return;
                   setQuestion("");
-                  run(async () => {
-                    const next = await sendMessage(session.id, content);
-                    return next;
-                  });
+                  run(async () => sendMessage(session.id, content));
                 }}
               >
                 <Input
@@ -266,8 +285,13 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
                   onChange={(event) => setQuestion(event.target.value)}
                   placeholder="Tanyakan onset, faktor risiko, red flag..."
                   aria-label="Pertanyaan konsultasi teks"
+                  disabled={isConsultationLocked}
                 />
-                <Button disabled={isPending || !question.trim()} type="submit" aria-label="Kirim pertanyaan">
+                <Button
+                  disabled={isPending || isConsultationLocked || !question.trim()}
+                  type="submit"
+                  aria-label="Kirim pertanyaan"
+                >
                   <Send className="size-4" />
                   <span className="sm:sr-only">Kirim</span>
                 </Button>
@@ -285,28 +309,49 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              disabled={isPending || session.used_extension || session.status !== "in_consultation"}
-              onClick={() =>
-                run(async () => {
-                  await extendTimer(session.id);
-                  return { ...session, remaining_seconds: session.remaining_seconds + 60, used_extension: true };
-                })
-              }
-            >
-              Extend 60s
-            </Button>
-            <Button
-              className="w-full"
-              disabled={isPending || session.status !== "in_consultation"}
-              onClick={() => run(() => endConsultation(session.id))}
-            >
-              End consultation
-            </Button>
+            <AlertDialog.Root open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+              <AlertDialog.Trigger asChild>
+                <Button
+                  className="w-full"
+                  disabled={isPending || session.status !== "in_consultation"}
+                >
+                  End consultation
+                </Button>
+              </AlertDialog.Trigger>
+              <AlertDialog.Portal>
+                <AlertDialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" />
+                <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background p-5 shadow-lg">
+                  <AlertDialog.Title className="text-lg font-semibold">
+                    Akhiri konsultasi?
+                  </AlertDialog.Title>
+                  <AlertDialog.Description className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Setelah konsultasi diakhiri, sesi akan masuk ke quiz diagnosis.
+                  </AlertDialog.Description>
+                  <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <AlertDialog.Cancel asChild>
+                      <Button variant="outline" disabled={isPending}>
+                        Cancel
+                      </Button>
+                    </AlertDialog.Cancel>
+                    <AlertDialog.Action asChild>
+                      <Button
+                        disabled={isPending}
+                        onClick={() => {
+                          setShowEndConfirm(false);
+                          run(() => endConsultation(session.id));
+                        }}
+                      >
+                        End consultation
+                      </Button>
+                    </AlertDialog.Action>
+                  </div>
+                </AlertDialog.Content>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
             <p className="text-xs leading-5 text-muted-foreground">
-              Mengakhiri konsultasi akan membuka quiz final. Pastikan data penting sudah digali.
+              {session.used_extension
+                ? "Perpanjangan 60 detik sudah digunakan."
+                : "Perpanjangan 60 detik tersedia ketika waktu konsultasi habis."}
             </p>
           </CardContent>
         </Card>
@@ -321,7 +366,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
             <Button
               variant="outline"
               className="w-full"
-              disabled={isPending || session.medical_record_opened}
+              disabled={isPending || isConsultationLocked || session.medical_record_opened}
               onClick={() => run(() => openMedicalRecord(session.id))}
             >
               {session.medical_record_opened ? "Opened" : "Open record"}
@@ -350,7 +395,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
                   key={exam.id}
                   variant="outline"
                   className="h-auto min-h-10 justify-between whitespace-normal text-left"
-                  disabled={isPending || selectedExamIds.has(exam.id) || session.status !== "in_consultation"}
+                  disabled={isPending || isConsultationLocked || selectedExamIds.has(exam.id)}
                   onClick={() => run(() => selectExamination(session.id, exam.id))}
                 >
                   <span>{exam.label}</span>
@@ -363,168 +408,51 @@ export function ConsultationRoom({ initialSession }: { initialSession: Session }
                 <div key={exam.id} className="rounded-md border p-3 text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium">{exam.label}</p>
-                    <Badge variant={exam.status === "resulted" ? "default" : "secondary"}>{exam.status}</Badge>
+                    <Badge variant={exam.status === "resulted" ? "default" : "secondary"}>
+                      {exam.status}
+                    </Badge>
                   </div>
-                  {exam.result ? <p className="mt-2 leading-6 text-muted-foreground">{exam.result}</p> : null}
+                  {exam.result ? (
+                    <p className="mt-2 leading-6 text-muted-foreground">{exam.result}</p>
+                  ) : null}
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
       </aside>
+      <AlertDialog.Root open={isExpired} onOpenChange={() => undefined}>
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" />
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background p-5 shadow-lg">
+            <AlertDialog.Title className="text-lg font-semibold">
+              Waktu konsultasi habis
+            </AlertDialog.Title>
+            <AlertDialog.Description className="mt-2 text-sm leading-6 text-muted-foreground">
+              Konsultasi dijeda. Lanjutkan 60 detik sekali saja, atau masuk ke quiz diagnosis.
+            </AlertDialog.Description>
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              {!session.used_extension ? (
+                <Button
+                  variant="outline"
+                  disabled={isPending}
+                  onClick={() =>
+                    run(async () => {
+                      await extendTimer(session.id);
+                      return getSessionSnapshot(session.id);
+                    })
+                  }
+                >
+                  Lanjut 60 detik
+                </Button>
+              ) : null}
+              <Button disabled={isPending} onClick={() => run(() => endConsultation(session.id))}>
+                Masuk Quiz Diagnosis
+              </Button>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </section>
   );
-}
-
-function VoicePanel({
-  token,
-  uiState,
-  error,
-  isPending,
-  onStart,
-  onStop,
-  onError,
-  onStateChange,
-}: {
-  token: VoiceToken | null;
-  uiState: VoiceUiState;
-  error: string | null;
-  isPending: boolean;
-  onStart: () => void;
-  onStop: () => void;
-  onError: (message: string) => void;
-  onStateChange: (state: VoiceUiState) => void;
-}) {
-  const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || token?.url || "";
-  const label = {
-    idle: "Voice ready",
-    connecting: "Connecting",
-    listening: "Listening",
-    patient_thinking: "Patient thinking",
-    patient_speaking: "Patient speaking",
-    reconnecting: "Reconnecting",
-    error: "Voice fallback",
-  }[uiState];
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          {token ? <Mic className="size-4" /> : <MicOff className="size-4" />}
-          Voice consultation
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div aria-live="polite" role="status">
-              <Badge variant={uiState === "error" ? "outline" : "secondary"}>{label}</Badge>
-            </div>
-            {token ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                AI patient voice is active. Transcript text is stored; raw audio is not
-                stored by PixelAid.
-              </p>
-            ) : (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Voice uses an AI patient with STT and TTS providers. Text consultation
-                remains available if mic, connection, STT, or TTS fails.
-              </p>
-            )}
-          </div>
-          {token ? (
-            <Button variant="outline" onClick={onStop} aria-label="Stop voice consultation">
-              Stop voice
-            </Button>
-          ) : (
-            <Button disabled={isPending} onClick={onStart} aria-label="Start voice consultation">
-              <Mic className="size-4" />
-              Start voice
-            </Button>
-          )}
-        </div>
-        {error ? (
-          <p className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">
-            {error} Text consultation remains available.
-          </p>
-        ) : null}
-        {token && livekitUrl ? (
-          <LiveKitRoom
-            audio
-            connect
-            token={token.token}
-            serverUrl={livekitUrl}
-            onDisconnected={() => onStateChange("idle")}
-            onError={(caught) => onError(caught.message)}
-          >
-            <RoomAudioRenderer />
-            <AudioUnlockButton />
-            <VoiceConnectionState onStateChange={onStateChange} />
-          </LiveKitRoom>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-}
-
-function AudioUnlockButton() {
-  const { canPlayAudio, startAudio } = useAudioPlayback();
-  const [failed, setFailed] = useState(false);
-
-  if (canPlayAudio) {
-    return null;
-  }
-
-  return (
-    <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={async () => {
-          try {
-            await startAudio();
-            setFailed(false);
-          } catch {
-            setFailed(true);
-          }
-        }}
-      >
-        <Volume2 className="size-4" />
-        Enable audio
-      </Button>
-      {failed ? <p className="mt-2 text-xs">Audio playback is still blocked.</p> : null}
-    </div>
-  );
-}
-
-function VoiceConnectionState({
-  onStateChange,
-}: {
-  onStateChange: (state: VoiceUiState) => void;
-}) {
-  const connectionState = useConnectionState();
-  const { state: agentState } = useVoiceAssistant();
-
-  useEffect(() => {
-    if (connectionState === ConnectionState.Reconnecting) {
-      onStateChange("reconnecting");
-      return;
-    }
-    if (connectionState !== ConnectionState.Connected) {
-      onStateChange("connecting");
-      return;
-    }
-    if (agentState === "speaking") {
-      onStateChange("patient_speaking");
-      return;
-    }
-    if (agentState === "thinking") {
-      onStateChange("patient_thinking");
-      return;
-    }
-    onStateChange("listening");
-  }, [agentState, connectionState, onStateChange]);
-
-  return null;
 }

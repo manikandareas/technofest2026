@@ -1,6 +1,12 @@
 import { defaultCache } from "@serwist/next/worker";
-import type { PrecacheEntry } from "serwist";
-import { Serwist } from "serwist";
+import type { PrecacheEntry, RuntimeCaching } from "serwist";
+import { NetworkOnly, Serwist } from "serwist";
+
+/** Always fetch the latest home BGM; avoid stale placeholder from static-audio-assets cache. */
+const homeBgmRuntimeCaching: RuntimeCaching = {
+  matcher: ({ url }) => url.pathname === "/assets/audio/home-bgm.mp3",
+  handler: new NetworkOnly(),
+};
 
 declare global {
   interface WorkerGlobalScope {
@@ -21,7 +27,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  runtimeCaching: [homeBgmRuntimeCaching, ...defaultCache],
   fallbacks: {
     entries: [
       {

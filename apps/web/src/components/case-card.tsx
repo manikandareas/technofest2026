@@ -14,7 +14,6 @@ type CaseCardProps = {
   difficulty: string;
   condition_badge: string;
   estimated_duration_minutes: number;
-  is_demo: boolean;
 };
 
 export function CaseCard({ item }: { item: CaseCardProps }) {
@@ -24,7 +23,6 @@ export function CaseCard({ item }: { item: CaseCardProps }) {
         <div className="flex flex-wrap gap-2">
           <Badge>{item.condition_badge}</Badge>
           <Badge variant="outline">{item.difficulty}</Badge>
-          {item.is_demo ? <Badge variant="secondary">Demo</Badge> : null}
         </div>
         <CardTitle className="text-xl">
           {item.patient_name}, {item.patient_age} tahun

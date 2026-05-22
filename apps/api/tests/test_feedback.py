@@ -75,8 +75,8 @@ def test_feedback_service_falls_back_on_invalid_output(monkeypatch) -> None:
 
 def _feedback_input() -> FeedbackInput:
     return FeedbackInput(
-        case_id="demo",
-        patient_name="Maya",
+        case_id="internal-medicine-dengue-warning-signs",
+        patient_name="Raka",
         score=80,
         stars=3,
         score_breakdown=ScoreBreakdown(

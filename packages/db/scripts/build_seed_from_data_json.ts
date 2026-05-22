@@ -23,7 +23,6 @@ type CaseInput = {
   };
   difficulty: "easy" | "medium" | "hard";
   availability: {
-    is_demo?: boolean;
     is_published?: boolean;
     [key: string]: unknown;
   };
@@ -84,7 +83,6 @@ function validate(data: DataInput): void {
   }
 
   const caseIds = new Set<string>();
-  let demoCount = 0;
   for (const item of data.cases) {
     assertString(item.id, "case.id");
     assertString(item.specialist_id, `${item.id}.specialist_id`);
@@ -105,9 +103,6 @@ function validate(data: DataInput): void {
       throw new Error(`duplicate case id: ${item.id}`);
     }
     caseIds.add(item.id);
-    if (item.availability?.is_demo) {
-      demoCount += 1;
-    }
     if (item.availability?.is_published) {
       if (!Array.isArray(item.case_data?.quiz) || item.case_data.quiz.length === 0) {
         throw new Error(`${item.id}.case_data.quiz must contain at least one item`);
@@ -119,9 +114,6 @@ function validate(data: DataInput): void {
         throw new Error(`${item.id}.case_data.examinations must contain at least one item`);
       }
     }
-  }
-  if (demoCount !== 1) {
-    throw new Error(`expected exactly 1 demo case, found ${demoCount}`);
   }
 }
 
@@ -173,7 +165,6 @@ function buildSql(data: DataInput): string {
         sqlString(item.difficulty),
         sqlString(item.condition_badge),
         String(durationMinutes),
-        item.availability?.is_demo ? "true" : "false",
         sqlString(status),
         String(item.base_xp),
         sqlJson(buildCaseData(item)),
@@ -193,7 +184,6 @@ delete from public.examination_events;
 delete from public.quiz_submissions;
 delete from public.case_results;
 delete from public.case_sessions;
-delete from public.guest_sessions;
 delete from public.user_case_stats;
 delete from public.leaderboard_entries;
 
@@ -218,7 +208,6 @@ insert into public.cases (
   difficulty,
   condition_badge,
   estimated_duration_minutes,
-  is_demo,
   status,
   base_xp,
   case_data

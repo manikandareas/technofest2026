@@ -1,48 +1,77 @@
 export const fallbackSpecialists = [
   {
-    id: "cardiology",
-    name: "Cardiology",
-    description: "Latihan konsultasi keluhan jantung dan pembuluh darah.",
-    icon: "heart-pulse",
+    id: "internal-medicine",
+    name: "Penyakit Dalam",
+    description:
+      "Latihan kasus keluhan dewasa seperti metabolik, infeksi, respirasi, dan gangguan organ dalam.",
+    icon: "stethoscope",
     status: "available",
     case_count: 3,
   },
   {
-    id: "pulmonology",
-    name: "Pulmonology",
-    description: "Kasus respirasi akan dibuka setelah fondasi voice siap.",
-    icon: "lungs",
-    status: "coming_soon",
-    case_count: 0,
+    id: "obgyn",
+    name: "OBGYN / Reproduksi Wanita",
+    description:
+      "Latihan kasus kehamilan, kesehatan reproduksi wanita, dan keluhan ginekologi dasar.",
+    icon: "venus",
+    status: "available",
+    case_count: 3,
   },
   {
-    id: "neurology",
-    name: "Neurology",
-    description: "Kasus neurologi disiapkan untuk fase konten berikutnya.",
-    icon: "brain",
-    status: "coming_soon",
-    case_count: 0,
+    id: "pediatrics",
+    name: "Kesehatan Anak",
+    description:
+      "Latihan kasus anak dengan fokus demam, dehidrasi, infeksi saluran napas, dan edukasi orang tua.",
+    icon: "baby",
+    status: "available",
+    case_count: 3,
+  },
+  {
+    id: "general-surgery",
+    name: "Bedah Umum",
+    description:
+      "Latihan kasus nyeri perut akut, luka, dan kondisi bedah dasar yang membutuhkan triase cepat.",
+    icon: "scissors",
+    status: "available",
+    case_count: 3,
+  },
+  {
+    id: "anesthesiology",
+    name: "Anestesi",
+    description:
+      "Latihan kasus praoperatif, sedasi, manajemen nyeri, dan keselamatan anestesi dasar.",
+    icon: "syringe",
+    status: "available",
+    case_count: 3,
+  },
+  {
+    id: "ophthalmology",
+    name: "Kesehatan Mata",
+    description:
+      "Latihan kasus mata merah, penurunan penglihatan, trauma ringan, dan skrining gejala bahaya.",
+    icon: "eye",
+    status: "available",
+    case_count: 3,
   },
 ];
 
 export const fallbackCases = [
   {
-    id: "demo",
-    specialist_id: "cardiology",
-    specialist_name: "Cardiology",
-    patient_name: "Maya",
-    patient_age: 54,
-    patient_gender: "Perempuan",
-    chief_complaint: "Nyeri dada kiri sejak 2 jam sebelum datang.",
-    triage_note: "Stabil, tampak cemas, perlu gali karakter nyeri dan faktor risiko.",
+    id: "internal-medicine-dengue-warning-signs",
+    specialist_id: "internal-medicine",
+    specialist_name: "Penyakit Dalam",
+    patient_name: "Raka",
+    patient_age: 23,
+    patient_gender: "male",
+    chief_complaint: "Demam tinggi sejak 3 hari.",
+    triage_note: "Pasien tampak lemah, perlu skrining tanda bahaya dengue.",
     difficulty: "easy",
-    condition_badge: "Chest pain",
-    estimated_duration_minutes: 8,
-    is_demo: true,
+    condition_badge: "Infeksi akut",
+    estimated_duration_minutes: 5,
     learning_objectives: [
-      "Gali onset, provokasi, kualitas, radiasi, skala, dan durasi nyeri.",
-      "Identifikasi faktor risiko kardiovaskular awal.",
-      "Tentukan pemeriksaan awal yang aman sebelum diagnosis akhir.",
+      "Gali pola demam dan tanda bahaya.",
+      "Nilai status hidrasi dan perdarahan.",
+      "Pilih pemeriksaan awal yang relevan.",
     ],
   },
   {
@@ -57,7 +86,6 @@ export const fallbackCases = [
     difficulty: "medium",
     condition_badge: "Palpitasi",
     estimated_duration_minutes: 10,
-    is_demo: false,
     learning_objectives: [
       "Pisahkan palpitasi benign dari tanda bahaya.",
       "Tanyakan konsumsi stimulan dan pola tidur.",
@@ -76,7 +104,6 @@ export const fallbackCases = [
     difficulty: "hard",
     condition_badge: "Dyspnea",
     estimated_duration_minutes: 12,
-    is_demo: false,
     learning_objectives: [
       "Nilai derajat sesak dan gejala kongesti.",
       "Gali komorbid yang memperburuk gagal jantung.",

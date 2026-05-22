@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type AuthFormProps = {
-  mode: "sign-in" | "register";
+  mode: "sign-in" | "register" | "upgrade";
   next?: string;
   action: (
     state: { error?: string },
@@ -24,22 +24,30 @@ export function AuthForm({ mode, next, action }: AuthFormProps) {
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" required autoComplete="email" />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          required
-          minLength={6}
-          autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-        />
-      </div>
+      {mode === "upgrade" ? null : (
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            required
+            minLength={6}
+            autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+          />
+        </div>
+      )}
       {state.error ? (
         <p className="text-sm font-medium text-destructive">{state.error}</p>
       ) : null}
       <Button className="w-full" type="submit" disabled={pending}>
-        {pending ? "Memproses..." : mode === "sign-in" ? "Masuk" : "Daftar"}
+        {pending
+          ? "Memproses..."
+          : mode === "sign-in"
+            ? "Masuk"
+            : mode === "upgrade"
+              ? "Upgrade akun"
+              : "Daftar"}
       </Button>
     </form>
   );

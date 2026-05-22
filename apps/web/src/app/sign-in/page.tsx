@@ -4,13 +4,14 @@ import { AuthForm } from "@/components/auth/auth-form";
 import { GoogleButton } from "@/components/auth/google-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { safeNextQuery } from "@/lib/navigation/safe-next";
 
 export default async function SignInPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const next = safeNext((await searchParams).next);
+  const next = safeNextQuery((await searchParams).next);
   return (
     <main className="grid min-h-dvh place-items-center bg-background px-5 py-10">
       <Card className="w-full max-w-md">
@@ -34,11 +35,4 @@ export default async function SignInPage({
       </Card>
     </main>
   );
-}
-
-function safeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
-    return undefined;
-  }
-  return value;
 }

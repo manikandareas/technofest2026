@@ -14,14 +14,10 @@ function resolveDisplayName(
 
 export default async function AppHomePage() {
   const api = await getApiClient();
-  const [meResult, historyResult] = await Promise.all([
-    api.GET("/api/me").catch(() => ({ data: undefined })),
-    api.GET("/api/history").catch(() => ({ data: undefined })),
-  ]);
+  const meResult = await api.GET("/api/me").catch(() => ({ data: undefined }));
 
   const profile = meResult.data?.profile;
   const progress = meResult.data?.progress;
-  const recentCases = historyResult.data?.items ?? [];
 
   const displayName = resolveDisplayName(profile?.display_name, profile?.email);
   const level = progress?.level ?? 1;
@@ -35,7 +31,6 @@ export default async function AppHomePage() {
       avatarUrl={profile?.avatar_url}
       startHref="/app/specialists"
       startLabel="Start"
-      recentCases={recentCases}
     />
   );
 }

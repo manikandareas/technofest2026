@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import cast
 
 import pytest
 from livekit.agents import llm
@@ -31,7 +31,7 @@ class SyncEventRecorder:
 async def test_patient_agent_validates_before_tts_fallback(monkeypatch) -> None:
     agent = PixelAidPatientAgent(
         context={
-            "case_id": "demo",
+            "case_id": "internal-medicine-dengue-warning-signs",
             "allowed_facts": [{"key": "onset", "response": "Mulainya dua jam lalu."}],
             "completed_examinations": [],
         },
@@ -53,7 +53,7 @@ async def test_patient_agent_validates_before_tts_fallback(monkeypatch) -> None:
 async def test_patient_agent_accepts_safe_grounded_reply(monkeypatch) -> None:
     agent = PixelAidPatientAgent(
         context={
-            "case_id": "demo",
+            "case_id": "internal-medicine-dengue-warning-signs",
             "allowed_facts": [
                 {
                     "key": "onset",
@@ -80,7 +80,7 @@ async def test_patient_agent_records_validation_reasons_before_retry(monkeypatch
     telemetry = SyncEventRecorder()
     agent = PixelAidPatientAgent(
         context={
-            "case_id": "demo",
+            "case_id": "internal-medicine-dengue-warning-signs",
             "allowed_facts": [
                 {
                     "key": "onset",
@@ -94,7 +94,7 @@ async def test_patient_agent_records_validation_reasons_before_retry(monkeypatch
     )
     replies = iter(
         [
-            "Sepertinya ini ACS.",
+            "Sepertinya ini Suspek dengue dengan pemantauan tanda bahaya.",
             "Mulainya sekitar dua jam lalu saat saya naik tangga.",
         ]
     )
@@ -117,7 +117,10 @@ async def test_patient_agent_records_validation_reasons_before_retry(monkeypatch
     assert isinstance(retry_metadata, dict)
     validation_reasons = cast(list[str], validation_metadata["reasons"])
     retry_reasons = cast(list[str], retry_metadata["reasons"])
-    assert "forbidden_term:acs" in validation_reasons
+    assert (
+        "forbidden_term:Suspek dengue dengan pemantauan tanda bahaya"
+        in validation_reasons
+    )
     assert retry_reasons == validation_reasons
 
 

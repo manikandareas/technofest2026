@@ -1,9 +1,11 @@
 import Image from "next/image";
+import Link from "next/link";
 
-import { AppBottomNav } from "@/components/app/app-bottom-nav";
+import { AppScreenNavFooter } from "@/components/app/app-screen-nav-footer";
+import { BgmProvider } from "@/components/audio/bgm-provider";
 
+import { HOME_ASSETS } from "./home-assets";
 import { HomeHeader } from "./home-header";
-import { HomeRecentCases } from "./home-recent-cases";
 import { HomeStartButton } from "./home-start-button";
 
 type HomeScreenProps = {
@@ -13,12 +15,6 @@ type HomeScreenProps = {
   avatarUrl?: string | null;
   startHref: string;
   startLabel: string;
-  recentCases: Array<{
-    result_id: string;
-    session_id: string;
-    case_id: string;
-    patient_name: string;
-  }>;
 };
 
 export function HomeScreen({
@@ -28,31 +24,30 @@ export function HomeScreen({
   avatarUrl,
   startHref,
   startLabel,
-  recentCases,
 }: HomeScreenProps) {
   return (
-    <div className="relative min-h-dvh w-full bg-[#0b1320]">
+    <BgmProvider>
+      <div className="relative min-h-dvh w-full bg-[#02153d]">
       <div className="pointer-events-none absolute inset-0">
         <Image
-          src="/assets/home/scene-bg.png"
+          src={HOME_ASSETS.sceneBgMobile}
           alt=""
           fill
           priority
           className="object-cover object-center pixelated lg:hidden"
-          sizes="(max-width: 1023px) 100vw, 0px"
+          sizes="100vw"
         />
         <Image
-          src="/assets/home/scene-bg-desktop.png"
+          src={HOME_ASSETS.sceneBgDesktop}
           alt=""
           fill
           priority
           className="hidden object-cover object-center pixelated lg:block"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35" />
       </div>
 
-      <main className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col md:max-w-3xl lg:max-w-5xl xl:max-w-6xl">
+      <main className="relative mx-auto flex min-h-dvh w-full max-w-[393px] flex-col md:max-w-3xl lg:max-w-5xl xl:max-w-6xl">
         <HomeHeader
           displayName={displayName}
           level={level}
@@ -60,28 +55,49 @@ export function HomeScreen({
           avatarUrl={avatarUrl}
         />
 
-        <div className="relative min-h-0 flex-1 overflow-hidden pb-[11rem] md:pb-[10rem] lg:pb-[12rem]">
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center md:bottom-2 lg:bottom-4">
-            <div className="relative h-[min(72vh,38rem)] w-[min(115%,34rem)] sm:h-[min(74vh,40rem)] sm:w-[min(110%,36rem)] md:h-[min(76vh,42rem)] md:w-[min(90%,38rem)] lg:h-[min(75vh,44rem)] lg:w-[min(55%,28rem)] xl:h-[min(78vh,48rem)] xl:w-[min(50%,32rem)]">
+        <div className="relative min-h-0 flex-1">
+          <Link
+            href="/profile"
+            className="absolute right-[4.5%] top-[25%] z-10 size-[3.25rem] overflow-hidden rounded-[17px] outline-none focus-visible:ring-2 focus-visible:ring-white/70 md:right-[6%] md:top-[22%] md:size-14 lg:right-[8%]"
+            aria-label="Kostum dan profil"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={HOME_ASSETS.iconWardrobe}
+              alt=""
+              className="absolute max-w-none pixelated"
+              style={{
+                width: "147.34%",
+                height: "147.34%",
+                left: "-23.53%",
+                top: "-23.81%",
+              }}
+            />
+          </Link>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-[calc(7.25rem+env(safe-area-inset-bottom))] flex justify-center md:bottom-[5.75rem] lg:bottom-[7.5rem]">
+            <div className="relative h-[min(44vh,22rem)] w-[min(48vw,11.5rem)] sm:h-[min(46vh,23rem)] sm:w-[min(46vw,12rem)] md:h-[min(48vh,25rem)] md:w-[min(42vw,13rem)] lg:h-[min(50vh,27rem)] lg:w-[min(30vw,14rem)] xl:h-[min(52vh,30rem)] xl:w-[min(26vw,15rem)]">
+              <div
+                aria-hidden
+                className="absolute bottom-[2%] left-1/2 h-[10%] w-[65%] -translate-x-1/2 rounded-[50%] bg-[#1a3a6b]/55 blur-[2px]"
+              />
               <Image
-                src="/assets/home/doctor-character.png"
+                src={HOME_ASSETS.doctorCharacter}
                 alt="Dokter PixelAid"
                 fill
                 priority
-                className="origin-bottom scale-[1.35] object-contain object-bottom pixelated drop-shadow-[0_8px_0_rgba(0,0,0,0.35)] sm:scale-[1.38] md:scale-[1.4] lg:scale-[1.48] xl:scale-[1.55]"
-                sizes="(max-width: 640px) 115vw, (max-width: 768px) 110vw, (max-width: 1024px) 90vw, (max-width: 1280px) 55vw, 32rem"
+                className="object-contain object-bottom pixelated drop-shadow-[0_6px_0_rgba(0,0,0,0.3)]"
+                sizes="(max-width: 640px) 62vw, (max-width: 1024px) 50vw, 36vw"
               />
             </div>
           </div>
         </div>
 
-        <div className="relative z-20 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-[calc(6rem+env(safe-area-inset-bottom))]">
-          <HomeRecentCases items={recentCases} />
+        <AppScreenNavFooter>
           <HomeStartButton href={startHref} label={startLabel} />
-        </div>
-
-        <AppBottomNav />
+        </AppScreenNavFooter>
       </main>
-    </div>
+      </div>
+    </BgmProvider>
   );
 }

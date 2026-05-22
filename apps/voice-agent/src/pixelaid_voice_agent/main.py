@@ -33,6 +33,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 AGENT_NAME = "pixelaid-patient"
+DEFAULT_CASE_ID = "internal-medicine-dengue-warning-signs"
 
 
 def _prewarm_process(proc: JobProcess) -> None:
@@ -57,8 +58,8 @@ async def patient_session(ctx: JobContext) -> None:
             token=settings.voice_agent_api_token,
         )
     else:
-        session_id = "console-demo"
-        metadata = {"session_id": session_id, "case_id": "demo", "actor": "console"}
+        session_id = "console-session"
+        metadata = {"session_id": session_id, "case_id": DEFAULT_CASE_ID, "actor": "console"}
     started = time.perf_counter()
     background_tasks: set[asyncio.Task[Any]] = set()
     telemetry = SessionEventRecorder(api_client, session_id, background_tasks)
@@ -183,9 +184,9 @@ def _parse_metadata(value: str) -> dict[str, Any]:
 
 
 def _console_context() -> dict[str, Any]:
-    case = get_case_config("demo")
+    case = get_case_config(DEFAULT_CASE_ID)
     return {
-        "session_id": "console-demo",
+        "session_id": "console-session",
         "case_id": case.id,
         "patient_name": case.patient_name,
         "patient_persona": case.patient_persona,

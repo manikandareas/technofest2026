@@ -41,7 +41,7 @@ Tanggung jawab:
 - Consultation room, message panel, medical record panel, examine panel.
 - LiveKit Web SDK client, microphone permission, reconnect/error states.
 - Diagnosis quiz, result screen, history, leaderboard, profile progress.
-- Guest demo flow and claim CTA after login/register.
+- Supabase Anonymous guest entry and account upgrade CTAs.
 
 Tidak bertanggung jawab:
 
@@ -56,13 +56,13 @@ Tidak bertanggung jawab:
 Tanggung jawab:
 
 - Supabase auth bridge and authenticated user context.
-- Profile, onboarding, specialist, case, and public demo APIs.
+- Profile, onboarding, specialist, case, and public case APIs.
 - Case session lifecycle and state transitions.
 - Medical record opened event.
 - Examination selection, delay metadata, and result availability.
 - Timer extension and end-consultation transition.
 - Quiz submission, deterministic scoring, result persistence.
-- XP, stars, retry, history, leaderboard, and guest claim.
+- XP, stars, retry, history, leaderboard, and anonymous-user leaderboard filtering.
 - LiveKit room naming, token issuing, session authorization.
 - Agent context endpoint and transcript write endpoint.
 - OpenAPI output for generated TypeScript client.
@@ -134,7 +134,7 @@ MVP policy:
 
 - Room name is derived from authorized case session ID.
 - API signs tokens only for authorized session participants.
-- Guest demo rooms have stricter duration and rate limits.
+- Anonymous guest rooms have stricter duration and rate limits.
 
 ### OpenAI
 
@@ -173,8 +173,8 @@ GET    /api/me
 PATCH  /api/me/profile
 POST   /api/me/onboarding-complete
 
-GET    /api/public/cases/demo
 GET    /api/public/specialists
+GET    /api/public/cases/{case_id}
 GET    /api/specialists
 GET    /api/specialists/{specialist_id}/cases
 GET    /api/cases/{case_id}
@@ -197,11 +197,13 @@ GET    /api/livekit/sessions/{session_id}/agent-context
 POST   /api/livekit/sessions/{session_id}/transcript
 POST   /api/livekit/sessions/{session_id}/events
 
-POST   /api/demo/session
-POST   /api/demo/{session_id}/claim
 ```
 
 Contract rule:
+
+- Guest = Supabase Anonymous Auth user. Anonymous users use the authenticated
+  role and own rows by `auth.users.id`; there is no custom guest session,
+  claim token, or demo-only API.
 
 - FastAPI OpenAPI is the source of truth.
 - Generated OpenAPI JSON is committed under `packages/contracts`.
@@ -224,7 +226,6 @@ Phase 1 migrations should create the baseline tables from the technical design:
 
 Additional operational tables can be added only when needed:
 
-- `guest_sessions` for claim token, expiration, and anti-abuse metadata.
 - `voice_session_events` for LiveKit/provider telemetry.
 - `rate_limit_events` if the selected deployment stack does not provide this externally.
 
@@ -232,15 +233,13 @@ Seed data:
 
 - 1 available specialist: Cardiology.
 - Coming-soon specialists: General Medicine, Neurology, Pediatrics, Dentistry, Neurosurgery.
-- 3 published Cardiology cases: Maya, Budi, Siti.
-- Maya is the only guest demo case.
+- Published cases can be started by permanent and anonymous authenticated users.
 
 RLS expectations:
 
 - Public users can read published public content.
-- Authenticated users can read and mutate their own profile/session/result rows.
-- Guests can only access demo session data through signed claim/session tokens, not broad table reads.
-- Leaderboard exposes only public display fields.
+- Authenticated and anonymous users can read and mutate only their own profile/session/result rows.
+- Leaderboard exposes only public display fields for non-anonymous profiles.
 
 ## 7. Implementation Phases
 
@@ -255,7 +254,7 @@ Backend deliverables:
 - Scaffold `apps/api` with FastAPI, Pydantic, health checks, settings, and test setup.
 - Add Supabase service integration and auth middleware.
 - Add migrations and seed data for profiles, specialists, cases, and base session tables.
-- Add public demo case endpoints.
+- Add public published case endpoints.
 - Add authenticated profile and onboarding endpoints.
 - Generate OpenAPI JSON into `packages/contracts`.
 
@@ -269,7 +268,7 @@ Frontend deliverables:
 
 Exit criteria:
 
-- A new user can open landing, try demo entry, or sign in.
+- A new user can open landing, enter as anonymous guest, or sign in.
 - A logged-in user can see dashboard, Cardiology, and 3 cases.
 - Case brief hides diagnosis and hidden clinical data.
 - API tests pass for health, public content, auth profile, and onboarding.
@@ -306,14 +305,14 @@ Frontend deliverables:
 Exit criteria:
 
 - A logged-in user can complete Maya, Budi, and Siti without voice.
-- A guest can complete Maya demo without login.
+- An anonymous guest can complete a published case.
 - Scoring, stars, XP placeholder, and history detail persist correctly.
 - Invalid state transitions return clear API errors.
 
 ### Phase 3 - Realtime Voice Consultation
 
-Status: complete for the Maya-first vertical slice. Remaining improvements belong
-to Phase 4+ hardening unless they block demo reliability.
+Status: complete for the initial vertical slice. Remaining improvements belong
+to Phase 4+ hardening unless they block session reliability.
 
 Goal:
 
@@ -363,7 +362,7 @@ Exit criteria:
 
 Goal:
 
-Complete the learning loop with motivation, progress, leaderboard, and guest conversion.
+Complete the learning loop with motivation, progress, leaderboard, and guest upgrade.
 
 Backend deliverables:
 
@@ -372,7 +371,7 @@ Backend deliverables:
 - Stars safety gate.
 - User case stats.
 - Global leaderboard entries.
-- Guest result claim after login/register.
+- Anonymous progress persists under the same user ID and becomes leaderboard-eligible after upgrade.
 - AI-written structured feedback from deterministic scoring data.
 
 Frontend deliverables:
@@ -381,22 +380,22 @@ Frontend deliverables:
 - Stars polish and safety-aware feedback wording.
 - Retry CTA.
 - Leaderboard.
-- Guest result claim CTA and claimed result state.
+- Upgrade account CTAs for anonymous users.
 - Profile progress summary.
 
 Exit criteria:
 
 - First completion awards full XP.
 - Retry awards reduced XP and can update best score.
-- Guest result can be claimed once after login.
-- Claimed guest result appears in history and leaderboard.
+- Anonymous users keep history and XP.
+- Upgraded users keep the same user ID and can appear in leaderboard.
 - AI feedback never contradicts deterministic scoring data.
 
 ### Phase 5 - QA, Safety, and Release Hardening
 
 Goal:
 
-Make the MVP reliable enough for public demo and judging.
+Make the MVP reliable enough for public judging.
 
 Backend and agent deliverables:
 
@@ -414,11 +413,11 @@ Frontend deliverables:
 - Accessibility pass.
 - Empty, loading, and error states.
 - Final pixel-art UI QA.
-- Public demo flow polish.
+- Anonymous guest flow polish.
 
 Exit criteria:
 
-- Landing -> demo -> complete case -> result -> signup/login claim works end to end.
+- Landing -> anonymous guest -> complete published case -> result -> upgrade works end to end.
 - Authenticated case completion and leaderboard work end to end.
 - Mobile, tablet, desktop, and installed PWA entry flows are verified.
 - Safety and privacy promises are reflected in UI and implementation.
@@ -443,7 +442,7 @@ Cover:
 Cover:
 
 - Authenticated profile and onboarding.
-- Public specialists and demo case.
+- Public specialists and published case.
 - Case session lifecycle.
 - Medical record opened event.
 - Examination delay/result flow.
@@ -452,7 +451,7 @@ Cover:
 - Quiz submit.
 - Results and history.
 - Leaderboard.
-- Guest demo and claim.
+- Anonymous guest and upgrade flow.
 - Invalid state transitions.
 - LiveKit token authorization.
 - Agent transcript writes.
@@ -463,7 +462,7 @@ Cover:
 
 - User-owned sessions and results.
 - Public published content.
-- Guest demo access constraints.
+- Anonymous guest ownership constraints.
 - Leaderboard public fields.
 - Transcript privacy.
 
@@ -629,7 +628,7 @@ Risk:
 
 Mitigation:
 
-- Keep MVP to Cardiology, 3 cases, 1 guest demo.
+- Keep MVP to the published starter case set.
 - Keep quiz static-controlled by case config.
 - Keep instructor and custom content tools as future enhancements.
 
@@ -650,7 +649,7 @@ Mitigation:
 
 MVP is done when:
 
-- Guest can complete Maya demo and claim the result after login/register.
+- Anonymous guest can complete a published case and keep progress after upgrade.
 - Logged-in user can complete all 3 Cardiology cases.
 - Consultation works with voice and text fallback.
 - Scoring, stars, XP, retry, history, and leaderboard work from persisted data.

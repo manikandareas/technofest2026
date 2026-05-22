@@ -1,8 +1,11 @@
 from functools import lru_cache
+import base64
+import json
 from typing import Any, cast
 
 from fastapi import HTTPException, status
 from pixelaid_api.models import AuthUser, CaseBrief, Profile, PublicSpecialist
+from pixelaid_api.services.profiles import ensure_memory_profile
 from pixelaid_api.services.seed_data import CASES, SPECIALISTS
 from pixelaid_api.settings import Settings, get_settings
 from supabase import Client, create_client
@@ -19,6 +22,11 @@ def get_supabase_admin() -> Client | None:
 
 
 async def verify_bearer_token(token: str, settings: Settings) -> AuthUser:
+    if settings.environment == "development" and token.startswith("dev-anon:"):
+        return AuthUser(
+            id=token.removeprefix("dev-anon:") or "dev-anon-user",
+            is_anonymous=True,
+        )
     if settings.environment == "development" and token.startswith("dev:"):
         return AuthUser(id=token.removeprefix("dev:") or "dev-user")
 
@@ -44,7 +52,11 @@ async def verify_bearer_token(token: str, settings: Settings) -> AuthUser:
             detail="Invalid bearer token.",
         )
 
-    return AuthUser(id=str(user.id), email=getattr(user, "email", None))
+    return AuthUser(
+        id=str(user.id),
+        email=getattr(user, "email", None),
+        is_anonymous=_is_anonymous_user(user, token),
+    )
 
 
 def list_specialists(include_coming_soon: bool = True) -> list[PublicSpecialist]:
@@ -96,30 +108,21 @@ def list_cases_for_specialist(specialist_id: str) -> list[CaseBrief]:
 
 
 def get_case(case_id: str) -> CaseBrief:
-    if case_id == "demo":
-        return get_demo_case()
     for case in _load_cases():
         if case.id == case_id:
             return case
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found.")
 
 
-def get_demo_case() -> CaseBrief:
-    for case in _load_cases():
-        if case.is_demo:
-            return case
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Demo case not found.")
-
-
 def ensure_profile(user: AuthUser) -> Profile:
     client = get_supabase_admin()
     if client is None:
-        return Profile(id=user.id, email=user.email, display_name=user.email, xp=0)
+        return ensure_memory_profile(user)
 
     try:
         existing_response = (
             client.table("profiles")
-            .select("id,email,display_name,avatar_url,onboarding_completed,xp")
+            .select("id,email,display_name,avatar_url,is_anonymous,onboarding_completed,xp")
             .eq("id", user.id)
             .maybe_single()
             .execute()
@@ -128,12 +131,28 @@ def ensure_profile(user: AuthUser) -> Profile:
     except Exception:
         return Profile(id=user.id, email=user.email, display_name=user.email, xp=0)
     if existing:
+        desired_updates: dict[str, Any] = {}
+        if existing.get("is_anonymous") != user.is_anonymous:
+            desired_updates["is_anonymous"] = user.is_anonymous
+        if user.email and existing.get("email") != user.email:
+            desired_updates["email"] = user.email
+        if desired_updates:
+            data = cast(
+                list[dict[str, Any]],
+                client.table("profiles")
+                .update(desired_updates)
+                .eq("id", user.id)
+                .execute()
+                .data,
+            )
+            existing = data[0]
         return Profile(**existing)
 
     row = {
         "id": user.id,
         "email": user.email,
         "display_name": user.email.split("@")[0] if user.email else None,
+        "is_anonymous": user.is_anonymous,
     }
     data = cast(
         list[dict[str, Any]],
@@ -174,7 +193,7 @@ def _load_cases() -> list[CaseBrief]:
             client.table("cases")
             .select(
                 "id,specialist_id,patient_name,patient_age,patient_gender,chief_complaint,"
-                "triage_note,difficulty,condition_badge,estimated_duration_minutes,is_demo"
+                "triage_note,difficulty,condition_badge,estimated_duration_minutes"
             )
             .eq("status", "published")
             .execute()
@@ -191,3 +210,29 @@ def _load_cases() -> list[CaseBrief]:
         )
         for row in rows
     ]
+
+
+def _is_anonymous_user(user: object, token: str) -> bool:
+    for attr in ("is_anonymous",):
+        value = getattr(user, attr, None)
+        if value is not None:
+            return bool(value)
+    app_metadata = getattr(user, "app_metadata", None)
+    if isinstance(app_metadata, dict) and "is_anonymous" in app_metadata:
+        return bool(app_metadata["is_anonymous"])
+    user_metadata = getattr(user, "user_metadata", None)
+    if isinstance(user_metadata, dict) and "is_anonymous" in user_metadata:
+        return bool(user_metadata["is_anonymous"])
+    return _is_anonymous_token(token)
+
+
+def _is_anonymous_token(token: str) -> bool:
+    parts = token.split(".")
+    if len(parts) < 2:
+        return False
+    payload = parts[1] + "=" * (-len(parts[1]) % 4)
+    try:
+        claims = json.loads(base64.urlsafe_b64decode(payload.encode("utf-8")))
+    except Exception:
+        return False
+    return bool(claims.get("is_anonymous"))

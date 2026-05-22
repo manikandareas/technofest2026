@@ -23,8 +23,8 @@ export default function Home() {
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link href="/app/cases/demo/brief">
-                Try Maya demo <ArrowRight className="size-4" />
+              <Link href="/app">
+                Mulai sebagai guest <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">

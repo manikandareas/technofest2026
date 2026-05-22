@@ -96,7 +96,12 @@ class PixelAidPatientAgent(Agent):
         return "".join(parts).strip() or SAFE_FALLBACK_TEXT
 
     def _validate_reply(self, reply: str) -> VoiceReplyValidation:
-        case = get_case_config(str(self._context.get("case_id") or "demo"))
+        case = get_case_config(
+            str(
+                self._context.get("case_id")
+                or "internal-medicine-dengue-warning-signs"
+            )
+        )
         completed_exam_keys = {
             str(exam.get("score_key") or exam.get("id"))
             for exam in self._context.get("completed_examinations", [])

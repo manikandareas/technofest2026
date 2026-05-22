@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "sync:bgm-version": "node scripts/sync-bgm-version.mjs",
+    "predev": "bun run sync:bgm-version",
+    "prebuild": "bun run sync:bgm-version",
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",

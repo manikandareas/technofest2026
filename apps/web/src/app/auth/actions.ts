@@ -1,5 +1,6 @@
 "use server";
 
+import { safeNextFromForm } from "@/lib/navigation/safe-next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -13,11 +14,7 @@ function redirectUrl(path: string) {
 }
 
 function safeNext(formData: FormData, fallback: string) {
-  const value = String(formData.get("next") ?? "");
-  if (!value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
-    return fallback;
-  }
-  return value;
+  return safeNextFromForm(formData, fallback);
 }
 
 export async function signInWithPassword(
@@ -43,6 +40,24 @@ export async function signUpWithPassword(
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const supabase = await createSupabaseServerClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (claimsData?.claims?.is_anonymous) {
+    const { error } = await supabase.auth.updateUser(
+      { email },
+      {
+        emailRedirectTo: redirectUrl(
+          `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
+        ),
+      },
+    );
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    redirect(safeNext(formData, "/app/onboarding"));
+  }
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -62,10 +77,17 @@ export async function signUpWithPassword(
 
 export async function signInWithGoogle(): Promise<void> {
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: redirectUrl("/auth/callback?next=/app") },
-  });
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const redirectTo = redirectUrl("/auth/callback?next=/app");
+  const { data, error } = claimsData?.claims?.is_anonymous
+    ? await supabase.auth.linkIdentity({
+        provider: "google",
+        options: { redirectTo },
+      })
+    : await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
 
   if (error || !data.url) {
     redirect("/sign-in?error=google_oauth_unavailable");

@@ -60,7 +60,6 @@ def _load_seed_data() -> tuple[list[PublicSpecialist], list[CaseBrief]]:
             estimated_duration_minutes=_duration_minutes(
                 int(row["estimated_duration_seconds"])
             ),
-            is_demo=bool(row.get("availability", {}).get("is_demo")),
             learning_objectives=[
                 str(item)
                 for item in (

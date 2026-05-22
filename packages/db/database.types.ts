@@ -22,13 +22,13 @@ export type Database = {
           case_id: string
           created_at: string
           feedback: Json
-          guest_session_id: string | null
           id: string
+          is_retry: boolean
           score: number
           score_breakdown: Json
           session_id: string
           stars: number
-          user_id: string | null
+          user_id: string
           xp_awarded: number
         }
         Insert: {
@@ -38,13 +38,13 @@ export type Database = {
           case_id: string
           created_at?: string
           feedback?: Json
-          guest_session_id?: string | null
           id?: string
+          is_retry?: boolean
           score: number
           score_breakdown?: Json
           session_id: string
           stars?: number
-          user_id?: string | null
+          user_id: string
           xp_awarded?: number
         }
         Update: {
@@ -54,13 +54,13 @@ export type Database = {
           case_id?: string
           created_at?: string
           feedback?: Json
-          guest_session_id?: string | null
           id?: string
+          is_retry?: boolean
           score?: number
           score_breakdown?: Json
           session_id?: string
           stars?: number
-          user_id?: string | null
+          user_id?: string
           xp_awarded?: number
         }
         Relationships: [
@@ -69,13 +69,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_results_guest_session_id_fkey"
-            columns: ["guest_session_id"]
-            isOneToOne: false
-            referencedRelation: "guest_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -99,43 +92,49 @@ export type Database = {
           case_id: string
           completed_at: string | null
           ended_at: string | null
-          guest_session_id: string | null
           id: string
+          livekit_room_name: string | null
           remaining_seconds: number
           result_id: string | null
           session_state: Json
           started_at: string
           status: string
           used_extension: boolean
-          user_id: string | null
+          user_id: string
+          voice_ended_at: string | null
+          voice_started_at: string | null
         }
         Insert: {
           case_id: string
           completed_at?: string | null
           ended_at?: string | null
-          guest_session_id?: string | null
           id?: string
+          livekit_room_name?: string | null
           remaining_seconds?: number
           result_id?: string | null
           session_state?: Json
           started_at?: string
           status?: string
           used_extension?: boolean
-          user_id?: string | null
+          user_id: string
+          voice_ended_at?: string | null
+          voice_started_at?: string | null
         }
         Update: {
           case_id?: string
           completed_at?: string | null
           ended_at?: string | null
-          guest_session_id?: string | null
           id?: string
+          livekit_room_name?: string | null
           remaining_seconds?: number
           result_id?: string | null
           session_state?: Json
           started_at?: string
           status?: string
           used_extension?: boolean
-          user_id?: string | null
+          user_id?: string
+          voice_ended_at?: string | null
+          voice_started_at?: string | null
         }
         Relationships: [
           {
@@ -143,13 +142,6 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "case_sessions_guest_session_id_fkey"
-            columns: ["guest_session_id"]
-            isOneToOne: false
-            referencedRelation: "guest_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -163,6 +155,7 @@ export type Database = {
       }
       cases: {
         Row: {
+          base_xp: number
           case_data: Json
           chief_complaint: string
           condition_badge: string
@@ -170,7 +163,6 @@ export type Database = {
           difficulty: string
           estimated_duration_minutes: number
           id: string
-          is_demo: boolean
           patient_age: number
           patient_gender: string
           patient_name: string
@@ -180,6 +172,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          base_xp?: number
           case_data?: Json
           chief_complaint: string
           condition_badge: string
@@ -187,7 +180,6 @@ export type Database = {
           difficulty: string
           estimated_duration_minutes: number
           id: string
-          is_demo?: boolean
           patient_age: number
           patient_gender: string
           patient_name: string
@@ -197,6 +189,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          base_xp?: number
           case_data?: Json
           chief_complaint?: string
           condition_badge?: string
@@ -204,7 +197,6 @@ export type Database = {
           difficulty?: string
           estimated_duration_minutes?: number
           id?: string
-          is_demo?: boolean
           patient_age?: number
           patient_gender?: string
           patient_name?: string
@@ -227,6 +219,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          external_id: string | null
           id: string
           metadata: Json
           role: string
@@ -235,6 +228,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          external_id?: string | null
           id?: string
           metadata?: Json
           role: string
@@ -243,6 +237,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          external_id?: string | null
           id?: string
           metadata?: Json
           role?: string
@@ -311,60 +306,43 @@ export type Database = {
           },
         ]
       }
-      guest_sessions: {
-        Row: {
-          claimed_at: string | null
-          claimed_by: string | null
-          created_at: string
-          id: string
-        }
-        Insert: {
-          claimed_at?: string | null
-          claimed_by?: string | null
-          created_at?: string
-          id: string
-        }
-        Update: {
-          claimed_at?: string | null
-          claimed_by?: string | null
-          created_at?: string
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "guest_sessions_claimed_by_fkey"
-            columns: ["claimed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       leaderboard_entries: {
         Row: {
+          average_best_score: number
+          completed_cases: number
           display_name: string
           id: string
+          latest_activity_at: string | null
           period: string
           rank: number | null
           score: number
+          total_xp: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          average_best_score?: number
+          completed_cases?: number
           display_name: string
           id?: string
+          latest_activity_at?: string | null
           period?: string
           rank?: number | null
           score?: number
+          total_xp?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          average_best_score?: number
+          completed_cases?: number
           display_name?: string
           id?: string
+          latest_activity_at?: string | null
           period?: string
           rank?: number | null
           score?: number
+          total_xp?: number
           updated_at?: string
           user_id?: string
         }
@@ -385,6 +363,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          is_anonymous: boolean
           onboarding_completed: boolean
           updated_at: string
           xp: number
@@ -395,6 +374,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          is_anonymous?: boolean
           onboarding_completed?: boolean
           updated_at?: string
           xp?: number
@@ -405,6 +385,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          is_anonymous?: boolean
           onboarding_completed?: boolean
           updated_at?: string
           xp?: number
@@ -436,6 +417,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "quiz_submissions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_limit_events: {
+        Row: {
+          actor_hash: string
+          actor_type: string
+          created_at: string
+          id: string
+          metadata: Json
+          scope: string
+          session_id: string | null
+        }
+        Insert: {
+          actor_hash: string
+          actor_type: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          scope: string
+          session_id?: string | null
+        }
+        Update: {
+          actor_hash?: string
+          actor_type?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          scope?: string
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_limit_events_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "case_sessions"
@@ -480,22 +499,31 @@ export type Database = {
         Row: {
           attempts: number
           best_score: number | null
+          best_stars: number
           case_id: string
+          first_completed_at: string | null
           last_attempt_at: string | null
+          last_completed_at: string | null
           user_id: string
         }
         Insert: {
           attempts?: number
           best_score?: number | null
+          best_stars?: number
           case_id: string
+          first_completed_at?: string | null
           last_attempt_at?: string | null
+          last_completed_at?: string | null
           user_id: string
         }
         Update: {
           attempts?: number
           best_score?: number | null
+          best_stars?: number
           case_id?: string
+          first_completed_at?: string | null
           last_attempt_at?: string | null
+          last_completed_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -511,6 +539,41 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_session_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          session_id: string
+          severity: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          session_id: string
+          severity?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          session_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_session_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
             referencedColumns: ["id"]
           },
         ]

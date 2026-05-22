@@ -17,8 +17,8 @@ from pixelaid_shared.gameplay import (
 
 
 _FALLBACK_CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
-    "demo": CaseGameplayConfig(
-        id="demo",
+    "internal-medicine-dengue-warning-signs": CaseGameplayConfig(
+        id="internal-medicine-dengue-warning-signs",
         patient_name="Maya",
         timer_seconds=8 * 60,
         medical_record=MedicalRecord(
@@ -598,8 +598,4 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = (
 
 
 def get_case_config(case_id: str) -> CaseGameplayConfig:
-    if case_id == "demo":
-        for config in CASE_CONFIGS.values():
-            if config.id == "internal-medicine-dengue-warning-signs":
-                return config
     return CASE_CONFIGS[case_id]

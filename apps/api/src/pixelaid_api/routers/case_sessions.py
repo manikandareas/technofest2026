@@ -1,11 +1,8 @@
 from fastapi import APIRouter, Depends
-from pixelaid_api.dependencies import get_current_user, get_session_actor
+from pixelaid_api.dependencies import get_session_actor
 from pixelaid_api.models import (
-    AuthUser,
     CaseResultResponse,
     CaseSessionResponse,
-    ClaimGuestResultRequest,
-    ClaimGuestResultResponse,
     CreateCaseSessionRequest,
     HistoryResponse,
     LeaderboardResponse,
@@ -94,6 +91,28 @@ async def extend_timer(
 
 
 @router.post(
+    "/api/case-sessions/{session_id}/pause",
+    response_model=CaseSessionResponse,
+)
+async def pause_consultation(
+    session_id: str,
+    actor: SessionActor = Depends(get_session_actor),
+) -> CaseSessionResponse:
+    return gameplay.pause_consultation(session_id, actor)
+
+
+@router.post(
+    "/api/case-sessions/{session_id}/resume",
+    response_model=CaseSessionResponse,
+)
+async def resume_consultation(
+    session_id: str,
+    actor: SessionActor = Depends(get_session_actor),
+) -> CaseSessionResponse:
+    return gameplay.resume_consultation(session_id, actor)
+
+
+@router.post(
     "/api/case-sessions/{session_id}/end-consultation",
     response_model=CaseSessionResponse,
 )
@@ -142,13 +161,3 @@ async def get_history_result(
 @router.get("/api/leaderboard", response_model=LeaderboardResponse)
 async def get_leaderboard() -> LeaderboardResponse:
     return gameplay.leaderboard()
-
-
-@router.post("/api/demo/{session_id}/claim", response_model=ClaimGuestResultResponse)
-async def claim_demo_result(
-    session_id: str,
-    payload: ClaimGuestResultRequest,
-    user: AuthUser = Depends(get_current_user),
-    settings: Settings = Depends(get_settings),
-) -> ClaimGuestResultResponse:
-    return gameplay.claim_guest_result(session_id, user.id, payload.token, settings)

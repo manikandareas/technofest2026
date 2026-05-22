@@ -24,7 +24,6 @@ class CaseCard(BaseModel):
     difficulty: str
     condition_badge: str
     estimated_duration_minutes: int
-    is_demo: bool
 
 
 class CaseBrief(CaseCard):
@@ -36,6 +35,7 @@ class Profile(BaseModel):
     email: str | None = None
     display_name: str | None = None
     avatar_url: str | None = None
+    is_anonymous: bool = False
     onboarding_completed: bool = False
     xp: int = 0
 
@@ -62,21 +62,17 @@ class AuthUser(BaseModel):
 
     id: str
     email: str | None = None
-
-
-class GuestUser(BaseModel):
-    id: str
+    is_anonymous: bool = False
 
 
 class SessionActor(BaseModel):
-    user_id: str | None = None
+    user_id: str
     email: str | None = None
-    guest_id: str | None = None
+    is_anonymous: bool = False
 
 
 class CreateCaseSessionRequest(BaseModel):
     case_id: str
-    guest_id: str | None = None
 
 
 class ConversationMessage(BaseModel):
@@ -127,6 +123,7 @@ class CaseSessionResponse(BaseModel):
     status: Literal["brief", "in_consultation", "quiz", "completed", "abandoned"]
     remaining_seconds: int
     used_extension: bool
+    is_paused: bool = False
     medical_record_opened: bool
     medical_record: MedicalRecordResponse
     examination_options: list[ExaminationOption]
@@ -183,10 +180,6 @@ class CaseResultResponse(BaseModel):
     attempt_number: int
     best_score: int
     is_retry: bool = False
-    is_claimed: bool = False
-    claim_available: bool = False
-    claim_token: str | None = None
-    claim_expires_at: str | None = None
 
 
 class HistoryItem(BaseModel):
@@ -220,15 +213,6 @@ class LeaderboardEntry(BaseModel):
 
 class LeaderboardResponse(BaseModel):
     entries: list[LeaderboardEntry]
-
-
-class ClaimGuestResultRequest(BaseModel):
-    token: str
-
-
-class ClaimGuestResultResponse(BaseModel):
-    result: CaseResultResponse
-    progress: ProgressResponse
 
 
 class LiveKitTokenRequest(BaseModel):

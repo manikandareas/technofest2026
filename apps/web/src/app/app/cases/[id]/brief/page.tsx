@@ -10,14 +10,6 @@ import { startCaseSession } from "../../actions";
 export const dynamic = "force-dynamic";
 
 async function loadCase(id: string) {
-  if (id === "demo") {
-    const api = await getPublicApiClient();
-    const { data } = await api
-      .GET("/api/public/cases/demo")
-      .catch(() => ({ data: undefined }));
-    return data ?? fallbackCases[0];
-  }
-
   const api = await getPublicApiClient();
   const { data } = await api
     .GET("/api/public/cases/{case_id}", { params: { path: { case_id: id } } })
@@ -42,7 +34,6 @@ export default async function CaseBriefPage({
             <div className="flex flex-wrap gap-2">
               <Badge>{item.specialist_name}</Badge>
               <Badge variant="outline">{item.condition_badge}</Badge>
-              {item.is_demo ? <Badge variant="secondary">Guest demo</Badge> : null}
             </div>
             <h1 className="text-3xl font-semibold tracking-tight">
               {item.patient_name}, {item.patient_age} tahun

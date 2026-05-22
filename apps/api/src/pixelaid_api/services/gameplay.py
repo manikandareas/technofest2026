@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-import hashlib
 import json
-import secrets
 from typing import Any, cast
 from uuid import uuid4
 
@@ -17,7 +15,6 @@ from livekit.protocol.room import CreateRoomRequest, ListRoomsRequest, RoomConfi
 from pixelaid_api.models import (
     CaseResultResponse,
     CaseSessionResponse,
-    ClaimGuestResultResponse,
     ConversationMessage,
     ExaminationEvent,
     ExaminationOption,
@@ -38,10 +35,18 @@ from pixelaid_api.models import (
     VoiceSessionEventResponse,
     VoiceTranscriptMessage,
 )
+from pixelaid_api.services import consultation_timer
 from pixelaid_api.services.feedback import generate_structured_feedback
+from pixelaid_api.services.profiles import (
+    ensure_memory_profile_for_actor,
+    get_memory_profile,
+    is_leaderboard_eligible,
+    memory_profiles,
+)
 from pixelaid_api.services.rate_limits import RateLimit, assert_rate_limit
 from pixelaid_api.services.supabase import get_case, get_supabase_admin
 from pixelaid_api.settings import Settings, get_settings
+from pixelaid_api.services import clock
 from pixelaid_shared.cases import CASE_CONFIGS, get_case_config
 from pixelaid_shared.gameplay import (
     calculate_score,
@@ -54,7 +59,6 @@ from pixelaid_shared.gameplay import (
     patient_response,
     summarize_missed_categories,
     stars_for_score,
-    utc_now,
 )
 
 StoreRow = dict[str, Any]
@@ -65,13 +69,10 @@ _exams: dict[str, list[StoreRow]] = {}
 _results: dict[str, StoreRow] = {}
 _attempts: dict[tuple[str, str], StoreRow] = {}
 _voice_events: dict[str, list[StoreRow]] = {}
-_profiles: dict[str, StoreRow] = {}
 _leaderboard: dict[str, StoreRow] = {}
 
 
 def _resolve_case_id(case_id: str) -> str:
-    if case_id == "demo":
-        return get_case("demo").id
     return case_id
 
 
@@ -85,26 +86,17 @@ def create_session(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Case not found."
         )
-    case_brief = get_case(case_id)
-    if actor.guest_id and not case_brief.is_demo:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Guests can only start the demo case.",
-        )
-    if not actor.user_id and not actor.guest_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing owner."
-        )
-    if actor.guest_id and case_brief.is_demo:
+    get_case(case_id)
+    if actor.is_anonymous:
         resolved = settings or get_settings()
         assert_rate_limit(
             RateLimit(
-                "guest_demo_sessions",
-                resolved.guest_demo_session_limit,
-                resolved.guest_demo_session_window_seconds,
+                "anonymous_case_sessions",
+                resolved.anonymous_case_session_limit,
+                resolved.anonymous_case_session_window_seconds,
             ),
-            actor_type="guest",
-            actor_key=actor.guest_id,
+            actor_type="user",
+            actor_key=actor.user_id,
             metadata={"case_id": case_id},
         )
 
@@ -113,25 +105,22 @@ def create_session(
     row = {
         "id": str(uuid4()),
         "user_id": actor.user_id,
-        "guest_session_id": actor.guest_id,
         "case_id": case_id,
         "status": "brief",
         "remaining_seconds": config.timer_seconds,
         "used_extension": False,
         "session_state": {"covered_interview_keys": [], "medical_record_opened": False},
-        "started_at": _iso(utc_now()),
+        "started_at": _iso(clock.utc_now()),
         "ended_at": None,
         "result_id": None,
     }
     if client is None:
+        ensure_memory_profile_for_actor(actor)
         _sessions[row["id"]] = row
         _messages[row["id"]] = []
         _exams[row["id"]] = []
     else:
-        if actor.user_id:
-            _ensure_session_profile(client, actor)
-        if actor.guest_id:
-            client.table("guest_sessions").upsert({"id": actor.guest_id}).execute()
+        _ensure_session_profile(client, actor)
         data = cast(
             list[StoreRow], client.table("case_sessions").insert(row).execute().data
         )
@@ -145,6 +134,7 @@ def get_session(
     row = _get_owned_session(session_id, actor)
     if auto_start and row["status"] == "brief":
         row = _update_session(session_id, {"status": "in_consultation"})
+    row = consultation_timer.ensure_started(row, _update_session)
     return _session_response(row)
 
 
@@ -156,6 +146,7 @@ def send_message(
     )
     if row["status"] == "brief":
         row = _update_session(session_id, {"status": "in_consultation"})
+    row = consultation_timer.assert_time_available(row, _update_session)
     config = get_case_config(str(row["case_id"]))
     reply, rubric_key = patient_response(config, content)
     state = dict(row.get("session_state") or {})
@@ -174,7 +165,12 @@ def send_message(
 
 
 def open_medical_record(session_id: str, actor: SessionActor) -> CaseSessionResponse:
-    row = _get_owned_session(session_id, actor)
+    row = _require_status(
+        _get_owned_session(session_id, actor), {"brief", "in_consultation"}
+    )
+    if row["status"] == "brief":
+        row = _update_session(session_id, {"status": "in_consultation"})
+    row = consultation_timer.assert_time_available(row, _update_session)
     state = dict(row.get("session_state") or {})
     state["medical_record_opened"] = True
     _update_session(session_id, {"session_state": state})
@@ -185,6 +181,7 @@ def select_examination(
     session_id: str, actor: SessionActor, examination_id: str
 ) -> CaseSessionResponse:
     row = _require_status(_get_owned_session(session_id, actor), {"in_consultation"})
+    row = consultation_timer.assert_time_available(row, _update_session)
     config = get_case_config(str(row["case_id"]))
     exam = next(
         (item for item in config.examinations if item.id == examination_id), None
@@ -200,7 +197,7 @@ def select_examination(
             status_code=status.HTTP_409_CONFLICT,
             detail="Examination has already been selected.",
         )
-    now = utc_now()
+    now = clock.utc_now()
     _insert_exam(
         session_id,
         {
@@ -219,21 +216,65 @@ def select_examination(
 
 def extend_timer(session_id: str, actor: SessionActor) -> tuple[int, bool]:
     row = _require_status(_get_owned_session(session_id, actor), {"in_consultation"})
+    row = consultation_timer.ensure_started(row, _update_session)
+    consultation_timer.assert_not_paused(row)
     if row.get("used_extension"):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Timer extension has already been used.",
         )
-    remaining = max(int(row.get("remaining_seconds") or 0), 0) + 60
+    if consultation_timer.remaining_seconds(row) > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Timer extension is available after consultation time expires.",
+        )
+    updates = consultation_timer.build_extend_updates()
+    state = dict(row.get("session_state") or {})
+    state.update(cast(dict[str, Any], updates["session_state"]))
     _update_session(
-        session_id, {"remaining_seconds": remaining, "used_extension": True}
+        session_id,
+        {
+            "remaining_seconds": updates["remaining_seconds"],
+            "used_extension": updates["used_extension"],
+            "session_state": state,
+        },
     )
-    return remaining, True
+    return 60, True
+
+
+def pause_consultation(session_id: str, actor: SessionActor) -> CaseSessionResponse:
+    row = _require_status(_get_owned_session(session_id, actor), {"in_consultation"})
+    row = consultation_timer.ensure_started(row, _update_session)
+    if consultation_timer.is_paused(row):
+        return _session_response(row)
+    remaining = consultation_timer.remaining_seconds(row)
+    if remaining <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Consultation time has expired.",
+        )
+    _update_session(session_id, consultation_timer.build_pause_updates(row))
+    return get_session(session_id, actor, auto_start=False)
+
+
+def resume_consultation(session_id: str, actor: SessionActor) -> CaseSessionResponse:
+    row = _require_status(_get_owned_session(session_id, actor), {"in_consultation"})
+    row = consultation_timer.ensure_started(row, _update_session)
+    if consultation_timer.remaining_seconds(row) <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Consultation time has expired.",
+        )
+    if not consultation_timer.is_paused(row):
+        return _session_response(row)
+    _update_session(session_id, consultation_timer.build_resume_updates(row))
+    return get_session(session_id, actor, auto_start=False)
 
 
 def end_consultation(session_id: str, actor: SessionActor) -> CaseSessionResponse:
-    _require_status(_get_owned_session(session_id, actor), {"in_consultation"})
-    _update_session(session_id, {"status": "quiz"})
+    row = _require_status(_get_owned_session(session_id, actor), {"in_consultation"})
+    row = consultation_timer.ensure_started(row, _update_session)
+    _update_session(session_id, consultation_timer.build_end_updates(row))
     return get_session(session_id, actor, auto_start=False)
 
 
@@ -261,16 +302,12 @@ def submit_quiz(
         covered_interview_keys,
         completed_exam_keys,
         bool(state.get("medical_record_opened")),
-        int(row.get("remaining_seconds") or 0),
+        int(consultation_timer.remaining_seconds(row)),
         bool(row.get("used_extension")),
     )
-    user_id = str(row["user_id"]) if row.get("user_id") else None
-    stats_key = (user_id, str(row["case_id"])) if user_id else None
-    stats = (
-        _load_user_case_stats(user_id, str(row["case_id"]))
-        if user_id
-        else {"attempts": 0, "best_score": 0}
-    )
+    user_id = str(row["user_id"])
+    stats_key = (user_id, str(row["case_id"]))
+    stats = _load_user_case_stats(user_id, str(row["case_id"]))
     attempt_number = int(stats["attempts"]) + 1
     best_score = max(int(stats.get("best_score") or 0), breakdown.total)
     is_retry = attempt_number > 1
@@ -281,8 +318,6 @@ def submit_quiz(
     )
     calculated_xp = calculate_xp(base_xp, breakdown.total, difficulty)
     xp_awarded = calculate_retry_xp(calculated_xp) if is_retry else calculated_xp
-    if not user_id:
-        xp_awarded = 0
     stars = stars_for_score(breakdown.total, breakdown.safety)
     missed_interview, missed_exams, missed_safety = summarize_missed_categories(
         config,
@@ -303,14 +338,11 @@ def submit_quiz(
     )
     _assert_feedback_generation_limit(row, actor, settings or get_settings())
     feedback = generate_structured_feedback(feedback_input).model_dump()
-    claim_token = secrets.token_urlsafe(32) if row.get("guest_session_id") else None
-    claim_expires_at = _iso(utc_now() + timedelta(hours=24)) if claim_token else None
     result_id = str(uuid4())
     result = {
         "id": result_id,
         "session_id": session_id,
         "user_id": user_id,
-        "guest_session_id": row.get("guest_session_id"),
         "case_id": row["case_id"],
         "score": breakdown.total,
         "xp_awarded": xp_awarded,
@@ -321,16 +353,12 @@ def submit_quiz(
         "attempt_number": attempt_number,
         "best_score": best_score,
         "is_retry": is_retry,
-        "is_claimed": bool(user_id),
-        "claim_token_hash": _hash_token(claim_token) if claim_token else None,
-        "claim_expires_at": claim_expires_at,
-        "claimed_at": _iso(utc_now()) if user_id else None,
-        "created_at": _iso(utc_now()),
+        "created_at": _iso(clock.utc_now()),
     }
     client = get_supabase_admin()
     if client is None:
         _results[result_id] = result
-        if user_id and stats_key:
+        if stats_key:
             _record_user_completion(
                 user_id, str(row["case_id"]), breakdown.total, stars, xp_awarded
             )
@@ -342,23 +370,18 @@ def submit_quiz(
             .execute()
             .data,
         )
-        insert_result = {
-            key: value for key, value in result.items() if key != "claim_token"
-        }
         data = cast(
             list[StoreRow],
-            client.table("case_results").insert(insert_result).execute().data,
+            client.table("case_results").insert(result).execute().data,
         )
         result = data[0]
         if user_id:
             _record_user_completion(
                 user_id, str(row["case_id"]), breakdown.total, stars, xp_awarded
             )
-    if claim_token:
-        result["claim_token"] = claim_token
     _update_session(
         session_id,
-        {"status": "completed", "ended_at": _iso(utc_now()), "result_id": result_id},
+        {"status": "completed", "ended_at": _iso(clock.utc_now()), "result_id": result_id},
     )
     return _result_response(result)
 
@@ -369,24 +392,16 @@ def get_result(result_id: str, actor: SessionActor) -> CaseResultResponse:
 
 
 def history(actor: SessionActor) -> HistoryResponse:
-    if not actor.user_id and not actor.guest_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing owner."
-        )
     client = get_supabase_admin()
     if client is None:
         rows = [
             row
             for row in _results.values()
-            if (actor.user_id and row.get("user_id") == actor.user_id)
-            or (actor.guest_id and row.get("guest_session_id") == actor.guest_id)
+            if row.get("user_id") == actor.user_id
         ]
     else:
         query = client.table("case_results").select("*").order("created_at", desc=True)
-        if actor.user_id:
-            query = query.eq("user_id", actor.user_id)
-        else:
-            query = query.eq("guest_session_id", actor.guest_id)
+        query = query.eq("user_id", actor.user_id)
         rows = cast(list[StoreRow], query.execute().data)
     rows = sorted(rows, key=lambda item: str(item.get("created_at")), reverse=True)
     return HistoryResponse(items=[_history_item(row) for row in rows])
@@ -395,7 +410,7 @@ def history(actor: SessionActor) -> HistoryResponse:
 def progress(user_id: str) -> ProgressResponse:
     client = get_supabase_admin()
     if client is None:
-        total_xp = int(_profiles.get(user_id, {}).get("xp") or 0)
+        total_xp = int((get_memory_profile(user_id) or {}).get("xp") or 0)
         stats = [
             row
             for (uid, _), row in _attempts.items()
@@ -421,7 +436,7 @@ def progress(user_id: str) -> ProgressResponse:
                 .data,
             )
         except Exception:
-            total_xp = int(_profiles.get(user_id, {}).get("xp") or 0)
+            total_xp = int((get_memory_profile(user_id) or {}).get("xp") or 0)
             stats = [
                 row
                 for (uid, _), row in _attempts.items()
@@ -446,13 +461,18 @@ def progress(user_id: str) -> ProgressResponse:
 def leaderboard(limit: int = 50) -> LeaderboardResponse:
     client = get_supabase_admin()
     if client is None:
-        rows = list(_leaderboard.values())
+        rows = [
+            row
+            for row in _leaderboard.values()
+            if is_leaderboard_eligible(str(row.get("user_id")))
+        ]
     else:
         try:
             rows = cast(
                 list[StoreRow],
                 client.table("leaderboard_entries")
-                .select("*")
+                .select("*,profiles!inner(is_anonymous)")
+                .eq("profiles.is_anonymous", False)
                 .order("score", desc=True)
                 .order("average_best_score", desc=True)
                 .order("completed_cases", desc=True)
@@ -462,7 +482,11 @@ def leaderboard(limit: int = 50) -> LeaderboardResponse:
                 .data,
             )
         except Exception:
-            rows = list(_leaderboard.values())
+            rows = [
+                row
+                for row in _leaderboard.values()
+                if is_leaderboard_eligible(str(row.get("user_id")))
+            ]
     rows = sorted(
         rows,
         key=lambda item: (
@@ -478,89 +502,6 @@ def leaderboard(limit: int = 50) -> LeaderboardResponse:
     )
 
 
-def claim_guest_result(
-    session_id: str,
-    user_id: str,
-    token: str,
-    settings: Settings | None = None,
-) -> ClaimGuestResultResponse:
-    resolved = settings or get_settings()
-    assert_rate_limit(
-        RateLimit(
-            "guest_demo_claim_attempts",
-            resolved.guest_demo_claim_attempt_limit,
-            resolved.guest_demo_claim_attempt_window_seconds,
-        ),
-        actor_type="user",
-        actor_key=user_id,
-        session_id=session_id,
-    )
-    row = _get_session_row(session_id)
-    if row.get("user_id"):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Session is already owned."
-        )
-    result_id = row.get("result_id")
-    if not result_id:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Guest result not found."
-        )
-    result = _get_result_row(str(result_id))
-    if result.get("is_claimed") or result.get("user_id"):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Result has already been claimed.",
-        )
-    if result.get("claim_token_hash") != _hash_token(token):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid claim token."
-        )
-    expires_at = result.get("claim_expires_at")
-    if expires_at and _parse(str(expires_at)) < utc_now():
-        raise HTTPException(
-            status_code=status.HTTP_410_GONE, detail="Claim token has expired."
-        )
-
-    stats = _load_user_case_stats(user_id, str(result["case_id"]))
-    attempt_number = int(stats.get("attempts") or 0) + 1
-    is_retry = attempt_number > 1
-    case_row = _case_row(str(result["case_id"]))
-    difficulty = cast(
-        Any, case_row.get("difficulty") or get_case(str(result["case_id"])).difficulty
-    )
-    calculated_xp = calculate_xp(
-        int(case_row.get("base_xp") or 100), int(result["score"]), difficulty
-    )
-    xp_awarded = calculate_retry_xp(calculated_xp) if is_retry else calculated_xp
-    stars = int(result.get("stars") or 0)
-    best_score = max(int(stats.get("best_score") or 0), int(result["score"]))
-    updates = {
-        "user_id": user_id,
-        "xp_awarded": xp_awarded,
-        "attempt_number": attempt_number,
-        "best_score": best_score,
-        "is_retry": is_retry,
-        "is_claimed": True,
-        "claimed_at": _iso(utc_now()),
-    }
-    client = get_supabase_admin()
-    if client is None:
-        result.update(updates)
-        row["user_id"] = user_id
-    else:
-        client.table("case_results").update(updates).eq("id", result["id"]).execute()
-        client.table("case_sessions").update({"user_id": user_id}).eq(
-            "id", session_id
-        ).execute()
-        result.update(updates)
-    _record_user_completion(
-        user_id, str(result["case_id"]), int(result["score"]), stars, xp_awarded
-    )
-    return ClaimGuestResultResponse(
-        result=_result_response(result), progress=progress(user_id)
-    )
-
-
 async def issue_livekit_token(
     session_id: str,
     actor: SessionActor,
@@ -569,6 +510,9 @@ async def issue_livekit_token(
     row = _require_status(
         _get_owned_session(session_id, actor), {"brief", "in_consultation"}
     )
+    if row["status"] == "brief":
+        row = _update_session(session_id, {"status": "in_consultation"})
+    row = consultation_timer.assert_time_available(row, _update_session)
     if (
         not settings.livekit_url
         or not settings.livekit_api_key
@@ -578,7 +522,18 @@ async def issue_livekit_token(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="LiveKit is not configured.",
         )
-    if actor.user_id:
+    if actor.is_anonymous:
+        assert_rate_limit(
+            RateLimit(
+                "anonymous_voice_tokens",
+                settings.anonymous_voice_token_limit,
+                settings.anonymous_voice_token_window_seconds,
+            ),
+            actor_type="user",
+            actor_key=actor.user_id,
+            session_id=session_id,
+        )
+    else:
         assert_rate_limit(
             RateLimit(
                 "authenticated_voice_tokens",
@@ -589,24 +544,11 @@ async def issue_livekit_token(
             actor_key=actor.user_id,
             session_id=session_id,
         )
-    elif actor.guest_id:
-        assert_rate_limit(
-            RateLimit(
-                "guest_voice_tokens",
-                settings.guest_voice_token_limit,
-                settings.guest_voice_token_window_seconds,
-            ),
-            actor_type="guest",
-            actor_key=actor.guest_id,
-            session_id=session_id,
-        )
 
     room_name = f"case-session-{session_id}"
-    identity = f"user:{actor.user_id}" if actor.user_id else f"guest:{actor.guest_id}"
-    ttl_seconds = (
-        15 * 60
-        if actor.user_id
-        else min(max(int(row.get("remaining_seconds") or 0), 0) + 60, 10 * 60)
+    identity = f"user:{actor.user_id}"
+    ttl_seconds = consultation_timer.voice_token_ttl_seconds(
+        row, is_anonymous=actor.is_anonymous
     )
     metadata: dict[str, object] = {
         "session_id": session_id,
@@ -642,7 +584,7 @@ async def issue_livekit_token(
     )
     updates: StoreRow = {
         "livekit_room_name": room_name,
-        "voice_started_at": _iso(utc_now()),
+        "voice_started_at": _iso(clock.utc_now()),
     }
     _update_session(session_id, updates)
     record_voice_event(
@@ -651,7 +593,7 @@ async def issue_livekit_token(
         "info",
         {
             "identity": identity,
-            "guest_session_id": actor.guest_id,
+            "is_anonymous": actor.is_anonymous,
             "ttl_seconds": ttl_seconds,
         },
     )
@@ -805,7 +747,7 @@ def record_voice_event(
         "event_type": event_type,
         "severity": severity,
         "metadata": metadata,
-        "created_at": _iso(utc_now()),
+        "created_at": _iso(clock.utc_now()),
     }
     client = get_supabase_admin()
     if client is None:
@@ -817,7 +759,7 @@ def record_voice_event(
         )
         row = data[0]
     if event_type in {"disconnected", "ended"}:
-        _update_session(session_id, {"voice_ended_at": _iso(utc_now())})
+        _update_session(session_id, {"voice_ended_at": _iso(clock.utc_now())})
     return VoiceSessionEventResponse(
         id=str(row["id"]),
         session_id=str(row["session_id"]),
@@ -835,8 +777,6 @@ def _get_owned_session(session_id: str, actor: SessionActor) -> StoreRow:
         )
     if actor.user_id and row.get("user_id") == actor.user_id:
         return row
-    if actor.guest_id and row.get("guest_session_id") == actor.guest_id:
-        return row
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Session is not owned by this actor.",
@@ -850,6 +790,7 @@ def _ensure_session_profile(client: Any, actor: SessionActor) -> None:
         "id": actor.user_id,
         "email": actor.email,
         "display_name": actor.email.split("@")[0] if actor.email else None,
+        "is_anonymous": actor.is_anonymous,
     }
     row = {key: value for key, value in row.items() if value is not None}
     try:
@@ -884,8 +825,6 @@ def _get_session_row(session_id: str) -> StoreRow:
 def _get_owned_result(result_id: str, actor: SessionActor) -> StoreRow:
     row = _get_result_row(result_id)
     if actor.user_id and row.get("user_id") == actor.user_id:
-        return row
-    if actor.guest_id and row.get("guest_session_id") == actor.guest_id:
         return row
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -942,7 +881,7 @@ def _insert_message(
         "session_id": session_id,
         "role": role,
         "content": content,
-        "created_at": _iso(utc_now()),
+        "created_at": _iso(clock.utc_now()),
         "external_id": external_id,
         "metadata": metadata or {},
     }
@@ -1040,8 +979,9 @@ def _session_response(row: StoreRow) -> CaseSessionResponse:
         id=str(row["id"]),
         case=get_case(str(row["case_id"])),
         status=cast(Any, row["status"]),
-        remaining_seconds=int(row["remaining_seconds"]),
+        remaining_seconds=consultation_timer.remaining_seconds(row),
         used_extension=bool(row["used_extension"]),
+        is_paused=consultation_timer.is_paused(row),
         medical_record_opened=bool(state.get("medical_record_opened")),
         medical_record=MedicalRecordResponse(**config.medical_record.model_dump()),
         examination_options=[
@@ -1094,15 +1034,6 @@ def _exam_response(row: StoreRow) -> ExaminationEvent:
 
 def _result_response(row: StoreRow) -> CaseResultResponse:
     breakdown = row.get("score_breakdown") or {}
-    claim_token = row.get("claim_token")
-    claim_expires_at = row.get("claim_expires_at")
-    claim_available = bool(
-        row.get("guest_session_id")
-        and not row.get("is_claimed")
-        and not row.get("user_id")
-        and claim_expires_at
-        and _parse(str(claim_expires_at)) > utc_now()
-    )
     return CaseResultResponse(
         id=str(row["id"]),
         session_id=str(row["session_id"]),
@@ -1117,10 +1048,6 @@ def _result_response(row: StoreRow) -> CaseResultResponse:
         attempt_number=int(row.get("attempt_number") or 1),
         best_score=int(row.get("best_score") or row["score"]),
         is_retry=bool(row.get("is_retry")),
-        is_claimed=bool(row.get("is_claimed") or row.get("user_id")),
-        claim_available=claim_available,
-        claim_token=str(claim_token) if claim_token else None,
-        claim_expires_at=str(claim_expires_at) if claim_expires_at else None,
     )
 
 
@@ -1150,7 +1077,7 @@ def _require_status(row: StoreRow, allowed: set[str]) -> StoreRow:
 
 
 def _owner_key(row: StoreRow) -> str:
-    return str(row.get("user_id") or f"guest:{row.get('guest_session_id')}")
+    return str(row.get("user_id"))
 
 
 def _case_row(case_id: str) -> StoreRow:
@@ -1202,7 +1129,7 @@ def _record_user_completion(
     stars: int,
     xp_awarded: int,
 ) -> None:
-    now = _iso(utc_now())
+    now = _iso(clock.utc_now())
     stats = _load_user_case_stats(user_id, case_id)
     attempts = int(stats.get("attempts") or 0) + 1
     best_score = max(int(stats.get("best_score") or 0), score)
@@ -1230,7 +1157,7 @@ def _record_user_completion(
         ).execute()
         profile_response = (
             client.table("profiles")
-            .select("xp,display_name,email")
+            .select("xp,display_name,email,is_anonymous")
             .eq("id", user_id)
             .maybe_single()
             .execute()
@@ -1238,7 +1165,7 @@ def _record_user_completion(
         profile = cast(
             StoreRow,
             getattr(profile_response, "data", None)
-            or {"xp": 0, "display_name": None, "email": None},
+            or {"xp": 0, "display_name": None, "email": None, "is_anonymous": False},
         )
         total_xp = int(profile.get("xp") or 0) + xp_awarded
         client.table("profiles").update({"xp": total_xp}).eq("id", user_id).execute()
@@ -1277,16 +1204,22 @@ def _record_memory_completion(
         "last_completed_at": now,
         "last_attempt_at": now,
     }
-    profile = _profiles.setdefault(
-        user_id, {"id": user_id, "xp": 0, "display_name": user_id}
+    profiles = memory_profiles()
+    profile = profiles.setdefault(
+        user_id,
+        {"id": user_id, "xp": 0, "display_name": user_id, "is_anonymous": False},
     )
     profile["xp"] = int(profile.get("xp") or 0) + xp_awarded
     _sync_memory_leaderboard(user_id, now)
 
 
 def _sync_memory_leaderboard(user_id: str, latest_activity_at: str) -> None:
+    if not is_leaderboard_eligible(user_id):
+        _leaderboard.pop(user_id, None)
+        return
     stats = [row for (uid, _), row in _attempts.items() if uid == user_id]
-    total_xp = int(_profiles.get(user_id, {}).get("xp") or 0)
+    profile = get_memory_profile(user_id) or {}
+    total_xp = int(profile.get("xp") or 0)
     completed_cases = len(stats)
     average = (
         round(
@@ -1297,7 +1230,7 @@ def _sync_memory_leaderboard(user_id: str, latest_activity_at: str) -> None:
     )
     _leaderboard[user_id] = {
         "user_id": user_id,
-        "display_name": str(_profiles.get(user_id, {}).get("display_name") or user_id),
+        "display_name": str((get_memory_profile(user_id) or {}).get("display_name") or user_id),
         "score": total_xp,
         "total_xp": total_xp,
         "completed_cases": completed_cases,
@@ -1314,6 +1247,11 @@ def _upsert_leaderboard_row(
     stats_rows: list[StoreRow],
     latest_activity_at: str,
 ) -> None:
+    if profile.get("is_anonymous"):
+        client.table("leaderboard_entries").delete().eq("user_id", user_id).eq(
+            "period", "all_time"
+        ).execute()
+        return
     completed_cases = len(stats_rows)
     average = (
         round(
@@ -1365,13 +1303,8 @@ def _assert_feedback_generation_limit(
     actor: SessionActor,
     settings: Settings,
 ) -> None:
-    actor_type = "user" if row.get("user_id") or actor.user_id else "guest"
-    actor_key = str(
-        row.get("user_id")
-        or actor.user_id
-        or row.get("guest_session_id")
-        or actor.guest_id
-    )
+    actor_type = "user"
+    actor_key = str(row.get("user_id") or actor.user_id)
     assert_rate_limit(
         RateLimit(
             "ai_feedback_generations",
@@ -1385,10 +1318,39 @@ def _assert_feedback_generation_limit(
     )
 
 
-def _hash_token(token: str | None) -> str | None:
-    if not token:
-        return None
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+def refresh_leaderboard_for_user(user_id: str) -> None:
+    now = _iso(clock.utc_now())
+    client = get_supabase_admin()
+    if client is None:
+        _sync_memory_leaderboard(user_id, now)
+        return
+
+    profile_response = (
+        client.table("profiles")
+        .select("xp,display_name,email,is_anonymous")
+        .eq("id", user_id)
+        .maybe_single()
+        .execute()
+    )
+    profile = cast(StoreRow | None, getattr(profile_response, "data", None))
+    if not profile:
+        return
+    stats_rows = cast(
+        list[StoreRow],
+        client.table("user_case_stats")
+        .select("*")
+        .eq("user_id", user_id)
+        .execute()
+        .data,
+    )
+    _upsert_leaderboard_row(
+        client,
+        user_id,
+        profile,
+        int(profile.get("xp") or 0),
+        stats_rows,
+        now,
+    )
 
 
 def _iso(value: datetime) -> str:

@@ -28,17 +28,18 @@ async def get_current_user(
 
 async def get_session_actor(
     authorization: Annotated[str | None, Header()] = None,
-    x_guest_session: Annotated[str | None, Header()] = None,
     settings: Settings = Depends(get_settings),
 ) -> SessionActor:
     if authorization and authorization.lower().startswith("bearer "):
         user = await get_current_user(authorization, settings)
-        return SessionActor(user_id=user.id, email=user.email)
-    if x_guest_session:
-        return SessionActor(guest_id=x_guest_session.strip())
+        return SessionActor(
+            user_id=user.id,
+            email=user.email,
+            is_anonymous=user.is_anonymous,
+        )
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Missing authenticated user or guest session.",
+        detail="Missing bearer token.",
     )
 
 
