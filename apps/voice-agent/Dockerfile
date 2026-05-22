@@ -35,8 +35,8 @@ RUN addgroup --system app \
 
 COPY --from=builder --chown=app:app /app/apps/voice-agent/.venv /app/apps/voice-agent/.venv
 COPY --from=builder --chown=app:app /app/apps/voice-agent/src /app/apps/voice-agent/src
+COPY --from=builder --chown=app:app /app/packages/shared-py /app/packages/shared-py
 
 USER app
 
 CMD ["pixelaid-voice-agent", "start"]
-
