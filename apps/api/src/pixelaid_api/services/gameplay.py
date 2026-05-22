@@ -11,7 +11,7 @@ from livekit.protocol.agent_dispatch import (
     CreateAgentDispatchRequest,
     RoomAgentDispatch,
 )
-from livekit.protocol.room import CreateRoomRequest, ListRoomsRequest, RoomConfiguration
+from livekit.protocol.room import RoomConfiguration
 from pixelaid_api.models import (
     CaseResultResponse,
     CaseSessionResponse,
@@ -626,20 +626,12 @@ async def _ensure_livekit_agent_dispatch(
         api_secret=settings.livekit_api_secret,
     )
     try:
-        rooms = await api.room.list_rooms(ListRoomsRequest(names=[room_name]))
-        if not rooms.rooms:
-            await api.room.create_room(
-                CreateRoomRequest(
-                    name=room_name,
-                    metadata=json.dumps({"session_id": metadata["session_id"]}),
-                    agents=[dispatch],
-                    empty_timeout=120,
-                    departure_timeout=30,
-                    max_participants=4,
-                )
-            )
-            return
-        existing = await api.agent_dispatch.list_dispatch(room_name)
+        existing: list[Any] = []
+        try:
+            existing = await api.agent_dispatch.list_dispatch(room_name)
+        except TwirpError as exc:
+            if exc.code != TwirpErrorCode.NOT_FOUND:
+                raise
         if any(item.agent_name == "pixelaid-patient" for item in existing):
             return
         await api.agent_dispatch.create_dispatch(
