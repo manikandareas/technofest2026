@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -102,6 +102,7 @@ export function VoicePanel({
           connect
           token={token.token}
           serverUrl={livekitUrl}
+          onDisconnected={() => onStateChange("disconnected")}
           onError={(caught) => onError(caught.message)}
         >
           <RoomAudioRenderer />
@@ -186,9 +187,6 @@ function VoiceConnectionState({
   onStateChange: (state: VoiceUiState) => void;
 }) {
   const [showMicHelp, setShowMicHelp] = useState(false);
-  const [pttHint, setPttHint] = useState<string | null>(null);
-  const hasConnectedRef = useRef(false);
-  const pttHoldRef = useRef(false);
   const connectionState = useConnectionState();
   const { state: agentState } = useVoiceAssistant();
   const { isMicrophoneEnabled, localParticipant } = useLocalParticipant();
@@ -204,75 +202,26 @@ function VoiceConnectionState({
     },
   });
   const effectiveMicEnabled = isMicrophoneEnabled && micEnabled;
-  const canPressPtt =
-    connectionState === ConnectionState.Connected && !disabled && !isPending;
-  const canEnableMic = canPressPtt && !micPending;
+  const canTalk =
+    connectionState === ConnectionState.Connected &&
+    agentState !== "speaking" &&
+    !disabled &&
+    !isPending &&
+    !micPending;
 
   const setMicEnabled = (enabled: boolean) => {
-    if (enabled) {
-      pttHoldRef.current = true;
-      if (!canPressPtt) {
-        if (disabled || isPending) {
-          setPttHint("Voice belum siap.");
-        } else if (connectionState !== ConnectionState.Connected) {
-          setPttHint("Menghubungkan voice...");
-        }
-        return;
-      }
-      if (!canEnableMic) {
-        setPttHint("Menyiapkan mikrofon...");
-        return;
-      }
-      setPttHint(null);
-      if (!effectiveMicEnabled) {
-        void toggleMic(true);
-      }
+    if (enabled && !canTalk) {
       return;
     }
-
-    pttHoldRef.current = false;
-    setPttHint(null);
-    if (!effectiveMicEnabled) {
+    if (!enabled && !effectiveMicEnabled) {
       return;
     }
-    void toggleMic(false);
+    void toggleMic(enabled);
   };
 
   useEffect(() => {
-    if (!pttHint) {
-      return;
-    }
-    const timer = window.setTimeout(() => setPttHint(null), 2500);
-    return () => window.clearTimeout(timer);
-  }, [pttHint]);
-
-  useEffect(() => {
-    if (micPending || !pttHoldRef.current || !canEnableMic || effectiveMicEnabled) {
-      return;
-    }
-    setPttHint(null);
-    void toggleMic(true);
-  }, [canEnableMic, effectiveMicEnabled, micPending, toggleMic]);
-
-  useEffect(() => {
-    if (connectionState !== ConnectionState.Connected) {
-      return;
-    }
-    void navigator.mediaDevices
-      ?.getUserMedia({ audio: true })
-      .then((stream) => {
-        for (const track of stream.getTracks()) {
-          track.stop();
-        }
-      })
-      .catch(() => {
-        setShowMicHelp(true);
-      });
-  }, [connectionState]);
-
-  useEffect(() => {
     if (connectionState === ConnectionState.Disconnected) {
-      onStateChange(hasConnectedRef.current ? "disconnected" : "connecting");
+      onStateChange("disconnected");
       return;
     }
     if (connectionState === ConnectionState.Reconnecting) {
@@ -283,7 +232,6 @@ function VoiceConnectionState({
       onStateChange("connecting");
       return;
     }
-    hasConnectedRef.current = true;
     if (!effectiveMicEnabled) {
       if (agentState === "speaking") {
         onStateChange("patient_speaking");
@@ -318,7 +266,7 @@ function VoiceConnectionState({
         size="icon"
         variant="secondary"
         font="retro"
-        disabled={!canPressPtt && !effectiveMicEnabled}
+        disabled={!canTalk && !effectiveMicEnabled}
         className="size-[4.75rem] rounded-full border-4 border-[#2f9e44] bg-[#82c91e] text-white shadow-[0_4px_0_#2f9e44] hover:bg-[#74b816] active:translate-y-1 active:shadow-[0_2px_0_#2f9e44] disabled:opacity-70 sm:size-20"
         aria-label={effectiveMicEnabled ? "Release to stop talking" : "Hold to talk"}
         onPointerDown={(event) => {
@@ -330,6 +278,7 @@ function VoiceConnectionState({
           setMicEnabled(false);
         }}
         onPointerCancel={() => setMicEnabled(false)}
+        onPointerLeave={() => setMicEnabled(false)}
         onKeyDown={(event) => {
           if (event.repeat || (event.key !== " " && event.key !== "Enter")) {
             return;
@@ -355,11 +304,9 @@ function VoiceConnectionState({
         {connectionState === ConnectionState.Disconnected ? <WifiOff className="size-4" /> : null}
         {effectiveMicEnabled
           ? "Release when finished speaking."
-          : pttHint
-            ? pttHint
-            : agentState === "speaking"
-              ? "Hold the mic button to interrupt or ask a follow-up."
-              : "Hold the mic button to talk."}
+          : agentState === "speaking"
+            ? "Patient is answering. Mic stays off."
+            : "Hold the mic button to talk."}
       </span>
       <MicrophoneHelpDialog open={showMicHelp} onOpenChange={setShowMicHelp} />
     </div>

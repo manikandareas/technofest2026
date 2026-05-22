@@ -8,34 +8,6 @@ const homeBgmRuntimeCaching: RuntimeCaching = {
   handler: new NetworkOnly(),
 };
 
-/** Never cache App Router RSC payloads; stale entries caused intermittent 404 on client nav. */
-const appRouterRuntimeCaching: RuntimeCaching = {
-  matcher: ({ request, url: { pathname }, sameOrigin }) =>
-    sameOrigin &&
-    !pathname.startsWith("/api/") &&
-    (request.headers.get("RSC") === "1" ||
-      request.headers.get("Next-Router-Prefetch") === "1" ||
-      request.headers.get("Next-Router-State-Tree") != null),
-  handler: new NetworkOnly(),
-};
-
-const documentRuntimeCaching: RuntimeCaching = {
-  matcher: ({ request }) => request.mode === "navigate" || request.destination === "document",
-  handler: async ({ request }) => {
-    try {
-      return await fetch(request);
-    } catch {
-      return (
-        (await caches.match("/offline")) ??
-        new Response("PixelAid sedang offline. Coba muat ulang saat koneksi stabil.", {
-          headers: { "Content-Type": "text/plain; charset=utf-8" },
-          status: 503,
-        })
-      );
-    }
-  },
-};
-
 declare global {
   interface WorkerGlobalScope {
     __SW_MANIFEST: (PrecacheEntry | string)[];
@@ -55,12 +27,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [
-    documentRuntimeCaching,
-    appRouterRuntimeCaching,
-    homeBgmRuntimeCaching,
-    ...defaultCache,
-  ],
+  runtimeCaching: [homeBgmRuntimeCaching, ...defaultCache],
   fallbacks: {
     entries: [
       {
