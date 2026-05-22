@@ -8,8 +8,8 @@ function resolveDisplayName(
   email?: string | null,
 ): string {
   if (displayName?.trim()) return displayName.trim();
-  if (email?.trim()) return email.split("@")[0] ?? "Koas";
-  return "Koas";
+  if (email?.trim()) return email.split("@")[0] ?? "Peserta";
+  return "Peserta";
 }
 
 export default async function AppHomePage() {

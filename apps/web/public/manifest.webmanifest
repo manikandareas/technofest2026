@@ -1,7 +1,7 @@
 {
   "name": "PixelAid",
   "short_name": "PixelAid",
-  "description": "Responsive PWA medical simulation for dokter koas.",
+  "description": "Responsive PWA medical simulation for dokter.",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",

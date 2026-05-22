@@ -6,25 +6,23 @@ from typing import Any
 from livekit import rtc
 from livekit.agents import Agent, ModelSettings, llm
 from pixelaid_shared.cases import get_case_config
-from pixelaid_shared.gameplay import validate_patient_reply
-from pixelaid_voice_agent.api_client import PixelAidApiClient
+from pixelaid_shared.gameplay import VoiceReplyValidation, validate_patient_reply
+from pixelaid_voice_agent.session_telemetry import EventRecorder
 
 SAFE_FALLBACK_TEXT = "Maaf Dok, bisa ditanyakan lebih spesifik?"
 
 
-class KoasPatientAgent(Agent):
+class PixelAidPatientAgent(Agent):
     def __init__(
         self,
         *,
         context: dict[str, Any],
-        api_client: PixelAidApiClient | None,
-        session_id: str,
+        telemetry: EventRecorder | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self._context = context
-        self._api_client = api_client
-        self._session_id = session_id
+        self._telemetry = telemetry
 
     async def llm_node(
         self,
@@ -33,13 +31,19 @@ class KoasPatientAgent(Agent):
         model_settings: ModelSettings,
     ) -> str:
         first_reply = await self._collect_reply(chat_ctx, tools, model_settings)
-        if self._is_safe(first_reply):
+        first_validation = self._validate_reply(first_reply)
+        if first_validation.ok:
             return first_reply
 
-        await self._record_event(
+        self._record_event(
             "validation_failed",
             "warning",
-            {"reply": first_reply[:300]},
+            {"reply": first_reply[:300], "reasons": first_validation.reasons},
+        )
+        self._record_event(
+            "safety_retry",
+            "warning",
+            {"attempt": 1, "reasons": first_validation.reasons},
         )
         retry_ctx = chat_ctx.copy()
         retry_ctx.add_message(
@@ -51,13 +55,14 @@ class KoasPatientAgent(Agent):
             ),
         )
         second_reply = await self._collect_reply(retry_ctx, tools, model_settings)
-        if self._is_safe(second_reply):
+        second_validation = self._validate_reply(second_reply)
+        if second_validation.ok:
             return second_reply
 
-        await self._record_event(
+        self._record_event(
             "fallback_used",
             "warning",
-            {"reply": second_reply[:300]},
+            {"reply": second_reply[:300], "reasons": second_validation.reasons},
         )
         return SAFE_FALLBACK_TEXT
 
@@ -70,7 +75,7 @@ class KoasPatientAgent(Agent):
             async for frame in Agent.default.tts_node(self, text, model_settings):
                 yield frame
         except Exception as exc:
-            await self._record_event("tts_failed", "error", {"error": str(exc)})
+            self._record_event("tts_failed", "error", {"error": str(exc)})
             raise
 
     async def _collect_reply(
@@ -90,13 +95,8 @@ class KoasPatientAgent(Agent):
                 parts.append(delta.content)
         return "".join(parts).strip() or SAFE_FALLBACK_TEXT
 
-    def _is_safe(self, reply: str) -> bool:
+    def _validate_reply(self, reply: str) -> VoiceReplyValidation:
         case = get_case_config(str(self._context.get("case_id") or "demo"))
-        allowed_keys = {
-            str(fact.get("key"))
-            for fact in self._context.get("allowed_facts", [])
-            if fact.get("key")
-        }
         completed_exam_keys = {
             str(exam.get("score_key") or exam.get("id"))
             for exam in self._context.get("completed_examinations", [])
@@ -104,21 +104,16 @@ class KoasPatientAgent(Agent):
         return validate_patient_reply(
             case,
             reply,
-            used_fact_keys=allowed_keys,
+            used_fact_keys=set(),
             completed_exam_keys=completed_exam_keys,
-        ).ok
+        )
 
-    async def _record_event(
+    def _record_event(
         self,
         event_type: str,
         severity: str,
         metadata: dict[str, object],
     ) -> None:
-        if self._api_client is None:
+        if self._telemetry is None:
             return
-        await self._api_client.record_event(
-            self._session_id,
-            event_type,
-            severity=severity,
-            metadata=metadata,
-        )
+        self._telemetry.record(event_type, severity=severity, metadata=metadata)

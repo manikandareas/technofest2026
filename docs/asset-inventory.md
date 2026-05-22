@@ -566,7 +566,7 @@ Patient TTS mappings from `docs/data.json`:
 
 | Slide | Asset Needed | Priority |
 |---|---|---|
-| Kamu adalah dokter koas virtual | Doctor/player avatar + patient scene | P0 |
+| Kamu adalah dokter virtual | Doctor/player avatar + patient scene | P0 |
 | Tanya pasien menggunakan Talk | Talk/mic interaction illustration | P0 |
 | Gunakan Examine dan Medical Record | Two-panel UI illustration | P0 |
 | Akhiri konsultasi, jawab quiz, dapat feedback | Quiz/result illustration | P0 |

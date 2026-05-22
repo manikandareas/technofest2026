@@ -11,6 +11,7 @@ dist
 public/sw.js
 public/workbox-*.js
 packages/db/supabase/.temp
+packages/db/backups/
 *.tgz
 
 # code coverage

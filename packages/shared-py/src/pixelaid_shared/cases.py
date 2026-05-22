@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import json
+import re
+from pathlib import Path
+from typing import Any
+
 from pixelaid_shared.gameplay import (
     CaseGameplayConfig,
     ExaminationConfig,
@@ -11,7 +16,7 @@ from pixelaid_shared.gameplay import (
 )
 
 
-CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
+_FALLBACK_CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
     "demo": CaseGameplayConfig(
         id="demo",
         patient_name="Maya",
@@ -385,5 +390,216 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
 }
 
 
+def _find_data_json() -> Path | None:
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "docs" / "data.json"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _as_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item).strip()]
+    return [str(value)] if str(value).strip() else []
+
+
+def _slug(value: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-")
+    return normalized or "option"
+
+
+def _keywords(key: str, value: Any) -> list[str]:
+    words = [key, key.replace("_", " ")]
+    for item in _as_list(value):
+        words.extend(re.findall(r"[A-Za-z0-9]+", item)[:4])
+    return sorted({word.casefold() for word in words if word.strip()})
+
+
+def _medical_record(item: dict[str, Any]) -> MedicalRecord:
+    patient = item.get("patient") or {}
+    case_data = item.get("case_data") or {}
+    record = case_data.get("medical_record") or {}
+    summary = (
+        f"{patient.get('name', item.get('id'))}, {patient.get('age', '?')} tahun, "
+        f"{item.get('chief_complaint', '')}"
+    )
+    return MedicalRecord(
+        summary=summary,
+        history=_as_list(record.get("history") or record.get("triage")),
+        medications=_as_list(record.get("current_medications")),
+        allergies=_as_list(record.get("allergies")),
+    )
+
+
+def _patient_facts(case_data: dict[str, Any]) -> list[PatientFact]:
+    facts = case_data.get("allowed_patient_facts") or {}
+    if not isinstance(facts, dict):
+        return []
+    return [
+        PatientFact(
+            keywords=_keywords(key, value),
+            response=", ".join(_as_list(value)),
+            rubric_key=key,
+            allowed_terms=_as_list(value),
+        )
+        for key, value in facts.items()
+    ]
+
+
+def _examinations(case_data: dict[str, Any]) -> list[ExaminationConfig]:
+    examinations = case_data.get("examinations") or []
+    if not isinstance(examinations, list):
+        return []
+    return [
+        ExaminationConfig(
+            id=str(item.get("key") or item.get("id") or f"exam_{index + 1}"),
+            label=str(item.get("label") or item.get("key") or f"Exam {index + 1}"),
+            category=str(item.get("category") or "examination"),
+            delay_seconds=int(item.get("delay_seconds") or 0),
+            result=str(item.get("result") or ""),
+            score_key=str(item.get("key") or item.get("id") or f"exam_{index + 1}"),
+            guard_terms=_as_list(item.get("label")),
+        )
+        for index, item in enumerate(examinations)
+        if isinstance(item, dict)
+    ]
+
+
+def _quiz(case_data: dict[str, Any]) -> list[QuizQuestion]:
+    questions = case_data.get("quiz") or []
+    if not isinstance(questions, list):
+        return []
+    used_ids: set[str] = set()
+    output: list[QuizQuestion] = []
+    for index, item in enumerate(questions):
+        if not isinstance(item, dict):
+            continue
+        question_id = _slug(str(item.get("category") or f"question-{index + 1}"))
+        if question_id in used_ids:
+            question_id = f"{question_id}-{index + 1}"
+        used_ids.add(question_id)
+
+        options = _as_list(item.get("options"))
+        answer = str(item.get("answer") or "")
+        option_models = [QuizOption(id=_slug(option), label=option) for option in options]
+        output.append(
+            QuizQuestion(
+                id=question_id,
+                prompt=str(item.get("question") or f"Question {index + 1}"),
+                options=option_models,
+                correct_option_id=_slug(answer),
+                explanation=str(item.get("explanation") or ""),
+                safety_critical=question_id in {"next-best-step", "safety"},
+            )
+        )
+    return output
+
+
+def _rubric(case_data: dict[str, Any], category: str) -> list[str]:
+    checklist = case_data.get("scoring_checklist") or []
+    if not isinstance(checklist, list):
+        return []
+    return [
+        str(item.get("key"))
+        for item in checklist
+        if isinstance(item, dict) and item.get("category") == category and item.get("key")
+    ]
+
+
+def _feedback_template(case_data: dict[str, Any]) -> str:
+    templates = case_data.get("feedback_templates") or {}
+    if isinstance(templates, dict):
+        for key in ("good", "excellent", "needs_improvement"):
+            if templates.get(key):
+                return str(templates[key])
+    return "Berikan umpan balik berdasarkan anamnesis, pemeriksaan, dan keputusan aman."
+
+
+def _patient_persona(item: dict[str, Any], case_data: dict[str, Any]) -> str:
+    persona = case_data.get("patient_persona") or {}
+    if isinstance(persona, dict):
+        tone = persona.get("tone") or "natural"
+        style = persona.get("language_style") or "Bahasa Indonesia sehari-hari"
+        return f"{persona.get('name', item.get('patient', {}).get('name'))}, {tone}. Gunakan {style}."
+    return "Jawab sebagai pasien simulasi Indonesia. Singkat, natural, dan hanya pakai fakta kasus."
+
+
+def _tts_profile(case_data: dict[str, Any]) -> TtsProfile:
+    tts = case_data.get("tts_profile") or {}
+    if not isinstance(tts, dict):
+        return TtsProfile(voice_id="alloy")
+    return TtsProfile(
+        provider=str(tts.get("provider") or "openai"),
+        voice_id=str(tts.get("voice") or tts.get("voice_id") or "alloy"),
+        language=str(tts.get("language") or "id"),
+    )
+
+
+def _forbidden_terms(case_data: dict[str, Any]) -> list[str]:
+    diagnosis = case_data.get("target_diagnosis") or {}
+    terms: list[str] = []
+    if isinstance(diagnosis, dict) and diagnosis.get("label"):
+        terms.append(str(diagnosis["label"]))
+    return terms
+
+
+def _case_config_from_data(item: dict[str, Any]) -> CaseGameplayConfig:
+    case_data = item.get("case_data") or {}
+    if not isinstance(case_data, dict):
+        case_data = {}
+    patient = item.get("patient") or {}
+    exams = _examinations(case_data)
+    facts = _patient_facts(case_data)
+    quiz = _quiz(case_data)
+    return CaseGameplayConfig(
+        id=str(item["id"]),
+        patient_name=str(patient.get("name") or item["id"]),
+        timer_seconds=int(item.get("estimated_duration_seconds") or 300),
+        medical_record=_medical_record(item),
+        patient_facts=facts,
+        examinations=exams,
+        quiz=quiz,
+        interview_rubric=_rubric(case_data, "anamnesis")
+        or [fact.rubric_key for fact in facts if fact.rubric_key],
+        examination_rubric=_rubric(case_data, "examination")
+        or [exam.score_key or exam.id for exam in exams],
+        safety_question_ids=[
+            question.id for question in quiz if question.id in {"next-best-step", "safety"}
+        ],
+        feedback_template=_feedback_template(case_data),
+        patient_persona=_patient_persona(item, case_data),
+        tts_profile=_tts_profile(case_data),
+        forbidden_terms=_forbidden_terms(case_data),
+    )
+
+
+def _load_case_configs_from_data_json() -> dict[str, CaseGameplayConfig] | None:
+    data_path = _find_data_json()
+    if data_path is None:
+        return None
+    data = json.loads(data_path.read_text())
+    cases = data.get("cases") or []
+    if not isinstance(cases, list):
+        return None
+    configs = {
+        str(item["id"]): _case_config_from_data(item)
+        for item in cases
+        if isinstance(item, dict) and item.get("id")
+    }
+    return configs or None
+
+
+CASE_CONFIGS: dict[str, CaseGameplayConfig] = (
+    _load_case_configs_from_data_json() or _FALLBACK_CASE_CONFIGS
+)
+
+
 def get_case_config(case_id: str) -> CaseGameplayConfig:
+    if case_id == "demo":
+        for config in CASE_CONFIGS.values():
+            if config.id == "internal-medicine-dengue-warning-signs":
+                return config
     return CASE_CONFIGS[case_id]
