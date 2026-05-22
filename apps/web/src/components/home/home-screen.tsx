@@ -2,29 +2,39 @@ import Image from "next/image";
 
 import { AppScreenNavFooter } from "@/components/app/app-screen-nav-footer";
 
-import { DoctorCharacterSprite } from "./doctor-character-sprite";
 import { HOME_ASSETS } from "./home-assets";
 import { HomeHeader } from "./home-header";
 import { HomeStartButton } from "./home-start-button";
 import { HomeWardrobePanel } from "./home-wardrobe-panel";
+
+type ProfileGender = "male" | "female";
 
 type HomeScreenProps = {
   displayName: string;
   level: number;
   totalXp: number;
   avatarUrl?: string | null;
+  gender?: ProfileGender | null;
   startHref: string;
   startLabel: string;
 };
+
+function resolveHomeCharacterSrc(gender?: ProfileGender | null): string {
+  return gender === "female"
+    ? HOME_ASSETS.characterWoman
+    : HOME_ASSETS.characterMan;
+}
 
 export function HomeScreen({
   displayName,
   level,
   totalXp,
   avatarUrl,
+  gender,
   startHref,
   startLabel,
 }: HomeScreenProps) {
+  const characterSrc = resolveHomeCharacterSrc(gender);
   return (
     <div className="relative min-h-dvh w-full bg-[#02153d]">
       <div className="pointer-events-none absolute inset-0">
@@ -63,7 +73,14 @@ export function HomeScreen({
                 aria-hidden
                 className="absolute bottom-[2%] left-1/2 h-[10%] w-[65%] -translate-x-1/2 rounded-[50%] bg-[#1a3a6b]/55 blur-[2px]"
               />
-              <DoctorCharacterSprite />
+              <Image
+                src={characterSrc}
+                alt="Dokter PixelAid"
+                fill
+                priority
+                className="object-contain object-bottom pixelated drop-shadow-[0_6px_0_rgba(0,0,0,0.3)]"
+                sizes="(max-width: 768px) 48vw, 30vw"
+              />
             </div>
           </div>
         </div>

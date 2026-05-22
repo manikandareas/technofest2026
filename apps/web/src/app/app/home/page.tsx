@@ -29,6 +29,7 @@ export default async function AppHomePage() {
       level={level}
       totalXp={totalXp}
       avatarUrl={profile?.avatar_url}
+      gender={profile?.gender}
       startHref="/app/specialists"
       startLabel="Start"
     />
