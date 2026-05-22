@@ -114,6 +114,27 @@ export async function startVoiceSession(sessionId: string) {
   return data;
 }
 
+export async function tryStartVoiceSession(sessionId: string) {
+  try {
+    const api = await getApiClient();
+    const { data, error } = await api.POST("/api/livekit/token", {
+      body: { session_id: sessionId },
+    });
+    if (error || !data) {
+      return {
+        token: null,
+        error: "Voice belum siap. Mode teks tetap bisa digunakan.",
+      };
+    }
+    return { token: data, error: null };
+  } catch {
+    return {
+      token: null,
+      error: "Voice belum siap. Mode teks tetap bisa digunakan.",
+    };
+  }
+}
+
 export async function submitQuiz(sessionId: string, answers: Record<string, string>) {
   const api = await getApiClient();
   const { data, error } = await api.POST("/api/case-sessions/{session_id}/quiz-submit", {

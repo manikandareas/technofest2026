@@ -2,7 +2,7 @@ import { CaseBriefScreen } from "@/components/cases/case-brief-screen";
 import { fallbackCases } from "@/lib/api/fallback";
 import { getPublicApiClient } from "@/lib/api/server";
 
-import { startCaseSession } from "../../actions";
+import { startCaseSessionInline } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export default async function CaseBriefPage({
 }) {
   const { id } = await params;
   const item = await loadCase(id);
-  const startSessionAction = startCaseSession.bind(null, item.id);
+  const startSessionAction = startCaseSessionInline.bind(null, item.id);
 
   return <CaseBriefScreen item={item} startSessionAction={startSessionAction} />;
 }

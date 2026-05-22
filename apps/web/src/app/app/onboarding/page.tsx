@@ -261,6 +261,7 @@ function GenderChoiceGrid({ selectedGender, onSelect, compact = false }: GenderC
 export default function OnboardingPage() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [selectedGender, setSelectedGender] = useState<OnboardingGender | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const currentSlide = ONBOARDING_SLIDES[activeSlide];
@@ -270,6 +271,7 @@ export default function OnboardingPage() {
   const disableNext = isPending || (requiresGender && !selectedGender);
 
   const handleNext = () => {
+    setError(null);
     if (isGenderSlide && !selectedGender) {
       return;
     }
@@ -280,7 +282,18 @@ export default function OnboardingPage() {
         return;
       }
       startTransition(async () => {
-        await completeOnboarding(selectedGender);
+        try {
+          const result = await completeOnboarding(selectedGender);
+          if (result?.error) {
+            setError(result.error);
+          }
+        } catch (caught) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Onboarding belum bisa diselesaikan. Coba lagi.",
+          );
+        }
       });
     }
   };
@@ -567,6 +580,11 @@ export default function OnboardingPage() {
                     </Button>
                   </div>
                 </div>
+                {error ? (
+                  <p className="rounded-xl border border-destructive/40 bg-background/95 px-3 py-2 text-center text-xs text-destructive">
+                    {error}
+                  </p>
+                ) : null}
               </div>
 
             </div>
@@ -805,6 +823,11 @@ export default function OnboardingPage() {
                     </Button>
                   </div>
                 </div>
+                {error ? (
+                  <p className="rounded-xl border border-destructive/40 bg-background/95 px-3 py-2 text-center text-sm text-destructive">
+                    {error}
+                  </p>
+                ) : null}
               </div>
 
             </div>

@@ -15,6 +15,7 @@ import { ConnectionState, Track } from "livekit-client";
 import { Mic, MicOff, RotateCcw, Volume2, WifiOff } from "lucide-react";
 
 import { Button } from "@/components/ui/8bit/button";
+import * as AlertDialog from "@/components/ui/alert-dialog";
 
 export type VoiceToken = {
   token: string;
@@ -109,7 +110,6 @@ export function VoicePanel({
           <VoiceConnectionState
             disabled={disabled}
             isPending={isPending}
-            onError={onError}
             onStateChange={onStateChange}
           />
         </LiveKitRoom>
@@ -132,9 +132,8 @@ export function VoicePanel({
       </p>
 
       {error ? (
-        <p className="max-w-xs rounded-xl border border-destructive/40 bg-background/90 px-3 py-2 text-center text-xs text-destructive">
-          {error} Periksa izin mikrofon browser, pastikan input device tersedia, lalu coba
-          reconnect. Text consultation remains available.
+        <p className="max-w-xs rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-center text-xs text-amber-950">
+          {error}
         </p>
       ) : null}
 
@@ -181,17 +180,16 @@ function AudioUnlockButton() {
 function VoiceConnectionState({
   disabled,
   isPending,
-  onError,
   onStateChange,
 }: {
   disabled: boolean;
   isPending: boolean;
-  onError: (message: string) => void;
   onStateChange: (state: VoiceUiState) => void;
 }) {
+  const [showMicHelp, setShowMicHelp] = useState(false);
   const connectionState = useConnectionState();
   const { state: agentState } = useVoiceAssistant();
-  const { isMicrophoneEnabled, lastMicrophoneError, localParticipant } = useLocalParticipant();
+  const { isMicrophoneEnabled, localParticipant } = useLocalParticipant();
   const isUserSpeaking = useIsSpeaking(localParticipant);
   const {
     enabled: micEnabled,
@@ -199,8 +197,8 @@ function VoiceConnectionState({
     toggle: toggleMic,
   } = useTrackToggle({
     source: Track.Source.Microphone,
-    onDeviceError: (caught) => {
-      onError(caught.message || "Microphone permission or device failed.");
+    onDeviceError: () => {
+      setShowMicHelp(true);
     },
   });
   const effectiveMicEnabled = isMicrophoneEnabled && micEnabled;
@@ -220,12 +218,6 @@ function VoiceConnectionState({
     }
     void toggleMic(enabled);
   };
-
-  useEffect(() => {
-    if (lastMicrophoneError) {
-      onError(lastMicrophoneError.message || "Microphone permission or device failed.");
-    }
-  }, [lastMicrophoneError, onError]);
 
   useEffect(() => {
     if (connectionState === ConnectionState.Disconnected) {
@@ -316,6 +308,40 @@ function VoiceConnectionState({
             ? "Patient is answering. Mic stays off."
             : "Hold the mic button to talk."}
       </span>
+      <MicrophoneHelpDialog open={showMicHelp} onOpenChange={setShowMicHelp} />
     </div>
+  );
+}
+
+function MicrophoneHelpDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" />
+        <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(92vw,26rem)] -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background p-5 shadow-lg">
+          <AlertDialog.Title className="text-lg font-semibold">
+            Izin mikrofon belum aktif
+          </AlertDialog.Title>
+          <AlertDialog.Description className="mt-2 text-sm leading-6 text-muted-foreground">
+            Untuk menggunakan push-to-talk, izinkan akses mikrofon dari browser. Jika sudah
+            sempat ditolak, buka ikon gembok atau pengaturan situs di address bar, lalu
+            ubah Microphone menjadi Allow. Mode teks tetap bisa digunakan.
+          </AlertDialog.Description>
+          <div className="mt-5 flex justify-end">
+            <AlertDialog.Action asChild>
+              <Button type="button" variant="secondary">
+                Mengerti
+              </Button>
+            </AlertDialog.Action>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
   );
 }

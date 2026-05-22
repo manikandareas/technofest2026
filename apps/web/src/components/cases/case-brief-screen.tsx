@@ -1,5 +1,4 @@
 import Image from "next/image";
-import type { ReactNode } from "react";
 
 import { CaseBriefLearningDrawer } from "@/components/cases/case-brief-learning-drawer";
 import {
@@ -31,7 +30,7 @@ export type CaseBriefItem = {
 
 type CaseBriefScreenProps = {
   item: CaseBriefItem;
-  startSessionAction: () => Promise<void>;
+  startSessionAction: () => Promise<void | { error?: string }>;
 };
 
 function normalizeGender(gender?: string | null) {

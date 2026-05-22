@@ -25,8 +25,8 @@ import {
   resumeConsultation,
   selectExamination,
   sendMessage,
-  startVoiceSession,
   submitQuiz,
+  tryStartVoiceSession,
 } from "./actions";
 import { useConsultationTimer, type CaseSession } from "./use-consultation-timer";
 import { VoicePanel, type VoiceToken, type VoiceUiState } from "./voice-panel";
@@ -143,13 +143,18 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
       setVoiceState("connecting");
 
       try {
-        const token = await startVoiceSession(session.id);
-        setVoiceToken(token);
-        setVoiceAutoConnectBlocked(false);
-      } catch (caught) {
-        setVoiceError(
-          caught instanceof Error ? caught.message : "Voice session could not be started.",
-        );
+        const result = await tryStartVoiceSession(session.id);
+        if (result.token) {
+          setVoiceToken(result.token);
+          setVoiceAutoConnectBlocked(false);
+          return;
+        }
+
+        setVoiceError(result.error ?? "Voice session could not be started.");
+        setVoiceState("error");
+        setVoiceAutoConnectBlocked(true);
+      } catch {
+        setVoiceError("Voice session could not be started.");
         setVoiceState("error");
         setVoiceAutoConnectBlocked(true);
       } finally {
@@ -198,6 +203,19 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
     if (!content) return;
     setQuestion("");
     run(async () => sendMessage(session.id, content));
+  }
+
+  function handleVoiceError(message: string) {
+    const normalized = message.toLowerCase();
+    if (normalized.includes("client initiated disconnect")) {
+      clearVoiceConnection("disconnected");
+      setVoiceAutoConnectBlocked(true);
+      return;
+    }
+
+    setVoiceError("Voice belum siap. Mode teks tetap bisa digunakan.");
+    clearVoiceConnection("error");
+    setVoiceAutoConnectBlocked(true);
   }
 
   return (
@@ -298,11 +316,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
                       isPending={isPending}
                       disabled={isConsultationLocked}
                       onStateChange={setVoiceState}
-                      onError={(message) => {
-                        setVoiceError(message);
-                        clearVoiceConnection("error");
-                        setVoiceAutoConnectBlocked(true);
-                      }}
+                      onError={handleVoiceError}
                       onReconnect={() => {
                         setVoiceAutoConnectBlocked(false);
                         void requestVoiceConnection({ force: true });

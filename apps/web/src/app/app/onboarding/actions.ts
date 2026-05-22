@@ -12,7 +12,7 @@ export async function completeOnboarding(gender: OnboardingGender) {
   });
 
   if (error) {
-    throw new Error("Onboarding could not be completed.");
+    return { error: "Onboarding could not be completed." };
   }
 
   redirect("/app/home");
