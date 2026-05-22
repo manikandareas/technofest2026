@@ -17,7 +17,10 @@ def generate_structured_feedback(
     if not resolved.openai_api_key:
         return fallback_feedback(payload)
 
-    client = OpenAI(api_key=resolved.openai_api_key, timeout=8.0)
+    client = OpenAI(
+        api_key=resolved.openai_api_key,
+        timeout=resolved.openai_feedback_timeout_seconds,
+    )
     try:
         response = client.responses.parse(
             model=resolved.openai_feedback_model,

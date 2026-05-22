@@ -21,6 +21,7 @@ import { SpecialistsScreenLayout } from "@/components/specialists/specialists-sc
 import { getApiClient } from "@/lib/api/server";
 import { cn } from "@/lib/utils";
 import { startCaseSession } from "../../../cases/actions";
+import { ResultFeedbackRefresh } from "./result-feedback-refresh";
 
 export const dynamic = "force-dynamic";
 
@@ -161,6 +162,7 @@ export default async function SessionResultPage({
   const isAnonymous = Boolean(meResult.data?.profile.is_anonymous);
   const currentResultPath = `/app/sessions/${id}/result?result=${encodeURIComponent(resultId)}`;
   const breakdown = data.score_breakdown;
+  const isFallbackFeedback = data.feedback.source === "fallback";
   const scoreRows = [
     ["Quiz", breakdown.quiz, 35],
     ["Interview", breakdown.interview, 25],
@@ -177,6 +179,7 @@ export default async function SessionResultPage({
       title="EVALUASI KASUS"
       showBottomNav={true}
     >
+      <ResultFeedbackRefresh enabled={isFallbackFeedback} />
       <section className="relative z-10 mx-auto grid w-full max-w-6xl gap-6 px-3 pb-8 pt-2 sm:px-4 md:px-6 lg:px-8 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-6">
           {/* Main Patient Result Header Box */}

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends
 from pixelaid_api.dependencies import get_session_actor
 from pixelaid_api.models import (
     CaseResultResponse,
@@ -129,10 +129,17 @@ async def end_consultation(
 async def submit_quiz(
     session_id: str,
     payload: QuizSubmitRequest,
+    background_tasks: BackgroundTasks,
     actor: SessionActor = Depends(get_session_actor),
     settings: Settings = Depends(get_settings),
 ) -> CaseResultResponse:
-    return gameplay.submit_quiz(session_id, actor, payload.answers, settings)
+    return gameplay.submit_quiz(
+        session_id,
+        actor,
+        payload.answers,
+        settings,
+        schedule_feedback_upgrade=background_tasks.add_task,
+    )
 
 
 @router.get("/api/case-results/{result_id}", response_model=CaseResultResponse)

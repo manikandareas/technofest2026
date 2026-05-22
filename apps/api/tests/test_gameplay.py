@@ -6,6 +6,7 @@ import pytest
 from typing import Any, cast
 
 from pixelaid_api.main import app, create_app
+from pixelaid_api.models import SessionActor
 from pixelaid_api.services import gameplay
 from pixelaid_api.services import case_configs
 from pixelaid_api.services import clock
@@ -696,6 +697,35 @@ def test_ai_feedback_generation_limit_falls_before_result_write(monkeypatch) -> 
 
     assert response.status_code == 429
     assert gameplay._results == {}
+
+
+def test_quiz_submit_returns_fallback_before_background_ai_feedback(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(gameplay, "get_supabase_admin", lambda: None)
+    monkeypatch.setattr(supabase_service, "get_supabase_admin", lambda: None)
+    settings = cast(Any, Settings)(
+        _env_file=None,
+        openai_api_key="test-key",
+    )
+    actor = SessionActor(user_id="test-user", email=None, is_anonymous=False)
+    session = gameplay.create_session(CASE_ID, actor, settings)
+    gameplay.get_session(session.id, actor)
+    gameplay.end_consultation(session.id, actor)
+    scheduled_tasks: list[tuple[Any, ...]] = []
+
+    result = gameplay.submit_quiz(
+        session.id,
+        actor,
+        _correct_answers(CASE_ID),
+        settings,
+        schedule_feedback_upgrade=lambda *args: scheduled_tasks.append(args),
+    )
+
+    assert result.feedback["source"] == "fallback"
+    assert len(scheduled_tasks) == 1
+    assert scheduled_tasks[0][0] is gameplay.upgrade_result_feedback
+    assert scheduled_tasks[0][1] == result.id
 
 
 def test_demo_claim_endpoint_is_removed(monkeypatch) -> None:

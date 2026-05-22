@@ -29,9 +29,9 @@ class Settings(BaseSettings):
     openai_feedback_timeout_seconds: float = 5.0
     anonymous_case_session_limit: int = 10
     anonymous_case_session_window_seconds: int = 24 * 60 * 60
-    anonymous_voice_token_limit: int = 3
+    anonymous_voice_token_limit: int = 100
     anonymous_voice_token_window_seconds: int = 60 * 60
-    authenticated_voice_token_limit: int = 10
+    authenticated_voice_token_limit: int = 300
     authenticated_voice_token_window_seconds: int = 60 * 60
     ai_feedback_generation_limit: int = 30
     ai_feedback_generation_window_seconds: int = 24 * 60 * 60

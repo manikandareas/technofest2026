@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import json
-from typing import Any, cast
+from typing import Any, Callable, cast
 from uuid import uuid4
 
 from fastapi import HTTPException, status
@@ -56,6 +56,7 @@ from pixelaid_shared.gameplay import (
     due_at,
     exam_status,
     FeedbackInput,
+    fallback_feedback,
     level_for_xp,
     patient_response,
     summarize_missed_categories,
@@ -285,6 +286,7 @@ def submit_quiz(
     actor: SessionActor,
     answers: dict[str, str],
     settings: Settings | None = None,
+    schedule_feedback_upgrade: Callable[..., object] | None = None,
 ) -> CaseResultResponse:
     row = _require_status(_get_owned_session(session_id, actor), {"quiz"})
     if row.get("result_id"):
@@ -338,8 +340,9 @@ def submit_quiz(
         missed_safety_questions=missed_safety,
         case_feedback_template=config.feedback_template,
     )
-    _assert_feedback_generation_limit(row, actor, settings or get_settings())
-    feedback = generate_structured_feedback(feedback_input).model_dump()
+    resolved_settings = settings or get_settings()
+    _assert_feedback_generation_limit(row, actor, resolved_settings)
+    feedback = fallback_feedback(feedback_input).model_dump()
     result_id = str(uuid4())
     result = {
         "id": result_id,
@@ -385,7 +388,30 @@ def submit_quiz(
         session_id,
         {"status": "completed", "ended_at": _iso(clock.utc_now()), "result_id": result_id},
     )
+    if schedule_feedback_upgrade and resolved_settings.openai_api_key:
+        schedule_feedback_upgrade(
+            upgrade_result_feedback,
+            result_id,
+            feedback_input,
+            resolved_settings,
+        )
     return _result_response(result)
+
+
+def upgrade_result_feedback(
+    result_id: str,
+    feedback_input: FeedbackInput,
+    settings: Settings | None = None,
+) -> None:
+    try:
+        feedback = generate_structured_feedback(feedback_input, settings)
+    except TypeError:
+        feedback = generate_structured_feedback(feedback_input)
+    except Exception:
+        return
+    if feedback.source != "ai":
+        return
+    _update_result_feedback(result_id, feedback.model_dump())
 
 
 def get_result(result_id: str, actor: SessionActor) -> CaseResultResponse:
@@ -844,6 +870,20 @@ def _get_result_row(result_id: str) -> StoreRow:
             status_code=status.HTTP_404_NOT_FOUND, detail="Result not found."
         )
     return row
+
+
+def _update_result_feedback(result_id: str, feedback: dict[str, object]) -> None:
+    client = get_supabase_admin()
+    if client is None:
+        if result_id in _results:
+            _results[result_id]["feedback"] = feedback
+        return
+    try:
+        client.table("case_results").update(cast(Any, {"feedback": feedback})).eq(
+            "id", result_id
+        ).execute()
+    except Exception:
+        return
 
 
 def _update_session(session_id: str, values: StoreRow) -> StoreRow:
