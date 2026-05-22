@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AppHeader } from "@/components/app-header";
+
+import { AppBottomNav } from "@/components/app/app-bottom-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +14,7 @@ export default async function HistoryPage() {
   const items = data?.items ?? [];
 
   return (
-    <main className="min-h-dvh bg-background">
-      <AppHeader />
+    <main className="min-h-dvh bg-background pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
       <section className="mx-auto w-full max-w-5xl space-y-5 px-5 py-8">
         <div className="space-y-2">
           <Badge>History</Badge>
@@ -55,6 +55,7 @@ export default async function HistoryPage() {
           ))}
         </div>
       </section>
+      <AppBottomNav />
     </main>
   );
 }

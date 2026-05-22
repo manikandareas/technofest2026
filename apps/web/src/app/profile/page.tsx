@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/app-header";
+import { AppBottomNav } from "@/components/app/app-bottom-nav";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/server";
@@ -12,8 +12,7 @@ export default async function ProfilePage() {
   const progress = data?.progress;
 
   return (
-    <main className="min-h-dvh bg-background">
-      <AppHeader />
+    <main className="min-h-dvh bg-background pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
       <section className="mx-auto w-full max-w-5xl space-y-5 px-5 py-8">
         <div className="space-y-2">
           <Badge>Profile</Badge>
@@ -29,6 +28,7 @@ export default async function ProfilePage() {
           <StatCard label="Avg best" value={progress?.average_best_score ?? 0} />
         </div>
       </section>
+      <AppBottomNav />
     </main>
   );
 }

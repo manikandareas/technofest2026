@@ -7,6 +7,14 @@ const workspaceRoot = path.resolve(process.cwd(), "../..");
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: workspaceRoot,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
+    ],
+  },
   turbopack: {
     root: workspaceRoot,
   },
