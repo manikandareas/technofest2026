@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pixelaid_api.routers import cases, me, public, specialists, system
+from pixelaid_api.routers import case_sessions, cases, me, public, specialists, system
 from pixelaid_api.settings import Settings, get_settings
 
 
@@ -25,6 +25,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(me.router)
     app.include_router(specialists.router)
     app.include_router(cases.router)
+    app.include_router(case_sessions.router)
 
     return app
 
