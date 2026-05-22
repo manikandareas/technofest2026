@@ -17,6 +17,14 @@ Recommended domains:
 - `api`: `https://api.pixelaid.example.com`
 - `voice-agent`: no domain
 
+In Dokploy, route domains to the internal service ports:
+
+- `web` -> port `3000`
+- `api` -> port `8000`
+
+Do not publish host ports such as `3000:3000` or `8000:8000` in production.
+Those bindings can conflict with other Dokploy apps on the same server.
+
 `PIXELAID_PUBLIC_API_URL` must point to the public API URL used by the web app.
 The voice agent uses the internal Compose network instead:
 
@@ -47,4 +55,3 @@ Build the images when Docker is available:
 ```bash
 docker compose --env-file .env.production.example -f docker-compose.production.yml build
 ```
-
