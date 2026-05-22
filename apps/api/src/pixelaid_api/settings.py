@@ -25,7 +25,8 @@ class Settings(BaseSettings):
     livekit_api_secret: str | None = None
     voice_agent_api_token: SecretStr | None = None
     openai_api_key: str | None = None
-    openai_feedback_model: str = "gpt-5.5"
+    openai_feedback_model: str = "gpt-4.1-mini"
+    openai_feedback_timeout_seconds: float = 5.0
     anonymous_case_session_limit: int = 10
     anonymous_case_session_window_seconds: int = 24 * 60 * 60
     anonymous_voice_token_limit: int = 3
