@@ -1,6 +1,6 @@
 "use server";
 
-import { safeNextFromForm } from "@/lib/navigation/safe-next";
+import { safePostAuthNextFromForm } from "@/lib/navigation/safe-next";
 import { apiCatchMessage } from "@/lib/api/action-result";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
@@ -78,7 +78,7 @@ function isInvalidAuthHost(
 }
 
 function safeNext(formData: FormData, fallback: string) {
-  return safeNextFromForm(formData, fallback);
+  return safePostAuthNextFromForm(formData, fallback);
 }
 
 function displayNameFromForm(formData: FormData, email: string) {

@@ -1,11 +1,11 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { safeNextPath } from "@/lib/navigation/safe-next";
+import { safePostAuthNextPath } from "@/lib/navigation/safe-next";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = safeNextPath(requestUrl.searchParams.get("next"), "/app");
+  const next = safePostAuthNextPath(requestUrl.searchParams.get("next"), "/app");
 
   if (code) {
     const supabase = await createSupabaseServerClient().catch(() => null);
