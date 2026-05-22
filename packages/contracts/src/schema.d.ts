@@ -711,6 +711,7 @@ export interface components {
             category: string;
             /** Delay Seconds */
             delay_seconds: number;
+            asset?: components["schemas"]["ExaminationAsset"] | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

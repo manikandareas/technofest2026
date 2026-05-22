@@ -92,17 +92,18 @@ class ConversationMessage(BaseModel):
     created_at: str
 
 
+class ExaminationAsset(BaseModel):
+    type: Literal["image"]
+    url: str
+    alt: str
+
+
 class ExaminationOption(BaseModel):
     id: str
     label: str
     category: str
     delay_seconds: int
-
-
-class ExaminationAsset(BaseModel):
-    type: Literal["image"]
-    url: str
-    alt: str
+    asset: ExaminationAsset | None = None
 
 
 class ExaminationEvent(BaseModel):

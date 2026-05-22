@@ -16,6 +16,7 @@ from pixelaid_api.models import (
     CaseResultResponse,
     CaseSessionResponse,
     ConversationMessage,
+    ExaminationAsset,
     ExaminationEvent,
     ExaminationOption,
     HistoryItem,
@@ -991,6 +992,9 @@ def _session_response(row: StoreRow) -> CaseSessionResponse:
                 label=item.label,
                 category=item.category,
                 delay_seconds=item.delay_seconds,
+                asset=ExaminationAsset.model_validate(item.asset)
+                if item.asset
+                else None,
             )
             for item in config.examinations
         ],

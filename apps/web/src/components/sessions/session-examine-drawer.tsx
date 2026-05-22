@@ -19,6 +19,7 @@ type ExaminationOption = {
   label: string;
   category: string;
   delay_seconds: number;
+  asset?: ExaminationAsset | null;
 };
 
 type ExaminationAsset = {

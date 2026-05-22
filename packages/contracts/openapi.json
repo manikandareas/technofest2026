@@ -2097,6 +2097,16 @@
           "delay_seconds": {
             "type": "integer",
             "title": "Delay Seconds"
+          },
+          "asset": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExaminationAsset"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",

@@ -8,7 +8,6 @@ import {
 import {
   SpecialistsScreenLayout,
   specialistsContentPanelClass,
-  specialistsScrollAreaClass,
 } from "./specialists-screen-layout";
 
 type SpecialistCaseItem = {
@@ -23,6 +22,9 @@ type SpecialistCaseItem = {
   difficulty: string;
   condition_badge: string;
   estimated_duration_minutes: number;
+  patient_avatar_url?: string | null;
+  case_thumbnail_url?: string | null;
+  consultation_avatar_url?: string | null;
 };
 
 type SpecialistCasesScreenProps = {
@@ -65,6 +67,8 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
 }
 
 function CaseSelectionCard({ item }: { item: SpecialistCaseItem }) {
+  const thumbnailUrl = item.case_thumbnail_url;
+
   return (
     <Link
       href={`/app/cases/${item.id}/brief`}
@@ -84,17 +88,37 @@ function CaseSelectionCard({ item }: { item: SpecialistCaseItem }) {
           <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/0 to-accent/0 group-hover:from-accent/5 group-hover:via-accent/2 group-hover:to-accent/0 transition-all duration-200" />
 
           <div className="relative flex min-h-[6.75rem] items-center gap-3 px-3 py-3 sm:min-h-[7.25rem] sm:gap-4 sm:px-4 sm:py-3.5 lg:min-h-[8rem] lg:px-5 lg:py-4">
-            <div className="relative size-14 shrink-0 border-2 border-primary bg-secondary/15 text-primary group-hover:border-accent group-hover:text-accent sm:size-16 lg:size-[4.5rem] transition-colors duration-150 flex flex-col items-center justify-center">
+            <div className="relative size-14 shrink-0 overflow-hidden border-2 border-primary bg-secondary/15 text-primary group-hover:border-accent group-hover:text-accent sm:size-16 lg:size-[4.5rem] transition-colors duration-150 flex flex-col items-center justify-center">
               <div className="pointer-events-none absolute inset-0.5 border border-primary/10 group-hover:border-accent/10" aria-hidden="true" />
-              <span className="retro text-[0.5rem] uppercase leading-none tracking-wider text-muted-foreground group-hover:text-accent transition-colors mb-0.5 sm:mb-1">
-                EST
-              </span>
-              <span className="retro text-base sm:text-lg lg:text-xl font-bold leading-none tracking-tighter">
-                {item.estimated_duration_minutes}
-              </span>
-              <span className="retro text-[0.45rem] sm:text-[0.5rem] uppercase leading-none tracking-widest text-muted-foreground mt-0.5 sm:mt-1">
-                MIN
-              </span>
+              {thumbnailUrl ? (
+                <>
+                  <Image
+                    src={thumbnailUrl}
+                    alt=""
+                    fill
+                    className="object-cover object-center pixelated"
+                    sizes="(max-width: 640px) 56px, (max-width: 1024px) 64px, 72px"
+                    aria-hidden
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+                  <span className="absolute bottom-1 left-1 right-1 inline-flex items-center justify-center border-y border-white/55 bg-black/65 px-1 py-0.5 text-[0.45rem] font-bold uppercase leading-none text-white retro sm:text-[0.5rem]">
+                    <span className="pointer-events-none absolute inset-y-0 -mx-0.5 border-x border-white/55" aria-hidden="true" />
+                    {item.estimated_duration_minutes} MIN
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="retro text-[0.5rem] uppercase leading-none tracking-wider text-muted-foreground group-hover:text-accent transition-colors mb-0.5 sm:mb-1">
+                    EST
+                  </span>
+                  <span className="retro text-base sm:text-lg lg:text-xl font-bold leading-none tracking-tighter">
+                    {item.estimated_duration_minutes}
+                  </span>
+                  <span className="retro text-[0.45rem] sm:text-[0.5rem] uppercase leading-none tracking-widest text-muted-foreground mt-0.5 sm:mt-1">
+                    MIN
+                  </span>
+                </>
+              )}
             </div>
 
             <div className="min-w-0 flex-1 space-y-1.5 pr-1 sm:pr-2 lg:space-y-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AlertTriangle, DoorOpen, Pause } from "lucide-react";
 
@@ -77,6 +78,7 @@ function PatientSpeechBubble({ content }: { content: string | null }) {
 }
 
 export function ConsultationRoom({ initialSession }: { initialSession: CaseSession }) {
+  const router = useRouter();
   const [session, setSession] = useState(initialSession);
   const [question, setQuestion] = useState("");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -258,13 +260,16 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
                   onSubmit={() => {
                     setError(null);
                     startTransition(async () => {
-                      try {
-                        await submitQuiz(session.id, answers);
-                      } catch (caught) {
-                        setError(
-                          caught instanceof Error ? caught.message : "Quiz could not be submitted.",
-                        );
+                      const result = await submitQuiz(session.id, answers);
+                      if (result.error || !result.resultId) {
+                        setError(result.error ?? "Quiz belum bisa dikirim. Coba lagi sebentar.");
+                        return;
                       }
+                      router.push(
+                        `/app/sessions/${session.id}/result?result=${encodeURIComponent(
+                          result.resultId,
+                        )}`,
+                      );
                     });
                   }}
                 />

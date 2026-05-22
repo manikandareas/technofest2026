@@ -1,8 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getApiClient } from "@/lib/api/server";
+
+function apiActionErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "detail" in error) {
+    const detail = (error as { detail?: unknown }).detail;
+    if (typeof detail === "string" && detail.trim()) {
+      return detail;
+    }
+  }
+  return fallback;
+}
 
 export async function sendMessage(sessionId: string, content: string) {
   const api = await getApiClient();
@@ -136,14 +145,24 @@ export async function tryStartVoiceSession(sessionId: string) {
 }
 
 export async function submitQuiz(sessionId: string, answers: Record<string, string>) {
-  const api = await getApiClient();
-  const { data, error } = await api.POST("/api/case-sessions/{session_id}/quiz-submit", {
-    params: { path: { session_id: sessionId } },
-    body: { answers },
-  });
-  if (error || !data) {
-    throw new Error("Quiz could not be submitted.");
+  try {
+    const api = await getApiClient();
+    const { data, error } = await api.POST("/api/case-sessions/{session_id}/quiz-submit", {
+      params: { path: { session_id: sessionId } },
+      body: { answers },
+    });
+    if (error || !data) {
+      return {
+        resultId: null,
+        error: apiActionErrorMessage(error, "Quiz belum bisa dikirim. Coba lagi sebentar."),
+      };
+    }
+    revalidatePath(`/app/sessions/${sessionId}`);
+    return { resultId: data.id, error: null };
+  } catch {
+    return {
+      resultId: null,
+      error: "Quiz belum bisa dikirim karena koneksi ke server tidak stabil. Coba lagi sebentar.",
+    };
   }
-  revalidatePath(`/app/sessions/${sessionId}`);
-  redirect(`/app/sessions/${sessionId}/result?result=${data.id}`);
 }
