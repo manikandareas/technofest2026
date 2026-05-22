@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { AlertTriangle, DoorOpen, Pause } from "lucide-react";
 
 import { resolvePatientConsultationAvatar } from "@/components/cases/cases-assets";
@@ -84,12 +84,14 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
   const [voiceToken, setVoiceToken] = useState<VoiceToken | null>(null);
   const [voiceState, setVoiceState] = useState<VoiceUiState>("idle");
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [voiceAutoConnectBlocked, setVoiceAutoConnectBlocked] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const voiceConnectInFlight = useRef(false);
 
-  const stopVoice = useCallback(() => {
+  const clearVoiceConnection = useCallback((nextState: VoiceUiState = "idle") => {
     setVoiceToken(null);
-    setVoiceState("idle");
+    setVoiceState(nextState);
   }, []);
 
   const {
@@ -101,7 +103,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
   } = useConsultationTimer({
     session,
     onSessionChange: setSession,
-    onConsultationLocked: stopVoice,
+    onConsultationLocked: clearVoiceConnection,
     onRefreshError: (message) => setError(message),
   });
 
@@ -124,6 +126,56 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
     session.case.consultation_avatar_url,
   );
 
+  const requestVoiceConnection = useCallback(
+    async ({ force = false }: { force?: boolean } = {}) => {
+      if (voiceConnectInFlight.current || isConsultationLocked) {
+        return;
+      }
+      if (!force && voiceToken) {
+        return;
+      }
+
+      voiceConnectInFlight.current = true;
+      if (force) {
+        setVoiceToken(null);
+      }
+      setVoiceError(null);
+      setVoiceState("connecting");
+
+      try {
+        const token = await startVoiceSession(session.id);
+        setVoiceToken(token);
+        setVoiceAutoConnectBlocked(false);
+      } catch (caught) {
+        setVoiceError(
+          caught instanceof Error ? caught.message : "Voice session could not be started.",
+        );
+        setVoiceState("error");
+        setVoiceAutoConnectBlocked(true);
+      } finally {
+        voiceConnectInFlight.current = false;
+      }
+    },
+    [isConsultationLocked, session.id, voiceToken],
+  );
+
+  useEffect(() => {
+    if (session.status !== "in_consultation" || isConsultationLocked) {
+      return;
+    }
+    if (voiceToken || voiceAutoConnectBlocked || voiceConnectInFlight.current) {
+      return;
+    }
+
+    void requestVoiceConnection();
+  }, [
+    isConsultationLocked,
+    requestVoiceConnection,
+    session.status,
+    voiceAutoConnectBlocked,
+    voiceToken,
+  ]);
+
   function run(action: () => Promise<CaseSession | unknown>) {
     setError(null);
     startTransition(async () => {
@@ -132,7 +184,7 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
         if (next && typeof next === "object" && "id" in next) {
           applySession(next as CaseSession);
           if ((next as CaseSession).is_paused) {
-            stopVoice();
+            clearVoiceConnection();
           }
         }
       } catch (caught) {
@@ -248,30 +300,13 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
                       onStateChange={setVoiceState}
                       onError={(message) => {
                         setVoiceError(message);
-                        setVoiceState("error");
-                        stopVoice();
+                        clearVoiceConnection("error");
+                        setVoiceAutoConnectBlocked(true);
                       }}
-                      onStart={() => {
-                        if (isConsultationLocked) {
-                          return;
-                        }
-                        setVoiceError(null);
-                        setVoiceState("connecting");
-                        startTransition(async () => {
-                          try {
-                            const token = await startVoiceSession(session.id);
-                            setVoiceToken(token);
-                          } catch (caught) {
-                            setVoiceError(
-                              caught instanceof Error
-                                ? caught.message
-                                : "Voice session could not be started.",
-                            );
-                            setVoiceState("error");
-                          }
-                        });
+                      onReconnect={() => {
+                        setVoiceAutoConnectBlocked(false);
+                        void requestVoiceConnection({ force: true });
                       }}
-                      onStop={stopVoice}
                     />
 
                     <div className="grid w-full grid-cols-4 gap-1.5 sm:gap-2">

@@ -27,6 +27,7 @@ export type VoiceToken = {
 export type VoiceUiState =
   | "idle"
   | "connecting"
+  | "ready"
   | "listening"
   | "user_speaking"
   | "muted"
@@ -42,15 +43,15 @@ type VoicePanelProps = {
   error: string | null;
   isPending: boolean;
   disabled: boolean;
-  onStart: () => void;
-  onStop: () => void;
+  onReconnect: () => void;
   onError: (message: string) => void;
   onStateChange: (state: VoiceUiState) => void;
 };
 
 const voiceStateLabels: Record<VoiceUiState, string> = {
-  idle: "Talk",
+  idle: "Preparing",
   connecting: "Connecting",
+  ready: "Hold to talk",
   listening: "Listening",
   user_speaking: "Speaking",
   muted: "Muted",
@@ -67,15 +68,13 @@ export function VoicePanel({
   error,
   isPending,
   disabled,
-  onStart,
-  onStop,
+  onReconnect,
   onError,
   onStateChange,
 }: VoicePanelProps) {
   const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || token?.url || "";
   const isActive = Boolean(token);
-  const startLabel =
-    uiState === "disconnected" || uiState === "error" ? "Reconnect voice" : "Start voice";
+  const canReconnect = uiState === "disconnected" || uiState === "error";
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -83,19 +82,7 @@ export function VoicePanel({
         {voiceStateLabels[uiState]}
       </div>
 
-      {isActive ? (
-        <Button
-          type="button"
-          size="icon"
-          variant="secondary"
-          font="retro"
-          className="size-[4.75rem] rounded-full border-4 border-[#2f9e44] bg-[#82c91e] text-white shadow-[0_4px_0_#2f9e44] hover:bg-[#74b816] sm:size-20"
-          aria-label="Stop voice consultation"
-          onClick={onStop}
-        >
-          <MicOff className="size-7 sm:size-8" aria-hidden />
-        </Button>
-      ) : (
+      {canReconnect ? (
         <Button
           type="button"
           size="icon"
@@ -103,14 +90,40 @@ export function VoicePanel({
           font="retro"
           disabled={isPending || disabled}
           className="size-[4.75rem] rounded-full border-4 border-[#2f9e44] bg-[#82c91e] text-white shadow-[0_4px_0_#2f9e44] hover:bg-[#74b816] disabled:opacity-70 sm:size-20"
-          aria-label={startLabel}
-          onClick={onStart}
+          aria-label="Reconnect voice"
+          onClick={onReconnect}
         >
-          {uiState === "disconnected" || uiState === "error" ? (
-            <RotateCcw className="size-7 sm:size-8" aria-hidden />
-          ) : (
-            <Mic className="size-7 sm:size-8" aria-hidden />
-          )}
+          <RotateCcw className="size-7 sm:size-8" aria-hidden />
+        </Button>
+      ) : isActive && token && livekitUrl ? (
+        <LiveKitRoom
+          audio={false}
+          connect
+          token={token.token}
+          serverUrl={livekitUrl}
+          onDisconnected={() => onStateChange("disconnected")}
+          onError={(caught) => onError(caught.message)}
+        >
+          <RoomAudioRenderer />
+          <AudioUnlockButton />
+          <VoiceConnectionState
+            disabled={disabled}
+            isPending={isPending}
+            onError={onError}
+            onStateChange={onStateChange}
+          />
+        </LiveKitRoom>
+      ) : (
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          font="retro"
+          disabled
+          className="size-[4.75rem] rounded-full border-4 border-[#2f9e44] bg-[#82c91e] text-white shadow-[0_4px_0_#2f9e44] hover:bg-[#74b816] disabled:opacity-70 sm:size-20"
+          aria-label="Voice is connecting"
+        >
+          <MicOff className="size-7 sm:size-8" aria-hidden />
         </Button>
       )}
 
@@ -125,19 +138,10 @@ export function VoicePanel({
         </p>
       ) : null}
 
-      {token && livekitUrl ? (
-        <LiveKitRoom
-          audio
-          connect
-          token={token.token}
-          serverUrl={livekitUrl}
-          onDisconnected={() => onStateChange("disconnected")}
-          onError={(caught) => onError(caught.message)}
-        >
-          <RoomAudioRenderer />
-          <AudioUnlockButton />
-          <VoiceConnectionState onError={onError} onStateChange={onStateChange} />
-        </LiveKitRoom>
+      {isActive && !livekitUrl ? (
+        <p className="max-w-xs rounded-xl border border-destructive/40 bg-background/90 px-3 py-2 text-center text-xs text-destructive">
+          LiveKit URL is missing. Text consultation remains available.
+        </p>
       ) : null}
     </div>
   );
@@ -175,9 +179,13 @@ function AudioUnlockButton() {
 }
 
 function VoiceConnectionState({
+  disabled,
+  isPending,
   onError,
   onStateChange,
 }: {
+  disabled: boolean;
+  isPending: boolean;
   onError: (message: string) => void;
   onStateChange: (state: VoiceUiState) => void;
 }) {
@@ -196,6 +204,22 @@ function VoiceConnectionState({
     },
   });
   const effectiveMicEnabled = isMicrophoneEnabled && micEnabled;
+  const canTalk =
+    connectionState === ConnectionState.Connected &&
+    agentState !== "speaking" &&
+    !disabled &&
+    !isPending &&
+    !micPending;
+
+  const setMicEnabled = (enabled: boolean) => {
+    if (enabled && !canTalk) {
+      return;
+    }
+    if (!enabled && !effectiveMicEnabled) {
+      return;
+    }
+    void toggleMic(enabled);
+  };
 
   useEffect(() => {
     if (lastMicrophoneError) {
@@ -217,7 +241,15 @@ function VoiceConnectionState({
       return;
     }
     if (!effectiveMicEnabled) {
-      onStateChange("muted");
+      if (agentState === "speaking") {
+        onStateChange("patient_speaking");
+        return;
+      }
+      if (agentState === "thinking") {
+        onStateChange("patient_thinking");
+        return;
+      }
+      onStateChange("ready");
       return;
     }
     if (isUserSpeaking) {
@@ -236,22 +268,53 @@ function VoiceConnectionState({
   }, [agentState, connectionState, effectiveMicEnabled, isUserSpeaking, onStateChange]);
 
   return (
-    <div className="mt-1 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/20 bg-[rgba(0,24,61,0.55)] p-2 text-xs text-white">
+    <div className="mt-1 flex flex-col items-center justify-center gap-2">
       <Button
         type="button"
-        variant="outline"
-        size="sm"
-        disabled={micPending}
-        onClick={() => void toggleMic(!effectiveMicEnabled)}
+        size="icon"
+        variant="secondary"
+        font="retro"
+        disabled={!canTalk && !effectiveMicEnabled}
+        className="size-[4.75rem] rounded-full border-4 border-[#2f9e44] bg-[#82c91e] text-white shadow-[0_4px_0_#2f9e44] hover:bg-[#74b816] active:translate-y-1 active:shadow-[0_2px_0_#2f9e44] disabled:opacity-70 sm:size-20"
+        aria-label={effectiveMicEnabled ? "Release to stop talking" : "Hold to talk"}
+        onPointerDown={(event) => {
+          event.currentTarget.setPointerCapture(event.pointerId);
+          setMicEnabled(true);
+        }}
+        onPointerUp={(event) => {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+          setMicEnabled(false);
+        }}
+        onPointerCancel={() => setMicEnabled(false)}
+        onPointerLeave={() => setMicEnabled(false)}
+        onKeyDown={(event) => {
+          if (event.repeat || (event.key !== " " && event.key !== "Enter")) {
+            return;
+          }
+          event.preventDefault();
+          setMicEnabled(true);
+        }}
+        onKeyUp={(event) => {
+          if (event.key !== " " && event.key !== "Enter") {
+            return;
+          }
+          event.preventDefault();
+          setMicEnabled(false);
+        }}
       >
-        {effectiveMicEnabled ? <Mic className="size-4" /> : <MicOff className="size-4" />}
-        {effectiveMicEnabled ? "Mute" : "Unmute"}
+        {effectiveMicEnabled ? (
+          <Mic className="size-7 sm:size-8" aria-hidden />
+        ) : (
+          <MicOff className="size-7 sm:size-8" aria-hidden />
+        )}
       </Button>
-      <span className="flex items-center gap-2 text-white/85">
+      <span className="flex max-w-xs items-center justify-center gap-2 rounded-xl border border-white/20 bg-[rgba(0,24,61,0.55)] px-3 py-2 text-center text-xs text-white/85">
         {connectionState === ConnectionState.Disconnected ? <WifiOff className="size-4" /> : null}
         {effectiveMicEnabled
-          ? "Mic is active for the AI patient."
-          : "Mic is off. Text fallback remains available."}
+          ? "Release when finished speaking."
+          : agentState === "speaking"
+            ? "Patient is answering. Mic stays off."
+            : "Hold the mic button to talk."}
       </span>
     </div>
   );

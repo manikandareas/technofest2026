@@ -38,7 +38,7 @@ PIXELAID_API_URL=http://api:8000
   the `web` service.
 - Run Supabase migrations as an explicit deployment step. Do not run migrations
   from API container startup.
-- Keep `VOICE_LATENCY_PROFILE=fast` for MVP voice latency.
+- Keep `VOICE_LATENCY_PROFILE=ptt` for MVP push-to-talk voice latency.
 - Prefer `TTS_PROVIDER=gemini` with `GOOGLE_API_KEY` for one fewer TTS proxy hop.
 - If using `TTS_PROVIDER=openrouter`, provide `OPENROUTER_API_KEY`.
 

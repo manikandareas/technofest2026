@@ -76,6 +76,63 @@ async def test_patient_agent_accepts_safe_grounded_reply(monkeypatch) -> None:
 
 
 @pytest.mark.anyio
+async def test_patient_agent_validates_unknown_cloud_case_from_api_context(
+    monkeypatch,
+) -> None:
+    agent = PixelAidPatientAgent(
+        context={
+            "case_id": "cloud-only-case",
+            "patient_name": "Raka",
+            "patient_persona": "Raka, jawab singkat.",
+            "forbidden_terms": ["Pneumonia"],
+            "allowed_facts": [
+                {
+                    "key": "cough",
+                    "response": "Batuk saya sudah tiga hari, Dok.",
+                }
+            ],
+            "completed_examinations": [],
+        },
+        instructions="test",
+    )
+
+    async def fake_collect(*args: object, **kwargs: object) -> str:
+        return "Batuk saya sudah tiga hari, Dok."
+
+    monkeypatch.setattr(agent, "_collect_reply", fake_collect)
+
+    result = await agent.llm_node(llm.ChatContext.empty(), [], None)  # type: ignore[arg-type]
+
+    assert result == "Batuk saya sudah tiga hari, Dok."
+
+
+@pytest.mark.anyio
+async def test_patient_agent_rejects_forbidden_term_for_unknown_cloud_case(
+    monkeypatch,
+) -> None:
+    agent = PixelAidPatientAgent(
+        context={
+            "case_id": "cloud-only-case",
+            "patient_name": "Raka",
+            "forbidden_terms": ["Pneumonia"],
+            "allowed_facts": [{"key": "cough", "response": "Saya batuk, Dok."}],
+            "completed_examinations": [],
+        },
+        instructions="test",
+    )
+    replies = iter(["Sepertinya saya Pneumonia.", "Saya batuk, Dok."])
+
+    async def fake_collect(*args: object, **kwargs: object) -> str:
+        return next(replies)
+
+    monkeypatch.setattr(agent, "_collect_reply", fake_collect)
+
+    result = await agent.llm_node(llm.ChatContext.empty(), [], None)  # type: ignore[arg-type]
+
+    assert result == "Saya batuk, Dok."
+
+
+@pytest.mark.anyio
 async def test_patient_agent_records_validation_reasons_before_retry(monkeypatch) -> None:
     telemetry = SyncEventRecorder()
     agent = PixelAidPatientAgent(

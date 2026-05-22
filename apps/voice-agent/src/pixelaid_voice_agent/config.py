@@ -28,7 +28,7 @@ class VoiceAgentSettings(BaseSettings):
     gemini_tts_model: str = "gemini-2.5-flash-preview-tts"
     gemini_tts_voice_name: str = "Kore"
     deepgram_api_key: str | None = None
-    voice_latency_profile: Literal["fast", "quality"] = "fast"
+    voice_latency_profile: Literal["fast", "quality", "ptt"] = "ptt"
 
     def readiness(self) -> dict[str, bool]:
         return {

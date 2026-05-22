@@ -46,9 +46,28 @@ def test_default_tts_provider_uses_openrouter_gemini() -> None:
     assert tts.model == "google/gemini-3.1-flash-tts-preview"
 
 
-def test_fast_latency_profile_is_default_low_latency() -> None:
+def test_ptt_latency_profile_is_default_and_disables_interruption() -> None:
     settings = cast(Any, VoiceAgentSettings)(_env_file=None)
     profile = resolve_latency_profile(settings.voice_latency_profile)
+    options = cast(dict[str, Any], profile.turn_handling)
+
+    assert profile.name == "ptt"
+    assert profile.aec_warmup_duration == 0.0
+    assert options["turn_detection"] == "stt"
+    assert options["endpointing"] == {
+        "mode": "fixed",
+        "min_delay": 0.15,
+        "max_delay": 0.8,
+    }
+    assert options["interruption"] == {"enabled": False}
+    assert options["preemptive_generation"]["enabled"] is True
+    assert options["preemptive_generation"]["preemptive_tts"] is False
+    assert options["preemptive_generation"]["max_speech_duration"] == 10.0
+    assert options["preemptive_generation"]["max_retries"] == 3
+
+
+def test_fast_latency_profile_remains_low_latency_with_vad_interruption() -> None:
+    profile = resolve_latency_profile("fast")
     options = cast(dict[str, Any], profile.turn_handling)
 
     assert profile.name == "fast"

@@ -14,7 +14,7 @@ OPENROUTER_API_KEY=
 OPENROUTER_TTS_MODEL=google/gemini-3.1-flash-tts-preview
 OPENROUTER_TTS_VOICE_NAME=Kore
 DEEPGRAM_API_KEY=
-VOICE_LATENCY_PROFILE=fast
+VOICE_LATENCY_PROFILE=ptt
 PIXELAID_API_URL=http://127.0.0.1:8000
 VOICE_AGENT_API_TOKEN=
 ```
@@ -24,9 +24,13 @@ OpenRouter is the default TTS provider, using Gemini TTS through OpenRouter cred
 
 ## Latency profile
 
-`VOICE_LATENCY_PROFILE=fast` is the default. It uses STT turn detection, prewarmed
-Silero VAD, short endpointing, no AEC warmup pause, and preemptive LLM generation
-without preemptive TTS.
+`VOICE_LATENCY_PROFILE=ptt` is the default for push-to-talk consultation. It uses
+STT turn detection, prewarmed Silero VAD, short endpointing, no AEC warmup pause,
+and disables automatic interruption so patient replies are not cancelled by
+ambient audio while the mic is normally off.
+
+Set `VOICE_LATENCY_PROFILE=fast` to restore continuous mic behavior with VAD-based
+interruption.
 
 Set `VOICE_LATENCY_PROFILE=quality` only after downloading LiveKit turn detector
 files. The quality profile uses the multilingual turn detector when those files

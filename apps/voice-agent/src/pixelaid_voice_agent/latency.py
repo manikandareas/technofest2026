@@ -5,9 +5,8 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from livekit.agents import TurnHandlingOptions
-from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
-VoiceLatencyProfileName = Literal["fast", "quality"]
+VoiceLatencyProfileName = Literal["fast", "quality", "ptt"]
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,29 @@ class VoiceLatencyProfile:
 def resolve_latency_profile(
     profile_name: VoiceLatencyProfileName,
 ) -> VoiceLatencyProfile:
+    if profile_name == "ptt":
+        return VoiceLatencyProfile(
+            name="ptt",
+            turn_handling={
+                "turn_detection": "stt",
+                "endpointing": {
+                    "mode": "fixed",
+                    "min_delay": 0.15,
+                    "max_delay": 0.8,
+                },
+                "interruption": {
+                    "enabled": False,
+                },
+                "preemptive_generation": {
+                    "enabled": True,
+                    "preemptive_tts": False,
+                    "max_speech_duration": 10.0,
+                    "max_retries": 3,
+                },
+            },
+            aec_warmup_duration=0.0,
+        )
+
     if profile_name == "quality":
         return VoiceLatencyProfile(
             name="quality",
@@ -91,5 +113,7 @@ def _resolve_quality_turn_detection() -> Any:
         return "stt"
 
 
-def _build_multilingual_turn_detector() -> MultilingualModel:
+def _build_multilingual_turn_detector() -> Any:
+    from livekit.plugins.turn_detector.multilingual import MultilingualModel
+
     return MultilingualModel()
