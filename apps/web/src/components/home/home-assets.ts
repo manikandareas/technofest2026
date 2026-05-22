@@ -15,3 +15,20 @@ export const HOME_ASSETS = {
   navIconHistory: "/assets/home/figma/icon-history.png",
   navIconSetting: "/assets/home/figma/nav-icon-setting.png",
 } as const;
+
+/** Wardrobe / STYLE panel assets (Figma node 232:2). */
+export const WARDROBE_ASSETS = {
+  outfits: [
+    "/assets/home/figma/wardrobe/outfit-1.png",
+    "/assets/home/figma/wardrobe/outfit-2.png",
+    "/assets/home/figma/wardrobe/outfit-3.png",
+    "/assets/home/figma/wardrobe/outfit-4.png",
+    "/assets/home/figma/wardrobe/outfit-5.png",
+    "/assets/home/figma/wardrobe/outfit-6.png",
+    "/assets/home/figma/wardrobe/outfit-7.png",
+    "/assets/home/figma/wardrobe/outfit-8.png",
+  ],
+  iconCheckSelected: "/assets/home/figma/wardrobe/icon-check-selected.png",
+  btnGo: "/assets/home/figma/wardrobe/btn-go.png",
+  footerRow: "/assets/home/figma/wardrobe/footer-row.png",
+} as const;
