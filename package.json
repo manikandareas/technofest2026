@@ -12,6 +12,7 @@
     "dev:voice": "cd apps/voice-agent && uv run pixelaid-voice-agent dev",
     "contracts:export": "cd apps/api && uv run python -m pixelaid_api.openapi ../../packages/contracts/openapi.json",
     "contracts:generate": "bun run contracts:export && bunx openapi-typescript packages/contracts/openapi.json -o packages/contracts/src/schema.d.ts",
+    "db:seed:build": "bun run packages/db/scripts/build_seed_from_data_json.ts",
     "db:status": "bunx supabase --workdir packages/db status",
     "db:migrations": "bunx supabase --workdir packages/db migration list",
     "db:types": "bunx supabase --workdir packages/db gen types typescript --project-id \"${SUPABASE_PROJECT_REF:-djjwforazkkzuexqflqn}\" --schema public > packages/db/database.types.ts",

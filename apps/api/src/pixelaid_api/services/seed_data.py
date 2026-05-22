@@ -1,96 +1,77 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
 from pixelaid_api.models import CaseBrief, PublicSpecialist
 
-SPECIALISTS: list[PublicSpecialist] = [
-    PublicSpecialist(
-        id="cardiology",
-        name="Cardiology",
-        description="Latihan konsultasi keluhan jantung dan pembuluh darah.",
-        icon="heart-pulse",
-        status="available",
-        case_count=3,
-    ),
-    PublicSpecialist(
-        id="pulmonology",
-        name="Pulmonology",
-        description="Kasus respirasi akan dibuka setelah fondasi voice siap.",
-        icon="lungs",
-        status="coming_soon",
-        case_count=0,
-    ),
-    PublicSpecialist(
-        id="neurology",
-        name="Neurology",
-        description="Kasus neurologi disiapkan untuk fase konten berikutnya.",
-        icon="brain",
-        status="coming_soon",
-        case_count=0,
-    ),
-    PublicSpecialist(
-        id="pediatrics",
-        name="Pediatrics",
-        description="Simulasi anak menyusul setelah mode dasar stabil.",
-        icon="baby",
-        status="coming_soon",
-        case_count=0,
-    ),
-]
 
-CASES: list[CaseBrief] = [
-    CaseBrief(
-        id="demo",
-        specialist_id="cardiology",
-        specialist_name="Cardiology",
-        patient_name="Maya",
-        patient_age=54,
-        patient_gender="Perempuan",
-        chief_complaint="Nyeri dada kiri sejak 2 jam sebelum datang.",
-        triage_note="Stabil, tampak cemas, perlu gali karakter nyeri dan faktor risiko.",
-        difficulty="easy",
-        condition_badge="Chest pain",
-        estimated_duration_minutes=8,
-        is_demo=True,
-        learning_objectives=[
-            "Gali onset, provokasi, kualitas, radiasi, skala, dan durasi nyeri.",
-            "Identifikasi faktor risiko kardiovaskular awal.",
-            "Tentukan pemeriksaan awal yang aman sebelum diagnosis akhir.",
-        ],
-    ),
-    CaseBrief(
-        id="budi-palpitasi",
-        specialist_id="cardiology",
-        specialist_name="Cardiology",
-        patient_name="Budi",
-        patient_age=42,
-        patient_gender="Laki-laki",
-        chief_complaint="Jantung berdebar setelah minum kopi dan begadang.",
-        triage_note="Hemodinamik stabil, fokus pada red flag, irama, dan konsumsi stimulan.",
-        difficulty="medium",
-        condition_badge="Palpitasi",
-        estimated_duration_minutes=10,
-        is_demo=False,
-        learning_objectives=[
-            "Pisahkan palpitasi benign dari tanda bahaya.",
-            "Tanyakan konsumsi stimulan dan pola tidur.",
-            "Pilih pemeriksaan awal untuk keluhan berdebar.",
-        ],
-    ),
-    CaseBrief(
-        id="siti-sesak",
-        specialist_id="cardiology",
-        specialist_name="Cardiology",
-        patient_name="Siti",
-        patient_age=67,
-        patient_gender="Perempuan",
-        chief_complaint="Sesak saat aktivitas disertai bengkak tungkai.",
-        triage_note="Butuh asesmen gagal jantung, kapasitas fungsional, dan tanda kongesti.",
-        difficulty="hard",
-        condition_badge="Dyspnea",
-        estimated_duration_minutes=12,
-        is_demo=False,
-        learning_objectives=[
-            "Nilai derajat sesak dan gejala kongesti.",
-            "Gali komorbid yang memperburuk gagal jantung.",
-            "Tentukan prioritas pemeriksaan fisik kardiopulmoner.",
-        ],
-    ),
-]
+def _find_data_json() -> Path | None:
+    for parent in Path(__file__).resolve().parents:
+        candidate = parent / "docs" / "data.json"
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _duration_minutes(seconds: int) -> int:
+    return max(1, (seconds + 59) // 60)
+
+
+def _load_seed_data() -> tuple[list[PublicSpecialist], list[CaseBrief]]:
+    data_path = _find_data_json()
+    if data_path is None:
+        return [], []
+
+    data = json.loads(data_path.read_text())
+    specialist_rows = data.get("specialists") or []
+    case_rows = data.get("cases") or []
+    case_counts: dict[str, int] = {}
+    for row in case_rows:
+        if row.get("availability", {}).get("is_published"):
+            specialist_id = str(row["specialist_id"])
+            case_counts[specialist_id] = case_counts.get(specialist_id, 0) + 1
+
+    specialists = [
+        PublicSpecialist(
+            id=str(row["id"]),
+            name=str(row.get("display_name") or row.get("name") or row["id"]),
+            description=str(row["description"]),
+            icon=str(row.get("icon") or "stethoscope"),
+            status=str(row["status"]),
+            case_count=case_counts.get(str(row["id"]), 0),
+        )
+        for row in specialist_rows
+    ]
+    specialist_names = {item.id: item.name for item in specialists}
+
+    cases = [
+        CaseBrief(
+            id=str(row["id"]),
+            specialist_id=str(row["specialist_id"]),
+            specialist_name=specialist_names.get(str(row["specialist_id"]), "Unknown"),
+            patient_name=str(row["patient"]["name"]),
+            patient_age=int(row["patient"]["age"]),
+            patient_gender=str(row["patient"]["gender"]),
+            chief_complaint=str(row["chief_complaint"]),
+            triage_note=str(row["triage_note"]),
+            difficulty=str(row["difficulty"]),
+            condition_badge=str(row["condition_badge"]),
+            estimated_duration_minutes=_duration_minutes(
+                int(row["estimated_duration_seconds"])
+            ),
+            is_demo=bool(row.get("availability", {}).get("is_demo")),
+            learning_objectives=[
+                str(item)
+                for item in (
+                    (row.get("case_data") or {}).get("learning_focus") or []
+                )
+            ],
+        )
+        for row in case_rows
+        if row.get("availability", {}).get("is_published")
+    ]
+    return specialists, cases
+
+
+SPECIALISTS, CASES = _load_seed_data()

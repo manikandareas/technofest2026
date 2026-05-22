@@ -96,6 +96,8 @@ def list_cases_for_specialist(specialist_id: str) -> list[CaseBrief]:
 
 
 def get_case(case_id: str) -> CaseBrief:
+    if case_id == "demo":
+        return get_demo_case()
     for case in _load_cases():
         if case.id == case_id:
             return case

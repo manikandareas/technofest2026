@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     default: "PixelAid",
     template: "%s | PixelAid",
   },
-  description: "Responsive PWA medical simulation for dokter koas.",
+  description: "Responsive PWA medical simulation for dokter.",
   manifest: "/manifest.webmanifest",
   applicationName: "PixelAid",
   appleWebApp: {

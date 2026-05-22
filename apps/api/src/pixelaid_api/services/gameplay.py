@@ -69,25 +69,33 @@ _profiles: dict[str, StoreRow] = {}
 _leaderboard: dict[str, StoreRow] = {}
 
 
+def _resolve_case_id(case_id: str) -> str:
+    if case_id == "demo":
+        return get_case("demo").id
+    return case_id
+
+
 def create_session(
     case_id: str,
     actor: SessionActor,
     settings: Settings | None = None,
 ) -> CaseSessionResponse:
+    case_id = _resolve_case_id(case_id)
     if case_id not in CASE_CONFIGS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Case not found."
         )
-    if actor.guest_id and case_id != "demo":
+    case_brief = get_case(case_id)
+    if actor.guest_id and not case_brief.is_demo:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Guests can only start the Maya demo case.",
+            detail="Guests can only start the demo case.",
         )
     if not actor.user_id and not actor.guest_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing owner."
         )
-    if actor.guest_id and case_id == "demo":
+    if actor.guest_id and case_brief.is_demo:
         resolved = settings or get_settings()
         assert_rate_limit(
             RateLimit(
@@ -752,16 +760,18 @@ def store_voice_transcript(
     session_id: str,
     messages: list[VoiceTranscriptMessage],
 ) -> list[ConversationMessage]:
-    row = _require_status(_get_session_row(session_id), {"brief", "in_consultation"})
+    row = _require_status(
+        _get_session_row(session_id), {"brief", "in_consultation", "quiz", "completed"}
+    )
     if row["status"] == "brief":
-        _update_session(session_id, {"status": "in_consultation"})
+        row = _update_session(session_id, {"status": "in_consultation"})
 
     stored: list[ConversationMessage] = []
     config = get_case_config(str(row["case_id"]))
     state = dict(row.get("session_state") or {})
     covered = set(state.get("covered_interview_keys") or [])
     for message in messages:
-        if message.role == "user":
+        if row["status"] == "in_consultation" and message.role == "user":
             _, rubric_key = patient_response(config, message.content)
             if rubric_key:
                 covered.add(rubric_key)
@@ -776,8 +786,9 @@ def store_voice_transcript(
                 )
             )
         )
-    state["covered_interview_keys"] = sorted(covered)
-    _update_session(session_id, {"session_state": state})
+    if row["status"] == "in_consultation":
+        state["covered_interview_keys"] = sorted(covered)
+        _update_session(session_id, {"session_state": state})
     return stored
 
 
@@ -951,12 +962,20 @@ def _insert_message(
         _messages.setdefault(session_id, []).append(row)
         return row
     if external_id:
+        existing_response = (
+            client.table("conversation_messages")
+            .select("*")
+            .eq("session_id", session_id)
+            .eq("external_id", external_id)
+            .maybe_single()
+            .execute()
+        )
+        existing = cast(StoreRow | None, getattr(existing_response, "data", None))
+        if existing:
+            return existing
         data = cast(
             list[StoreRow],
-            client.table("conversation_messages")
-            .upsert(row, on_conflict="session_id,external_id")
-            .execute()
-            .data,
+            client.table("conversation_messages").insert(row).execute().data,
         )
         return data[0]
     row = {key: value for key, value in row.items() if value is not None}

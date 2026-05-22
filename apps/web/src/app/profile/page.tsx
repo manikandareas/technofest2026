@@ -17,7 +17,7 @@ export default async function ProfilePage() {
         <div className="space-y-2">
           <Badge>Profile</Badge>
           <h1 className="text-3xl font-semibold tracking-tight">
-            {profile?.display_name ?? profile?.email ?? "Profil Koas"}
+            {profile?.display_name ?? profile?.email ?? "Profil Peserta"}
           </h1>
           <p className="text-muted-foreground">Progress dihitung dari XP dan best result.</p>
         </div>

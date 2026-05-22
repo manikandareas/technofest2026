@@ -24,8 +24,7 @@ export default async function SpecialistsPage() {
           <Badge>Specialists</Badge>
           <h1 className="text-3xl font-semibold tracking-tight">Pilih bidang klinis</h1>
           <p className="max-w-2xl text-muted-foreground">
-            Cardiology tersedia untuk demo publik. Specialist lain tetap terkunci
-            sampai konten dan guardrail klinisnya siap.
+            Pilih bidang yang tersedia untuk membuka brief simulasi PixelAid.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">

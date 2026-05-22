@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-PixelAid adalah aplikasi **responsive PWA** berbasis **Next.js** untuk simulasi edukatif dokter koas dalam format 2D pixel-art medical simulation game. Produk berjalan sebagai web app yang responsif di desktop, tablet, dan mobile, serta dapat di-install sebagai PWA untuk pengalaman seperti aplikasi mobile.
+PixelAid adalah aplikasi **responsive PWA** berbasis **Next.js** untuk simulasi edukatif dokter dalam format 2D pixel-art medical simulation game. Produk berjalan sebagai web app yang responsif di desktop, tablet, dan mobile, serta dapat di-install sebagai PWA untuk pengalaman seperti aplikasi mobile.
 
 Fitur inti adalah **real-time continuous voice consultation** antara user dan pasien NPC menggunakan **LiveKit**. Backend dan AI agent menggunakan **Python**, sedangkan database, autentikasi, storage, dan fitur realtime non-audio menggunakan **Supabase**.
 
@@ -212,7 +212,7 @@ Splash singkat → Homepage
 ### Onboarding Slides
 
 ```text
-Slide 1: Kamu adalah dokter koas virtual
+Slide 1: Kamu adalah dokter virtual
 Slide 2: Tanya pasien menggunakan fitur Talk
 Slide 3: Gunakan Examine dan Medical Record
 Slide 4: Akhiri konsultasi, jawab quiz, dapat feedback
@@ -1615,4 +1615,3 @@ XP: based on score and difficulty
 Retry: small XP, best score update
 Demo Conversion: guest result can be saved after login
 ```
-

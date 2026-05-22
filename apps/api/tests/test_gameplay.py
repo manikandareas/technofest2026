@@ -43,7 +43,7 @@ def reset_memory_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(rate_limits, "get_supabase_admin", lambda: None)
 
 
-def test_guest_completes_maya_demo(monkeypatch) -> None:
+def test_guest_completes_demo(monkeypatch) -> None:
     monkeypatch.setattr(gameplay, "get_supabase_admin", lambda: None)
     monkeypatch.setattr(supabase_service, "get_supabase_admin", lambda: None)
     client = TestClient(app)
@@ -64,10 +64,10 @@ def test_guest_completes_maya_demo(monkeypatch) -> None:
     message = client.post(
         f"/api/case-sessions/{session_id}/messages",
         headers=GUEST_AUTH,
-        json={"content": "Kapan nyeri mulai dan apakah menjalar?"},
+        json={"content": "Kapan demam mulai dan apakah ada keluhan penyerta?"},
     )
     assert message.status_code == 200
-    assert "dua jam" in message.json()["patient_message"]["content"]
+    assert "3 hari" in message.json()["patient_message"]["content"]
 
     record = client.post(
         f"/api/case-sessions/{session_id}/medical-record/opened",
@@ -107,11 +107,11 @@ def test_guest_completes_maya_demo(monkeypatch) -> None:
     submitted = client.post(
         f"/api/case-sessions/{session_id}/quiz-submit",
         headers=GUEST_AUTH,
-        json={"answers": {"diagnosis": "acs", "next_step": "serial_ecg_trop"}},
+        json={"answers": _correct_answers("demo")},
     )
     assert submitted.status_code == 200
     result = submitted.json()
-    assert result["score"] > 60
+    assert result["score"] > 50
     assert result["stars"] >= 1
     assert result["xp_awarded"] == 0
     assert result["claim_available"] is True
@@ -139,18 +139,18 @@ def test_feedback_fallback_and_missed_category_summary() -> None:
     case = get_case_config("demo")
     missed_interview, missed_exams, missed_safety = summarize_missed_categories(
         case,
-        {"diagnosis": "acs", "next_step": "discharge"},
+        {**_correct_answers("demo"), "next-best-step": "unsafe"},
         {"onset"},
         {"vitals"},
     )
-    assert "quality" in missed_interview
-    assert "ecg" in missed_exams
-    assert missed_safety == ["next_step"]
+    assert "asked_bleeding_warning" in missed_interview
+    assert "ordered_ns1" in missed_exams
+    assert missed_safety == ["next-best-step"]
 
     feedback = fallback_feedback(
         FeedbackInput(
             case_id="demo",
-            patient_name="Maya",
+            patient_name="Raka",
             score=55,
             stars=2,
             score_breakdown=ScoreBreakdown(
@@ -225,7 +225,7 @@ def test_guest_cannot_start_non_demo(monkeypatch) -> None:
     response = TestClient(app).post(
         "/api/case-sessions",
         headers=GUEST_AUTH,
-        json={"case_id": "budi-palpitasi"},
+        json={"case_id": "internal-medicine-diabetes-hyperglycemia"},
     )
 
     assert response.status_code == 403
@@ -337,17 +337,22 @@ def test_claim_attempt_limit_blocks_repeated_attempts(monkeypatch) -> None:
     assert second.status_code == 429
 
 
-def test_authenticated_user_completes_all_cardiology_cases(monkeypatch) -> None:
+def test_authenticated_user_completes_all_internal_medicine_cases(monkeypatch) -> None:
     monkeypatch.setattr(gameplay, "get_supabase_admin", lambda: None)
     monkeypatch.setattr(supabase_service, "get_supabase_admin", lambda: None)
     client = TestClient(app)
 
-    for case_id, answers in [
-        ("demo", {"diagnosis": "acs", "next_step": "serial_ecg_trop"}),
-        ("budi-palpitasi", {"diagnosis": "stimulant", "safety": "syncope_chest_pain"}),
+    for case_id, answers, expected_case_id in [
+        ("demo", _correct_answers("demo"), "internal-medicine-dengue-warning-signs"),
         (
-            "siti-sesak",
-            {"diagnosis": "heart_failure", "safety": "oxygen_diuretic_monitor"},
+            "internal-medicine-diabetes-hyperglycemia",
+            _correct_answers("internal-medicine-diabetes-hyperglycemia"),
+            "internal-medicine-diabetes-hyperglycemia",
+        ),
+        (
+            "internal-medicine-pneumonia",
+            _correct_answers("internal-medicine-pneumonia"),
+            "internal-medicine-pneumonia",
         ),
     ]:
         created = client.post(
@@ -381,7 +386,7 @@ def test_authenticated_user_completes_all_cardiology_cases(monkeypatch) -> None:
             json={"answers": answers},
         )
         assert submitted.status_code == 200
-        assert submitted.json()["case"]["id"] == case_id
+        assert submitted.json()["case"]["id"] == expected_case_id
 
 
 def test_contract_contains_gameplay_endpoints() -> None:
@@ -463,7 +468,7 @@ def test_voice_agent_context_and_transcript_are_agent_only(monkeypatch) -> None:
         headers={"Authorization": "Bearer voice-token"},
     )
     assert context.status_code == 200
-    assert context.json()["patient_name"] == "Maya"
+    assert context.json()["patient_name"] == "Raka"
     assert context.json()["completed_examinations"] == []
 
     first = client.post(
@@ -498,6 +503,32 @@ def test_voice_agent_context_and_transcript_are_agent_only(monkeypatch) -> None:
     assert second.status_code == 200
     assert first.json()["messages"][0]["id"] == second.json()["messages"][0]["id"]
 
+    ended = client.post(
+        f"/api/case-sessions/{session_id}/end-consultation",
+        headers=DEV_AUTH,
+    )
+    assert ended.status_code == 200
+    assert ended.json()["status"] == "quiz"
+
+    late = client.post(
+        f"/api/livekit/sessions/{session_id}/transcript",
+        headers={"Authorization": "Bearer voice-token"},
+        json={
+            "messages": [
+                {
+                    "external_id": "voice-late",
+                    "role": "user",
+                    "content": "Transcript final yang telat setelah disconnect.",
+                    "metadata": {"provider": "deepgram"},
+                }
+            ]
+        },
+    )
+    assert late.status_code == 200
+    assert late.json()["messages"][0]["content"] == (
+        "Transcript final yang telat setelah disconnect."
+    )
+
 
 async def _noop_dispatch(*args: object, **kwargs: object) -> None:
     return None
@@ -526,7 +557,12 @@ def _complete_demo(client: TestClient, headers: dict[str, str]) -> dict[str, Any
     response = client.post(
         f"/api/case-sessions/{session_id}/quiz-submit",
         headers=headers,
-        json={"answers": {"diagnosis": "acs", "next_step": "serial_ecg_trop"}},
+        json={"answers": _correct_answers("demo")},
     )
     assert response.status_code == 200
     return cast(dict[str, Any], response.json())
+
+
+def _correct_answers(case_id: str) -> dict[str, str]:
+    config = get_case_config(case_id)
+    return {question.id: question.correct_option_id for question in config.quiz}

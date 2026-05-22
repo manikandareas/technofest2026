@@ -4,11 +4,21 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   LiveKitRoom,
   RoomAudioRenderer,
+  useAudioPlayback,
   useConnectionState,
   useVoiceAssistant,
 } from "@livekit/components-react";
 import { ConnectionState } from "livekit-client";
-import { Clock, FileText, Mic, MicOff, Send, Stethoscope, TimerReset } from "lucide-react";
+import {
+  Clock,
+  FileText,
+  Mic,
+  MicOff,
+  Send,
+  Stethoscope,
+  TimerReset,
+  Volume2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -448,11 +458,43 @@ function VoicePanel({
             onError={(caught) => onError(caught.message)}
           >
             <RoomAudioRenderer />
+            <AudioUnlockButton />
             <VoiceConnectionState onStateChange={onStateChange} />
           </LiveKitRoom>
         ) : null}
       </CardContent>
     </Card>
+  );
+}
+
+function AudioUnlockButton() {
+  const { canPlayAudio, startAudio } = useAudioPlayback();
+  const [failed, setFailed] = useState(false);
+
+  if (canPlayAudio) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={async () => {
+          try {
+            await startAudio();
+            setFailed(false);
+          } catch {
+            setFailed(true);
+          }
+        }}
+      >
+        <Volume2 className="size-4" />
+        Enable audio
+      </Button>
+      {failed ? <p className="mt-2 text-xs">Audio playback is still blocked.</p> : null}
+    </div>
   );
 }
 

@@ -2,7 +2,7 @@
 
 ## 1. Product Overview
 
-**PixelAid** adalah game simulasi medis edukatif berbasis **responsive Progressive Web App (PWA)** dengan visual **2D pixel art**. Aplikasi ini menempatkan user sebagai dokter koas yang menangani pasien virtual melalui proses konsultasi, anamnesis berbasis voice real-time, pemeriksaan, review rekam medis, quiz clinical reasoning, dan evaluasi performa.
+**PixelAid** adalah game simulasi medis edukatif berbasis **responsive Progressive Web App (PWA)** dengan visual **2D pixel art**. Aplikasi ini menempatkan user sebagai dokter yang menangani pasien virtual melalui proses konsultasi, anamnesis berbasis voice real-time, pemeriksaan, review rekam medis, quiz clinical reasoning, dan evaluasi performa.
 
 PixelAid bukan alat diagnosis medis nyata. Produk ini adalah media pembelajaran interaktif untuk membantu user memahami alur berpikir klinis secara ringan, visual, aman, dan engaging.
 
@@ -31,7 +31,7 @@ Membuat pengalaman belajar clinical reasoning yang lebih interaktif dan menyenan
 
 ## 4. Problem Statement
 
-Mahasiswa kedokteran, koas, dan pelajar yang tertarik dunia medis sering kali belajar clinical reasoning dari teks, kuliah, atau latihan kasus yang pasif. Mereka membutuhkan media latihan yang:
+Mahasiswa kedokteran dan pelajar yang tertarik dunia medis sering kali belajar clinical reasoning dari teks, kuliah, atau latihan kasus yang pasif. Mereka membutuhkan media latihan yang:
 
 - Interaktif dan terasa seperti konsultasi nyata.
 - Aman untuk mencoba dan salah.
@@ -45,7 +45,7 @@ Mahasiswa kedokteran, koas, dan pelajar yang tertarik dunia medis sering kali be
 
 ### 5.1 Primary Users
 
-**Mahasiswa kedokteran / koas**
+**Mahasiswa kedokteran**
 
 Kebutuhan:
 
@@ -77,7 +77,7 @@ Kebutuhan jangka panjang:
 
 ## 6. Value Proposition
 
-PixelAid membantu user merasakan pengalaman menjadi dokter koas melalui simulasi pasien virtual yang interaktif, responsif, dan berbasis voice real-time. User dapat bertanya kepada pasien, membuka rekam medis, memilih pemeriksaan, menjawab quiz diagnosis, dan menerima feedback performa dengan cara yang lebih engaging dibanding latihan kasus berbasis teks biasa.
+PixelAid membantu user merasakan pengalaman menjadi dokter melalui simulasi pasien virtual yang interaktif, responsif, dan berbasis voice real-time. User dapat bertanya kepada pasien, membuka rekam medis, memilih pemeriksaan, menjawab quiz diagnosis, dan menerima feedback performa dengan cara yang lebih engaging dibanding latihan kasus berbasis teks biasa.
 
 ---
 
@@ -289,7 +289,7 @@ Memberi penjelasan singkat tentang cara bermain kepada user yang pertama kali ma
 
 ### Slides
 
-1. Kamu adalah dokter koas virtual.
+1. Kamu adalah dokter virtual.
 2. Tanya pasien menggunakan fitur Talk.
 3. Gunakan Examine dan Medical Record.
 4. Akhiri konsultasi, jawab quiz, dan dapat feedback.
@@ -1074,4 +1074,3 @@ XP: score × difficulty
 Retry: small XP + best score update
 Demo Result: can be saved after login
 ```
-

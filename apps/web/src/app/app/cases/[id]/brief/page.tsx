@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fallbackCases } from "@/lib/api/fallback";
-import { getApiClient, getPublicApiClient } from "@/lib/api/server";
+import { getPublicApiClient } from "@/lib/api/server";
 import { startCaseSession } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -18,9 +18,9 @@ async function loadCase(id: string) {
     return data ?? fallbackCases[0];
   }
 
-  const api = await getApiClient();
+  const api = await getPublicApiClient();
   const { data } = await api
-    .GET("/api/cases/{case_id}", { params: { path: { case_id: id } } })
+    .GET("/api/public/cases/{case_id}", { params: { path: { case_id: id } } })
     .catch(() => ({ data: undefined }));
   return data ?? fallbackCases.find((item) => item.id === id) ?? fallbackCases[0];
 }

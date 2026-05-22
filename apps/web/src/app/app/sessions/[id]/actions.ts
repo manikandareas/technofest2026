@@ -103,7 +103,7 @@ export async function submitQuiz(sessionId: string, answers: Record<string, stri
   if (data.claim_token) {
     const cookieStore = await cookies();
     cookieStore.set(
-      "koas_pending_claim",
+      "pixelaid_pending_claim",
       JSON.stringify({
         sessionId,
         resultId: data.id,

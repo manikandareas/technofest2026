@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/app-header";
 import { CaseCard } from "@/components/case-card";
 import { Badge } from "@/components/ui/badge";
 import { fallbackCases } from "@/lib/api/fallback";
-import { getApiClient } from "@/lib/api/server";
+import { getPublicApiClient } from "@/lib/api/server";
 
 export const dynamic = "force-dynamic";
 
@@ -12,9 +12,9 @@ export default async function SpecialistDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const api = await getApiClient();
+  const api = await getPublicApiClient();
   const { data } = await api
-    .GET("/api/specialists/{specialist_id}/cases", {
+    .GET("/api/public/specialists/{specialist_id}/cases", {
       params: { path: { specialist_id: id } },
     })
     .catch(() => ({ data: undefined }));
@@ -26,7 +26,7 @@ export default async function SpecialistDetailPage({
       <section className="mx-auto w-full max-w-6xl space-y-6 px-5 py-8">
         <div className="space-y-2">
           <Badge>Case list</Badge>
-          <h1 className="text-3xl font-semibold tracking-tight">Cardiology cases</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Clinical cases</h1>
           <p className="max-w-2xl text-muted-foreground">
             Brief hanya menampilkan data aman untuk persiapan simulasi. Jawaban klinis
             dan konfigurasi scoring tetap di API.

@@ -65,7 +65,7 @@ export function HomeScreen({
             <div className="relative h-[min(72vh,38rem)] w-[min(115%,34rem)] sm:h-[min(74vh,40rem)] sm:w-[min(110%,36rem)] md:h-[min(76vh,42rem)] md:w-[min(90%,38rem)] lg:h-[min(75vh,44rem)] lg:w-[min(55%,28rem)] xl:h-[min(78vh,48rem)] xl:w-[min(50%,32rem)]">
               <Image
                 src="/assets/home/doctor-character.png"
-                alt="Dokter koas PixelAid"
+                alt="Dokter PixelAid"
                 fill
                 priority
                 className="origin-bottom scale-[1.35] object-contain object-bottom pixelated drop-shadow-[0_8px_0_rgba(0,0,0,0.35)] sm:scale-[1.38] md:scale-[1.4] lg:scale-[1.48] xl:scale-[1.55]"

@@ -17,7 +17,7 @@ export async function savePendingClaim(
 ) {
   const cookieStore = await cookies();
   cookieStore.set(
-    "koas_pending_claim",
+    "pixelaid_pending_claim",
     JSON.stringify({ sessionId, resultId, token }),
     {
       httpOnly: true,
@@ -34,7 +34,7 @@ export async function savePendingClaim(
 
 export async function claimPendingGuestResult() {
   const cookieStore = await cookies();
-  const raw = cookieStore.get("koas_pending_claim")?.value;
+  const raw = cookieStore.get("pixelaid_pending_claim")?.value;
   if (!raw) {
     throw new Error("Claim data is no longer available.");
   }
@@ -56,7 +56,7 @@ export async function claimPendingGuestResult() {
     throw new Error("Guest result could not be claimed.");
   }
 
-  cookieStore.delete("koas_pending_claim");
+  cookieStore.delete("pixelaid_pending_claim");
   cookieStore.delete("pixelaid_guest_session");
   redirect(`/app/sessions/${pending.sessionId}/result?result=${data.result.id}`);
 }
