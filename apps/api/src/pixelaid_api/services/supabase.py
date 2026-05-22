@@ -107,7 +107,19 @@ def list_cases_for_specialist(specialist_id: str) -> list[CaseBrief]:
     return [case for case in cases if case.specialist_id == specialist_id]
 
 
+def get_demo_case() -> CaseBrief:
+    for case in _load_cases():
+        if case.id == "anesthesiology-preoperative-asthma":
+            return case
+    for case in _load_cases():
+        if case.patient_name == "Maya":
+            return case
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Demo case not found.")
+
+
 def get_case(case_id: str) -> CaseBrief:
+    if case_id == "demo":
+        return get_demo_case()
     for case in _load_cases():
         if case.id == case_id:
             return case
