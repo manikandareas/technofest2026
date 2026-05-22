@@ -1,7 +1,8 @@
 from functools import lru_cache
 
 from pydantic import AnyHttpUrl, AnyUrl, Field, SecretStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from typing_extensions import Annotated
 
 
 class Settings(BaseSettings):
@@ -13,7 +14,7 @@ class Settings(BaseSettings):
 
     project_name: str = "technofest2026"
     environment: str = "development"
-    cors_origins: list[str] = Field(
+    cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["http://localhost:3000"],
         validation_alias="CORS_ORIGINS",
     )
