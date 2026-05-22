@@ -12,6 +12,14 @@ function redirectUrl(path: string) {
   return new URL(path, origin).toString();
 }
 
+function safeNext(formData: FormData, fallback: string) {
+  const value = String(formData.get("next") ?? "");
+  if (!value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
+    return fallback;
+  }
+  return value;
+}
+
 export async function signInWithPassword(
   _state: AuthState,
   formData: FormData,
@@ -25,7 +33,7 @@ export async function signInWithPassword(
     return { error: error.message };
   }
 
-  redirect("/app");
+  redirect(safeNext(formData, "/app"));
 }
 
 export async function signUpWithPassword(
@@ -38,14 +46,18 @@ export async function signUpWithPassword(
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: redirectUrl("/auth/callback?next=/app/onboarding") },
+    options: {
+      emailRedirectTo: redirectUrl(
+        `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
+      ),
+    },
   });
 
   if (error) {
     return { error: error.message };
   }
 
-  redirect("/app/onboarding");
+  redirect(safeNext(formData, "/app/onboarding"));
 }
 
 export async function signInWithGoogle(): Promise<void> {

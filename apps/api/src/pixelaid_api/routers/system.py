@@ -23,7 +23,6 @@ async def readyz(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
         ),
         "openai": bool(settings.openai_api_key),
         "deepgram": bool(settings.deepgram_api_key),
-        "elevenlabs": bool(settings.elevenlabs_key),
     }
 
     return {

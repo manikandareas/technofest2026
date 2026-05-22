@@ -24,8 +24,8 @@ export default async function SpecialistsPage() {
           <Badge>Specialists</Badge>
           <h1 className="text-3xl font-semibold tracking-tight">Pilih bidang klinis</h1>
           <p className="max-w-2xl text-muted-foreground">
-            Cardiology sudah aktif untuk Phase 1. Specialist lain tampil sebagai
-            coming soon agar struktur konten tetap jelas.
+            Cardiology tersedia untuk demo publik. Specialist lain tetap terkunci
+            sampai konten dan guardrail klinisnya siap.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">

@@ -154,9 +154,10 @@ MVP policy:
 
 Default realtime STT provider for LiveKit Agents, including Indonesian speech support.
 
-### ElevenLabs
+### OpenAI TTS
 
-Default TTS provider with per-patient voice mapping.
+Current Phase 3 TTS provider. Per-patient voice mapping is represented through
+the case `tts_profile`, with OpenAI voice names used for the first working slice.
 
 Fallback:
 
@@ -311,6 +312,9 @@ Exit criteria:
 
 ### Phase 3 - Realtime Voice Consultation
 
+Status: complete for the Maya-first vertical slice. Remaining improvements belong
+to Phase 4+ hardening unless they block demo reliability.
+
 Goal:
 
 Replace text-mode patient interaction with LiveKit voice consultation while preserving text fallback.
@@ -332,7 +336,7 @@ Voice agent deliverables:
 - Implement grounded case fact selection.
 - Integrate OpenAI response naturalizer.
 - Validate response before TTS.
-- Integrate ElevenLabs TTS.
+- Integrate OpenAI TTS.
 - Emit text transcript and metadata to API.
 - Implement safe fallback response and text-only fallback.
 - Handle reconnect, timeout, interruption, and graceful shutdown.
@@ -508,7 +512,6 @@ LIVEKIT_API_KEY
 LIVEKIT_API_SECRET
 OPENAI_API_KEY
 DEEPGRAM_API_KEY
-ELEVENLABS_API_KEY
 REDIS_URL
 ```
 
@@ -522,7 +525,6 @@ LIVEKIT_API_KEY
 LIVEKIT_API_SECRET
 OPENAI_API_KEY
 DEEPGRAM_API_KEY
-ELEVENLABS_API_KEY
 ```
 
 Rule:

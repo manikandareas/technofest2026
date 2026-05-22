@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, RotateCcw, Star } from "lucide-react";
+import { Award, RotateCcw, Star, Trophy } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getApiClient } from "@/lib/api/server";
 import { startCaseSession } from "../../../cases/actions";
+import { claimPendingGuestResult, savePendingClaim } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +16,10 @@ export default async function SessionResultPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ result?: string }>;
+  searchParams: Promise<{ result?: string; claim?: string }>;
 }) {
   const { id } = await params;
-  const { result } = await searchParams;
+  const { result, claim } = await searchParams;
   const api = await getApiClient();
   const resultId = result;
 
@@ -31,6 +32,33 @@ export default async function SessionResultPage({
       params: { path: { result_id: resultId } },
     })
     .catch(() => ({ data: undefined, error: true }));
+
+  if ((error || !data) && claim === "1") {
+    return (
+      <main className="min-h-dvh bg-background">
+        <AppHeader />
+        <section className="mx-auto grid min-h-[70dvh] w-full max-w-xl place-items-center px-5 py-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Claim demo result</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Simpan hasil demo ke akun ini agar XP, history, dan leaderboard ikut
+                diperbarui.
+              </p>
+              <form action={claimPendingGuestResult}>
+                <Button type="submit" className="w-full">
+                  <Trophy className="size-4" />
+                  Claim result
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
+    );
+  }
 
   if (error || !data || data.session_id !== id) {
     notFound();
@@ -48,13 +76,18 @@ export default async function SessionResultPage({
             <h1 className="text-3xl font-semibold tracking-tight">
               {data.case.patient_name}: {data.score}/100
             </h1>
-            <div className="flex gap-1 text-primary">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <Star
-                  key={index}
-                  className={index < data.stars ? "size-5 fill-current" : "size-5 opacity-30"}
-                />
-              ))}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex gap-1 text-primary">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <Star
+                    key={index}
+                    className={index < data.stars ? "size-5 fill-current" : "size-5 opacity-30"}
+                  />
+                ))}
+              </div>
+              <Badge variant={data.is_retry ? "secondary" : "default"}>
+                {data.is_retry ? `Retry XP +${data.xp_awarded}` : `XP +${data.xp_awarded}`}
+              </Badge>
             </div>
           </div>
           <Card>
@@ -83,8 +116,16 @@ export default async function SessionResultPage({
             <CardHeader>
               <CardTitle>Feedback</CardTitle>
             </CardHeader>
-            <CardContent className="leading-7 text-muted-foreground">
-              {typeof data.feedback.summary === "string" ? data.feedback.summary : "Feedback saved."}
+            <CardContent className="space-y-5 leading-7 text-muted-foreground">
+              <p>{textValue(data.feedback.summary, "Feedback saved.")}</p>
+              <FeedbackList title="Yang sudah kuat" items={arrayValue(data.feedback.strengths)} />
+              <FeedbackList title="Perlu diperbaiki" items={arrayValue(data.feedback.improvements)} />
+              <FeedbackList title="Langkah berikutnya" items={arrayValue(data.feedback.next_steps)} />
+              {typeof data.feedback.safety_note === "string" ? (
+                <p className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm text-foreground">
+                  {data.feedback.safety_note}
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>
@@ -106,6 +147,14 @@ export default async function SessionResultPage({
                 <p className="font-mono text-lg">{data.best_score}</p>
               </div>
             </div>
+            {data.claim_available && data.claim_token ? (
+              <form action={savePendingClaim.bind(null, id, data.id, data.claim_token)}>
+                <Button type="submit" className="w-full">
+                  <Trophy className="size-4" />
+                  Simpan progress
+                </Button>
+              </form>
+            ) : null}
             <form action={startCaseSession.bind(null, data.case.id)}>
               <Button type="submit" className="w-full">
                 <RotateCcw className="size-4" />
@@ -120,4 +169,28 @@ export default async function SessionResultPage({
       </section>
     </main>
   );
+}
+
+function FeedbackList({ title, items }: { title: string; items: string[] }) {
+  if (items.length === 0) {
+    return null;
+  }
+  return (
+    <div className="space-y-2">
+      <h2 className="text-sm font-medium text-foreground">{title}</h2>
+      <ul className="list-disc space-y-1 pl-5 text-sm">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function arrayValue(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function textValue(value: unknown, fallback: string) {
+  return typeof value === "string" ? value : fallback;
 }

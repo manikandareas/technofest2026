@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends
-from pixelaid_api.dependencies import get_session_actor
+from pixelaid_api.dependencies import get_current_user, get_session_actor
 from pixelaid_api.models import (
+    AuthUser,
     CaseResultResponse,
     CaseSessionResponse,
+    ClaimGuestResultRequest,
+    ClaimGuestResultResponse,
     CreateCaseSessionRequest,
     HistoryResponse,
+    LeaderboardResponse,
     QuizSubmitRequest,
     SelectExaminationRequest,
     SendMessageRequest,
@@ -13,6 +17,7 @@ from pixelaid_api.models import (
     TimerExtendResponse,
 )
 from pixelaid_api.services import gameplay
+from pixelaid_api.settings import Settings, get_settings
 
 router = APIRouter(tags=["case-sessions"])
 
@@ -21,8 +26,9 @@ router = APIRouter(tags=["case-sessions"])
 async def create_case_session(
     payload: CreateCaseSessionRequest,
     actor: SessionActor = Depends(get_session_actor),
+    settings: Settings = Depends(get_settings),
 ) -> CaseSessionResponse:
-    return gameplay.create_session(payload.case_id, actor)
+    return gameplay.create_session(payload.case_id, actor, settings)
 
 
 @router.get("/api/case-sessions/{session_id}", response_model=CaseSessionResponse)
@@ -105,8 +111,9 @@ async def submit_quiz(
     session_id: str,
     payload: QuizSubmitRequest,
     actor: SessionActor = Depends(get_session_actor),
+    settings: Settings = Depends(get_settings),
 ) -> CaseResultResponse:
-    return gameplay.submit_quiz(session_id, actor, payload.answers)
+    return gameplay.submit_quiz(session_id, actor, payload.answers, settings)
 
 
 @router.get("/api/case-results/{result_id}", response_model=CaseResultResponse)
@@ -130,3 +137,18 @@ async def get_history_result(
     actor: SessionActor = Depends(get_session_actor),
 ) -> CaseResultResponse:
     return gameplay.get_result(result_id, actor)
+
+
+@router.get("/api/leaderboard", response_model=LeaderboardResponse)
+async def get_leaderboard() -> LeaderboardResponse:
+    return gameplay.leaderboard()
+
+
+@router.post("/api/demo/{session_id}/claim", response_model=ClaimGuestResultResponse)
+async def claim_demo_result(
+    session_id: str,
+    payload: ClaimGuestResultRequest,
+    user: AuthUser = Depends(get_current_user),
+    settings: Settings = Depends(get_settings),
+) -> ClaimGuestResultResponse:
+    return gameplay.claim_guest_result(session_id, user.id, payload.token, settings)

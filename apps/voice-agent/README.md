@@ -1,6 +1,6 @@
 # PixelAid Voice Agent
 
-Smoke scaffold for the LiveKit Agents worker. It validates runtime configuration but does not implement patient-case conversation logic yet.
+LiveKit Agents worker for realtime patient voice consultation.
 
 Required environment:
 
@@ -10,8 +10,8 @@ LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
 OPENAI_API_KEY=
 DEEPGRAM_API_KEY=
-ELEVEN_API_KEY=
-ELEVENLABS_API_KEY=
+PIXELAID_API_URL=http://127.0.0.1:8000
+VOICE_AGENT_API_TOKEN=
 ```
 
-`ELEVENLABS_API_KEY` is accepted as the preferred alias; `ELEVEN_API_KEY` remains compatible.
+Deepgram is used for STT. OpenAI is used for response generation and TTS in the current local slice.

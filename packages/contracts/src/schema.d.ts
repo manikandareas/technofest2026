@@ -361,6 +361,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Leaderboard */
+        get: operations["get_leaderboard_api_leaderboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/demo/{session_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claim Demo Result */
+        post: operations["claim_demo_result_api_demo__session_id__claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/livekit/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Livekit Token */
+        post: operations["create_livekit_token_api_livekit_token_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/livekit/sessions/{session_id}/agent-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Voice Agent Context */
+        get: operations["get_voice_agent_context_api_livekit_sessions__session_id__agent_context_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/livekit/sessions/{session_id}/transcript": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Store Voice Transcript */
+        post: operations["store_voice_transcript_api_livekit_sessions__session_id__transcript_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/livekit/sessions/{session_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Store Voice Event */
+        post: operations["store_voice_event_api_livekit_sessions__session_id__events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -449,6 +551,25 @@ export interface components {
             attempt_number: number;
             /** Best Score */
             best_score: number;
+            /**
+             * Is Retry
+             * @default false
+             */
+            is_retry: boolean;
+            /**
+             * Is Claimed
+             * @default false
+             */
+            is_claimed: boolean;
+            /**
+             * Claim Available
+             * @default false
+             */
+            claim_available: boolean;
+            /** Claim Token */
+            claim_token?: string | null;
+            /** Claim Expires At */
+            claim_expires_at?: string | null;
         };
         /** CaseSessionResponse */
         CaseSessionResponse: {
@@ -477,6 +598,16 @@ export interface components {
             quiz: components["schemas"]["QuizQuestionResponse"][];
             /** Result Id */
             result_id?: string | null;
+        };
+        /** ClaimGuestResultRequest */
+        ClaimGuestResultRequest: {
+            /** Token */
+            token: string;
+        };
+        /** ClaimGuestResultResponse */
+        ClaimGuestResultResponse: {
+            result: components["schemas"]["CaseResultResponse"];
+            progress: components["schemas"]["ProgressResponse"];
         };
         /** ConversationMessage */
         ConversationMessage: {
@@ -563,9 +694,54 @@ export interface components {
             /** Items */
             items: components["schemas"]["HistoryItem"][];
         };
+        /** LeaderboardEntry */
+        LeaderboardEntry: {
+            /** Rank */
+            rank: number;
+            /** User Id */
+            user_id: string;
+            /** Display Name */
+            display_name: string;
+            /** Total Xp */
+            total_xp: number;
+            /** Score */
+            score: number;
+            /** Completed Cases */
+            completed_cases: number;
+            /** Average Best Score */
+            average_best_score: number;
+            /** Latest Activity At */
+            latest_activity_at?: string | null;
+            /** Level */
+            level: number;
+        };
+        /** LeaderboardResponse */
+        LeaderboardResponse: {
+            /** Entries */
+            entries: components["schemas"]["LeaderboardEntry"][];
+        };
+        /** LiveKitTokenRequest */
+        LiveKitTokenRequest: {
+            /** Session Id */
+            session_id: string;
+        };
+        /** LiveKitTokenResponse */
+        LiveKitTokenResponse: {
+            /** Token */
+            token: string;
+            /** Url */
+            url: string;
+            /** Room Name */
+            room_name: string;
+            /** Identity */
+            identity: string;
+            /** Expires In Seconds */
+            expires_in_seconds: number;
+        };
         /** MeResponse */
         MeResponse: {
             profile: components["schemas"]["Profile"];
+            progress: components["schemas"]["ProgressResponse"];
         };
         /** MedicalRecordResponse */
         MedicalRecordResponse: {
@@ -605,6 +781,29 @@ export interface components {
             display_name?: string | null;
             /** Avatar Url */
             avatar_url?: string | null;
+        };
+        /** ProgressResponse */
+        ProgressResponse: {
+            /**
+             * Total Xp
+             * @default 0
+             */
+            total_xp: number;
+            /**
+             * Level
+             * @default 1
+             */
+            level: number;
+            /**
+             * Completed Cases
+             * @default 0
+             */
+            completed_cases: number;
+            /**
+             * Average Best Score
+             * @default 0
+             */
+            average_best_score: number;
         };
         /** PublicSpecialist */
         PublicSpecialist: {
@@ -711,6 +910,103 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VoiceAgentContextResponse */
+        VoiceAgentContextResponse: {
+            /** Session Id */
+            session_id: string;
+            /** Case Id */
+            case_id: string;
+            /** Patient Name */
+            patient_name: string;
+            /** Patient Persona */
+            patient_persona: string;
+            /** Tts Profile */
+            tts_profile: {
+                [key: string]: unknown;
+            };
+            /** Forbidden Terms */
+            forbidden_terms: string[];
+            /** Allowed Facts */
+            allowed_facts: components["schemas"]["VoiceFactResponse"][];
+            /** Completed Examinations */
+            completed_examinations: components["schemas"]["VoiceExaminationResponse"][];
+            /** Safety Rules */
+            safety_rules: string[];
+            /** Recent Messages */
+            recent_messages: components["schemas"]["ConversationMessage"][];
+        };
+        /** VoiceExaminationResponse */
+        VoiceExaminationResponse: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Result */
+            result: string;
+            /** Score Key */
+            score_key?: string | null;
+        };
+        /** VoiceFactResponse */
+        VoiceFactResponse: {
+            /** Key */
+            key: string;
+            /** Response */
+            response: string;
+        };
+        /** VoiceSessionEventRequest */
+        VoiceSessionEventRequest: {
+            /** Event Type */
+            event_type: string;
+            /**
+             * Severity
+             * @default info
+             * @enum {string}
+             */
+            severity: "info" | "warning" | "error";
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        /** VoiceSessionEventResponse */
+        VoiceSessionEventResponse: {
+            /** Id */
+            id: string;
+            /** Session Id */
+            session_id: string;
+            /** Event Type */
+            event_type: string;
+            /** Severity */
+            severity: string;
+            /** Created At */
+            created_at: string;
+        };
+        /** VoiceTranscriptMessage */
+        VoiceTranscriptMessage: {
+            /** External Id */
+            external_id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "patient";
+            /** Content */
+            content: string;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        /** VoiceTranscriptRequest */
+        VoiceTranscriptRequest: {
+            /** Messages */
+            messages: components["schemas"]["VoiceTranscriptMessage"][];
+        };
+        /** VoiceTranscriptResponse */
+        VoiceTranscriptResponse: {
+            /** Messages */
+            messages: components["schemas"]["ConversationMessage"][];
         };
     };
     responses: never;
@@ -1370,6 +1666,206 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaseResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_leaderboard_api_leaderboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaderboardResponse"];
+                };
+            };
+        };
+    };
+    claim_demo_result_api_demo__session_id__claim_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClaimGuestResultRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimGuestResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_livekit_token_api_livekit_token_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-guest-session"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiveKitTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveKitTokenResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_voice_agent_context_api_livekit_sessions__session_id__agent_context_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceAgentContextResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    store_voice_transcript_api_livekit_sessions__session_id__transcript_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceTranscriptRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceTranscriptResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    store_voice_event_api_livekit_sessions__session_id__events_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSessionEventRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceSessionEventResponse"];
                 };
             };
             /** @description Validation Error */

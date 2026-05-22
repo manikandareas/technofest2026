@@ -5,7 +5,12 @@ import { GoogleButton } from "@/components/auth/google-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
-export default function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const next = safeNext((await searchParams).next);
   return (
     <main className="grid min-h-dvh place-items-center bg-background px-5 py-10">
       <Card className="w-full max-w-md">
@@ -13,12 +18,15 @@ export default function SignInPage() {
           <CardTitle>Masuk ke PixelAid</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <AuthForm mode="sign-in" action={signInWithPassword} />
+          <AuthForm mode="sign-in" action={signInWithPassword} next={next} />
           <Separator />
           <GoogleButton />
           <p className="text-center text-sm text-muted-foreground">
             Belum punya akun?{" "}
-            <Link href="/register" className="font-medium text-foreground">
+            <Link
+              href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
+              className="font-medium text-foreground"
+            >
               Daftar
             </Link>
           </p>
@@ -26,4 +34,11 @@ export default function SignInPage() {
       </Card>
     </main>
   );
+}
+
+function safeNext(value: string | undefined) {
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("://")) {
+    return undefined;
+  }
+  return value;
 }

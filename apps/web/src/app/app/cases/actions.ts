@@ -22,7 +22,11 @@ export async function startCaseSession(caseId: string) {
   });
 
   if (error || !data) {
-    throw new Error("Unable to start case session.");
+    const detail =
+      error && typeof error === "object" && "detail" in error
+        ? String(error.detail)
+        : "API did not return a session.";
+    throw new Error(`Unable to start case session: ${detail}`);
   }
 
   redirect(`/app/sessions/${data.id}`);

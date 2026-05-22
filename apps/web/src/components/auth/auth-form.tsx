@@ -7,17 +7,19 @@ import { Label } from "@/components/ui/label";
 
 type AuthFormProps = {
   mode: "sign-in" | "register";
+  next?: string;
   action: (
     state: { error?: string },
     formData: FormData,
   ) => Promise<{ error?: string }>;
 };
 
-export function AuthForm({ mode, action }: AuthFormProps) {
+export function AuthForm({ mode, next, action }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, {});
 
   return (
     <form action={formAction} className="space-y-4">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" required autoComplete="email" />

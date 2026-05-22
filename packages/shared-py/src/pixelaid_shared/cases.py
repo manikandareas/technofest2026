@@ -7,6 +7,7 @@ from pixelaid_shared.gameplay import (
     PatientFact,
     QuizOption,
     QuizQuestion,
+    TtsProfile,
 )
 
 
@@ -26,6 +27,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 keywords=["kapan", "onset", "mulai"],
                 response="Mulainya sekitar dua jam lalu saat saya naik tangga.",
                 rubric_key="onset",
+                allowed_terms=["tangga"],
             ),
             PatientFact(
                 keywords=["rasa", "seperti apa", "kualitas"],
@@ -61,6 +63,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=0,
                 result="TD 158/94, N 96, RR 20, SpO2 97%, suhu 36.8 C.",
                 score_key="vitals",
+                guard_terms=["TD", "SpO2"],
             ),
             ExaminationConfig(
                 id="cardiac_exam",
@@ -69,6 +72,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=5,
                 result="Bunyi jantung reguler, tidak terdengar murmur jelas.",
                 score_key="physical",
+                guard_terms=["murmur"],
             ),
             ExaminationConfig(
                 id="ecg",
@@ -77,6 +81,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=10,
                 result="ST depression ringan di V4-V6, tidak ada STEMI.",
                 score_key="ecg",
+                guard_terms=["ECG", "ST depression", "STEMI"],
             ),
             ExaminationConfig(
                 id="troponin",
@@ -85,6 +90,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=30,
                 result="Troponin I borderline meningkat, perlu serial.",
                 score_key="troponin",
+                guard_terms=["troponin"],
             ),
         ],
         quiz=[
@@ -126,6 +132,17 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
         examination_rubric=["vitals", "physical", "ecg", "troponin"],
         safety_question_ids=["next_step"],
         feedback_template="Fokus utama: gali nyeri dada tipikal, faktor risiko, ECG, dan langkah aman ACS.",
+        patient_persona="Maya, 54 tahun, cemas karena nyeri dada. Jawab sebagai pasien, bukan dokter.",
+        tts_profile=TtsProfile(
+            provider="openai", voice_id="alloy", model="gpt-4o-mini-tts", language="id"
+        ),
+        forbidden_terms=[
+            "acute coronary syndrome",
+            "acs",
+            "nstemi",
+            "stemi",
+            "serangan jantung",
+        ],
     ),
     "budi-palpitasi": CaseGameplayConfig(
         id="budi-palpitasi",
@@ -172,6 +189,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=0,
                 result="TD 128/82, N 112 reguler, RR 18, SpO2 99%.",
                 score_key="vitals",
+                guard_terms=["TD", "SpO2"],
             ),
             ExaminationConfig(
                 id="cardiac_exam",
@@ -180,6 +198,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=5,
                 result="Takikardia ringan, tidak ada murmur.",
                 score_key="physical",
+                guard_terms=["takikardia", "murmur"],
             ),
             ExaminationConfig(
                 id="ecg",
@@ -188,6 +207,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=10,
                 result="Sinus tachycardia, tidak ada pre-excitation atau iskemia.",
                 score_key="ecg",
+                guard_terms=["ECG", "pre-excitation", "iskemia"],
             ),
             ExaminationConfig(
                 id="cbc",
@@ -196,6 +216,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=20,
                 result="Hb dan leukosit dalam batas normal.",
                 score_key="cbc",
+                guard_terms=["Hb", "leukosit"],
             ),
         ],
         quiz=[
@@ -233,6 +254,11 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
         examination_rubric=["vitals", "physical", "ecg", "cbc"],
         safety_question_ids=["safety"],
         feedback_template="Pastikan palpitasi selalu disaring untuk red flag dan dikonfirmasi dengan ECG.",
+        patient_persona="Budi, 42 tahun, kooperatif dan agak cemas karena berdebar.",
+        tts_profile=TtsProfile(
+            provider="openai", voice_id="alloy", model="gpt-4o-mini-tts", language="id"
+        ),
+        forbidden_terms=["sinus takikardia", "ventricular tachycardia", "stemi"],
     ),
     "siti-sesak": CaseGameplayConfig(
         id="siti-sesak",
@@ -279,6 +305,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=0,
                 result="TD 166/96, N 104, RR 24, SpO2 93%.",
                 score_key="vitals",
+                guard_terms=["TD", "SpO2"],
             ),
             ExaminationConfig(
                 id="lung_exam",
@@ -287,6 +314,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=5,
                 result="Ronki basal bilateral, JVP meningkat, edema pretibial +2.",
                 score_key="physical",
+                guard_terms=["ronki", "JVP"],
             ),
             ExaminationConfig(
                 id="ecg",
@@ -295,6 +323,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=10,
                 result="Sinus tachycardia, LVH, tanpa elevasi ST.",
                 score_key="ecg",
+                guard_terms=["ECG", "LVH", "ST"],
             ),
             ExaminationConfig(
                 id="xray",
@@ -303,6 +332,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=20,
                 result="Kardiomegali dan kongesti pulmonal.",
                 score_key="xray",
+                guard_terms=["kardiomegali", "kongesti"],
             ),
             ExaminationConfig(
                 id="bnp",
@@ -311,6 +341,7 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
                 delay_seconds=30,
                 result="BNP meningkat signifikan.",
                 score_key="bnp",
+                guard_terms=["BNP"],
             ),
         ],
         quiz=[
@@ -345,6 +376,11 @@ CASE_CONFIGS: dict[str, CaseGameplayConfig] = {
         examination_rubric=["vitals", "physical", "ecg", "xray", "bnp"],
         safety_question_ids=["safety"],
         feedback_template="Untuk sesak kardiak, hubungkan derajat sesak, kongesti, dan pemeriksaan objektif.",
+        patient_persona="Siti, 67 tahun, mudah lelah dan menjawab pelan karena sesak.",
+        tts_profile=TtsProfile(
+            provider="openai", voice_id="alloy", model="gpt-4o-mini-tts", language="id"
+        ),
+        forbidden_terms=["gagal jantung", "heart failure", "dekompensasi"],
     ),
 }
 

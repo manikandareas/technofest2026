@@ -95,8 +95,8 @@ export default async function CaseBriefPage({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm leading-6 text-muted-foreground">
-              Mode teks Phase 2 aktif tanpa voice dependency. Timer dimulai saat
-              ruang konsultasi terbuka.
+              Mulai dari mode teks yang selalu tersedia. Voice AI bisa dinyalakan
+              di ruang konsultasi bila perangkat dan koneksi siap.
             </p>
             <form action={startCaseSession.bind(null, item.id)}>
               <Button className="w-full" type="submit">

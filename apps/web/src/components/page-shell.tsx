@@ -73,8 +73,8 @@ export function PageShell({
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               {children ?? (
                 <>
-                  <p>UI route skeleton siap untuk integrasi Phase 1.</p>
-                  <p>Auth, data, scoring, dan voice room belum dihubungkan.</p>
+                  <p>Demo case, auth, scoring, voice, dan leaderboard sudah tersedia.</p>
+                  <p>Gunakan mode teks bila koneksi voice tidak siap.</p>
                 </>
               )}
             </CardContent>

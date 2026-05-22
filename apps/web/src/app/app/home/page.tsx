@@ -11,6 +11,7 @@ export default async function AppHomePage() {
   const api = await getApiClient();
   const { data } = await api.GET("/api/me").catch(() => ({ data: undefined }));
   const profile = data?.profile;
+  const progress = data?.progress;
 
   return (
     <main className="min-h-dvh bg-background">
@@ -20,7 +21,7 @@ export default async function AppHomePage() {
           <div className="space-y-2">
             <Badge>Dashboard</Badge>
             <h1 className="text-3xl font-semibold tracking-tight">
-              {profile?.display_name ? `Halo, ${profile.display_name}` : "Dashboard PixelAid"}
+              {profile?.display_name ? `Halo, ${profile.display_name}` : "Dashboard Koas"}
             </h1>
             <p className="max-w-2xl text-muted-foreground">
               Mulai dari Cardiology demo, lanjutkan onboarding, lalu simpan progress
@@ -36,21 +37,23 @@ export default async function AppHomePage() {
             <CardHeader>
               <CardTitle className="text-base">XP</CardTitle>
             </CardHeader>
-            <CardContent className="text-3xl font-semibold">{profile?.xp ?? 0}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Onboarding</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {profile?.onboarding_completed ? "Selesai" : "Belum selesai"}
+            <CardContent className="text-3xl font-semibold">
+              {progress?.total_xp ?? profile?.xp ?? 0}
             </CardContent>
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Case tersedia</CardTitle>
+              <CardTitle className="text-base">Level</CardTitle>
             </CardHeader>
-            <CardContent className="text-3xl font-semibold">3</CardContent>
+            <CardContent className="text-3xl font-semibold">{progress?.level ?? 1}</CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Case selesai</CardTitle>
+            </CardHeader>
+            <CardContent className="text-3xl font-semibold">
+              {progress?.completed_cases ?? 0}
+            </CardContent>
           </Card>
         </div>
       </section>

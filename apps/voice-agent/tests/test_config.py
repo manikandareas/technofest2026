@@ -9,7 +9,7 @@ def test_readiness_without_env_is_degraded() -> None:
     assert settings.project_name == "technofest2026"
     assert settings.readiness() == {
         "livekit": False,
+        "api": False,
         "openai": False,
         "deepgram": False,
-        "elevenlabs": False,
     }

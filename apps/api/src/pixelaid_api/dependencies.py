@@ -33,10 +33,37 @@ async def get_session_actor(
 ) -> SessionActor:
     if authorization and authorization.lower().startswith("bearer "):
         user = await get_current_user(authorization, settings)
-        return SessionActor(user_id=user.id)
+        return SessionActor(user_id=user.id, email=user.email)
     if x_guest_session:
         return SessionActor(guest_id=x_guest_session.strip())
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Missing authenticated user or guest session.",
     )
+
+
+async def require_voice_agent(
+    authorization: Annotated[str | None, Header()] = None,
+    settings: Settings = Depends(get_settings),
+) -> None:
+    configured = (
+        settings.voice_agent_api_token.get_secret_value()
+        if settings.voice_agent_api_token
+        else None
+    )
+    if not configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Voice agent API token is not configured.",
+        )
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing voice agent bearer token.",
+        )
+    token = authorization.removeprefix("Bearer ").removeprefix("bearer ").strip()
+    if token != configured:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid voice agent bearer token.",
+        )

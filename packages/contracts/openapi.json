@@ -1261,6 +1261,364 @@
           }
         }
       }
+    },
+    "/api/leaderboard": {
+      "get": {
+        "tags": [
+          "case-sessions"
+        ],
+        "summary": "Get Leaderboard",
+        "operationId": "get_leaderboard_api_leaderboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo/{session_id}/claim": {
+      "post": {
+        "tags": [
+          "case-sessions"
+        ],
+        "summary": "Claim Demo Result",
+        "operationId": "claim_demo_result_api_demo__session_id__claim_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimGuestResultRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimGuestResultResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/livekit/token": {
+      "post": {
+        "tags": [
+          "livekit"
+        ],
+        "summary": "Create Livekit Token",
+        "operationId": "create_livekit_token_api_livekit_token_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-guest-session",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Guest-Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveKitTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveKitTokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/livekit/sessions/{session_id}/agent-context": {
+      "get": {
+        "tags": [
+          "livekit"
+        ],
+        "summary": "Get Voice Agent Context",
+        "operationId": "get_voice_agent_context_api_livekit_sessions__session_id__agent_context_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceAgentContextResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/livekit/sessions/{session_id}/transcript": {
+      "post": {
+        "tags": [
+          "livekit"
+        ],
+        "summary": "Store Voice Transcript",
+        "operationId": "store_voice_transcript_api_livekit_sessions__session_id__transcript_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceTranscriptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceTranscriptResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/livekit/sessions/{session_id}/events": {
+      "post": {
+        "tags": [
+          "livekit"
+        ],
+        "summary": "Store Voice Event",
+        "operationId": "store_voice_event_api_livekit_sessions__session_id__events_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSessionEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceSessionEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1459,6 +1817,43 @@
           "best_score": {
             "type": "integer",
             "title": "Best Score"
+          },
+          "is_retry": {
+            "type": "boolean",
+            "title": "Is Retry",
+            "default": false
+          },
+          "is_claimed": {
+            "type": "boolean",
+            "title": "Is Claimed",
+            "default": false
+          },
+          "claim_available": {
+            "type": "boolean",
+            "title": "Claim Available",
+            "default": false
+          },
+          "claim_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Token"
+          },
+          "claim_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim Expires At"
           }
         },
         "type": "object",
@@ -1568,6 +1963,35 @@
           "quiz"
         ],
         "title": "CaseSessionResponse"
+      },
+      "ClaimGuestResultRequest": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token"
+        ],
+        "title": "ClaimGuestResultRequest"
+      },
+      "ClaimGuestResultResponse": {
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/CaseResultResponse"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ProgressResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "result",
+          "progress"
+        ],
+        "title": "ClaimGuestResultResponse"
       },
       "ConversationMessage": {
         "properties": {
@@ -1794,15 +2218,140 @@
         ],
         "title": "HistoryResponse"
       },
-      "MeResponse": {
+      "LeaderboardEntry": {
         "properties": {
-          "profile": {
-            "$ref": "#/components/schemas/Profile"
+          "rank": {
+            "type": "integer",
+            "title": "Rank"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "total_xp": {
+            "type": "integer",
+            "title": "Total Xp"
+          },
+          "score": {
+            "type": "integer",
+            "title": "Score"
+          },
+          "completed_cases": {
+            "type": "integer",
+            "title": "Completed Cases"
+          },
+          "average_best_score": {
+            "type": "number",
+            "title": "Average Best Score"
+          },
+          "latest_activity_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Activity At"
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level"
           }
         },
         "type": "object",
         "required": [
-          "profile"
+          "rank",
+          "user_id",
+          "display_name",
+          "total_xp",
+          "score",
+          "completed_cases",
+          "average_best_score",
+          "level"
+        ],
+        "title": "LeaderboardEntry"
+      },
+      "LeaderboardResponse": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "entries"
+        ],
+        "title": "LeaderboardResponse"
+      },
+      "LiveKitTokenRequest": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id"
+        ],
+        "title": "LiveKitTokenRequest"
+      },
+      "LiveKitTokenResponse": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "room_name": {
+            "type": "string",
+            "title": "Room Name"
+          },
+          "identity": {
+            "type": "string",
+            "title": "Identity"
+          },
+          "expires_in_seconds": {
+            "type": "integer",
+            "title": "Expires In Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "url",
+          "room_name",
+          "identity",
+          "expires_in_seconds"
+        ],
+        "title": "LiveKitTokenResponse"
+      },
+      "MeResponse": {
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ProgressResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "profile",
+          "progress"
         ],
         "title": "MeResponse"
       },
@@ -1929,6 +2478,32 @@
         },
         "type": "object",
         "title": "ProfileUpdate"
+      },
+      "ProgressResponse": {
+        "properties": {
+          "total_xp": {
+            "type": "integer",
+            "title": "Total Xp",
+            "default": 0
+          },
+          "level": {
+            "type": "integer",
+            "title": "Level",
+            "default": 1
+          },
+          "completed_cases": {
+            "type": "integer",
+            "title": "Completed Cases",
+            "default": 0
+          },
+          "average_best_score": {
+            "type": "number",
+            "title": "Average Best Score",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ProgressResponse"
       },
       "PublicSpecialist": {
         "properties": {
@@ -2201,6 +2776,265 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VoiceAgentContextResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "case_id": {
+            "type": "string",
+            "title": "Case Id"
+          },
+          "patient_name": {
+            "type": "string",
+            "title": "Patient Name"
+          },
+          "patient_persona": {
+            "type": "string",
+            "title": "Patient Persona"
+          },
+          "tts_profile": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Tts Profile"
+          },
+          "forbidden_terms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Forbidden Terms"
+          },
+          "allowed_facts": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceFactResponse"
+            },
+            "type": "array",
+            "title": "Allowed Facts"
+          },
+          "completed_examinations": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceExaminationResponse"
+            },
+            "type": "array",
+            "title": "Completed Examinations"
+          },
+          "safety_rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Safety Rules"
+          },
+          "recent_messages": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationMessage"
+            },
+            "type": "array",
+            "title": "Recent Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "case_id",
+          "patient_name",
+          "patient_persona",
+          "tts_profile",
+          "forbidden_terms",
+          "allowed_facts",
+          "completed_examinations",
+          "safety_rules",
+          "recent_messages"
+        ],
+        "title": "VoiceAgentContextResponse"
+      },
+      "VoiceExaminationResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "result": {
+            "type": "string",
+            "title": "Result"
+          },
+          "score_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "result"
+        ],
+        "title": "VoiceExaminationResponse"
+      },
+      "VoiceFactResponse": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "response": {
+            "type": "string",
+            "title": "Response"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "response"
+        ],
+        "title": "VoiceFactResponse"
+      },
+      "VoiceSessionEventRequest": {
+        "properties": {
+          "event_type": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Event Type"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ],
+            "title": "Severity",
+            "default": "info"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "event_type"
+        ],
+        "title": "VoiceSessionEventRequest"
+      },
+      "VoiceSessionEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "session_id",
+          "event_type",
+          "severity",
+          "created_at"
+        ],
+        "title": "VoiceSessionEventResponse"
+      },
+      "VoiceTranscriptMessage": {
+        "properties": {
+          "external_id": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "External Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "patient"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 1200,
+            "minLength": 1,
+            "title": "Content"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "external_id",
+          "role",
+          "content"
+        ],
+        "title": "VoiceTranscriptMessage"
+      },
+      "VoiceTranscriptRequest": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceTranscriptMessage"
+            },
+            "type": "array",
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages"
+        ],
+        "title": "VoiceTranscriptRequest"
+      },
+      "VoiceTranscriptResponse": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/ConversationMessage"
+            },
+            "type": "array",
+            "title": "Messages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages"
+        ],
+        "title": "VoiceTranscriptResponse"
       }
     }
   }

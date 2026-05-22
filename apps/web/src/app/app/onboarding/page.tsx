@@ -18,7 +18,8 @@ export default function OnboardingPage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">Kenali alur simulasi</h1>
           <p className="text-muted-foreground">
-            Phase 1 menyiapkan shell konten dan auth sebelum konsultasi voice real-time.
+            Latihan dimulai dari konsultasi aman, pemeriksaan awal, quiz klinis,
+            lalu feedback pembelajaran.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-4">

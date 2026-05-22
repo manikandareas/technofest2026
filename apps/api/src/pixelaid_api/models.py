@@ -40,6 +40,13 @@ class Profile(BaseModel):
     xp: int = 0
 
 
+class ProgressResponse(BaseModel):
+    total_xp: int = 0
+    level: int = 1
+    completed_cases: int = 0
+    average_best_score: float = 0
+
+
 class ProfileUpdate(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=80)
     avatar_url: str | None = Field(default=None, max_length=500)
@@ -47,6 +54,7 @@ class ProfileUpdate(BaseModel):
 
 class MeResponse(BaseModel):
     profile: Profile
+    progress: ProgressResponse
 
 
 class AuthUser(BaseModel):
@@ -62,6 +70,7 @@ class GuestUser(BaseModel):
 
 class SessionActor(BaseModel):
     user_id: str | None = None
+    email: str | None = None
     guest_id: str | None = None
 
 
@@ -173,6 +182,11 @@ class CaseResultResponse(BaseModel):
     created_at: str
     attempt_number: int
     best_score: int
+    is_retry: bool = False
+    is_claimed: bool = False
+    claim_available: bool = False
+    claim_token: str | None = None
+    claim_expires_at: str | None = None
 
 
 class HistoryItem(BaseModel):
@@ -190,3 +204,94 @@ class HistoryItem(BaseModel):
 
 class HistoryResponse(BaseModel):
     items: list[HistoryItem]
+
+
+class LeaderboardEntry(BaseModel):
+    rank: int
+    user_id: str
+    display_name: str
+    total_xp: int
+    score: int
+    completed_cases: int
+    average_best_score: float
+    latest_activity_at: str | None = None
+    level: int
+
+
+class LeaderboardResponse(BaseModel):
+    entries: list[LeaderboardEntry]
+
+
+class ClaimGuestResultRequest(BaseModel):
+    token: str
+
+
+class ClaimGuestResultResponse(BaseModel):
+    result: CaseResultResponse
+    progress: ProgressResponse
+
+
+class LiveKitTokenRequest(BaseModel):
+    session_id: str
+
+
+class LiveKitTokenResponse(BaseModel):
+    token: str
+    url: str
+    room_name: str
+    identity: str
+    expires_in_seconds: int
+
+
+class VoiceFactResponse(BaseModel):
+    key: str
+    response: str
+
+
+class VoiceExaminationResponse(BaseModel):
+    id: str
+    label: str
+    result: str
+    score_key: str | None = None
+
+
+class VoiceAgentContextResponse(BaseModel):
+    session_id: str
+    case_id: str
+    patient_name: str
+    patient_persona: str
+    tts_profile: dict[str, object]
+    forbidden_terms: list[str]
+    allowed_facts: list[VoiceFactResponse]
+    completed_examinations: list[VoiceExaminationResponse]
+    safety_rules: list[str]
+    recent_messages: list[ConversationMessage]
+
+
+class VoiceTranscriptMessage(BaseModel):
+    external_id: str = Field(min_length=1, max_length=160)
+    role: Literal["user", "patient"]
+    content: str = Field(min_length=1, max_length=1200)
+    metadata: dict[str, object] = Field(default_factory=dict)
+
+
+class VoiceTranscriptRequest(BaseModel):
+    messages: list[VoiceTranscriptMessage] = Field(min_length=1, max_length=8)
+
+
+class VoiceTranscriptResponse(BaseModel):
+    messages: list[ConversationMessage]
+
+
+class VoiceSessionEventRequest(BaseModel):
+    event_type: str = Field(min_length=1, max_length=80)
+    severity: Literal["info", "warning", "error"] = "info"
+    metadata: dict[str, object] = Field(default_factory=dict)
+
+
+class VoiceSessionEventResponse(BaseModel):
+    id: str
+    session_id: str
+    event_type: str
+    severity: str
+    created_at: str
