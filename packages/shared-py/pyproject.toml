@@ -1,0 +1,23 @@
+[project]
+name = "pixelaid-shared"
+version = "0.1.0"
+description = "Shared Python schemas and utilities for PixelAid."
+readme = "README.md"
+authors = [
+    { name = "Vito Andareas Manik", email = "vitoandareas15@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.12.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.407",
+    "pytest>=9.0.0",
+    "ruff>=0.14.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.7,<0.11.0"]
+build-backend = "uv_build"

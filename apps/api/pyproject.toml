@@ -1,0 +1,46 @@
+[project]
+name = "pixelaid-api"
+version = "0.1.0"
+description = "FastAPI HTTP backend for PixelAid."
+readme = "README.md"
+authors = [
+    { name = "Vito Andareas Manik", email = "vitoandareas15@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.125.0",
+    "pixelaid-shared",
+    "livekit-api>=1.0.7",
+    "openai>=2.14.0",
+    "pydantic-settings>=2.12.0",
+    "python-dotenv>=1.2.1",
+    "supabase>=2.25.0",
+]
+
+[project.scripts]
+pixelaid-api = "pixelaid_api.main:main"
+pixelaid-openapi = "pixelaid_api.openapi:main"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pyright>=1.1.407",
+    "pytest>=9.0.0",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.14.0",
+]
+
+[tool.uv.sources]
+pixelaid-shared = { path = "../../packages/shared-py", editable = true }
+
+[tool.ruff]
+line-length = 88
+
+[tool.pyright]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+
+[build-system]
+requires = ["uv_build>=0.10.7,<0.11.0"]
+build-backend = "uv_build"

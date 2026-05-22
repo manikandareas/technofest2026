@@ -1,0 +1,28 @@
+{
+  "name": "technofest2026",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "packages/contracts"
+  ],
+  "scripts": {
+    "dev:web": "cd apps/web && bun run dev",
+    "dev:api": "cd apps/api && uv run fastapi dev src/pixelaid_api/main.py",
+    "dev:voice": "cd apps/voice-agent && uv run pixelaid-voice-agent dev",
+    "contracts:export": "cd apps/api && uv run python -m pixelaid_api.openapi ../../packages/contracts/openapi.json",
+    "contracts:generate": "bun run contracts:export && bunx openapi-typescript packages/contracts/openapi.json -o packages/contracts/src/schema.d.ts",
+    "db:status": "bunx supabase --workdir packages/db status",
+    "db:migrations": "bunx supabase --workdir packages/db migration list",
+    "db:types": "bunx supabase --workdir packages/db gen types typescript --project-id \"${SUPABASE_PROJECT_REF:-djjwforazkkzuexqflqn}\" --schema public > packages/db/database.types.ts",
+    "lint": "cd apps/web && bun run lint && cd ../../apps/api && uv run ruff check . && cd ../../apps/voice-agent && uv run ruff check .",
+    "typecheck": "cd apps/web && bun run typecheck && cd ../../packages/contracts && bun run typecheck && cd ../../apps/api && uv run pyright && cd ../../apps/voice-agent && uv run pyright",
+    "test": "cd apps/api && uv run pytest && cd ../../apps/voice-agent && uv run pytest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

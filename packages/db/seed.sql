@@ -1,0 +1,2 @@
+-- Pra-development seed placeholder.
+-- Product seed data starts in Phase 1 with the case schema.
