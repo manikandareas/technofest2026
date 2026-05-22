@@ -16,6 +16,10 @@ async def healthz() -> ServiceStatus:
 async def readyz(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
     checks = {
         "supabase": bool(settings.supabase_url and settings.supabase_service_role_key),
+        "supabase_auth": bool(
+            settings.supabase_url
+            and (settings.supabase_anon_key or settings.supabase_service_role_key)
+        ),
         "livekit": bool(
             settings.livekit_url
             and settings.livekit_api_key

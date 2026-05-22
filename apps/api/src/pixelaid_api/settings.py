@@ -19,6 +19,7 @@ class Settings(BaseSettings):
         validation_alias="CORS_ORIGINS",
     )
     supabase_url: AnyHttpUrl | None = None
+    supabase_anon_key: SecretStr | None = None
     supabase_service_role_key: SecretStr | None = None
     livekit_url: AnyUrl | None = None
     livekit_api_key: str | None = None

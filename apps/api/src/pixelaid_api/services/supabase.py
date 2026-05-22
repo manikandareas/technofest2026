@@ -25,6 +25,15 @@ def get_supabase_admin() -> Client | None:
     )
 
 
+@lru_cache
+def get_supabase_auth() -> Client | None:
+    settings = get_settings()
+    key = settings.supabase_anon_key or settings.supabase_service_role_key
+    if not settings.supabase_url or not key:
+        return None
+    return create_client(str(settings.supabase_url), key.get_secret_value())
+
+
 async def verify_bearer_token(token: str, settings: Settings) -> AuthUser:
     if settings.environment == "development" and token.startswith("dev-anon:"):
         return AuthUser(
@@ -34,7 +43,7 @@ async def verify_bearer_token(token: str, settings: Settings) -> AuthUser:
     if settings.environment == "development" and token.startswith("dev:"):
         return AuthUser(id=token.removeprefix("dev:") or "dev-user")
 
-    client = get_supabase_admin()
+    client = get_supabase_auth()
     if client is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
