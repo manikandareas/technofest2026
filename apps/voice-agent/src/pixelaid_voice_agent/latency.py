@@ -28,8 +28,8 @@ def resolve_latency_profile(
                 "turn_detection": "stt",
                 "endpointing": {
                     "mode": "fixed",
-                    "min_delay": 0.15,
-                    "max_delay": 0.8,
+                    "min_delay": 0.2,
+                    "max_delay": 1.2,
                 },
                 "interruption": {
                     "enabled": False,

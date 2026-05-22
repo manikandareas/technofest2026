@@ -124,8 +124,8 @@ def test_ptt_latency_profile_is_default_and_disables_interruption() -> None:
     assert options["turn_detection"] == "stt"
     assert options["endpointing"] == {
         "mode": "fixed",
-        "min_delay": 0.15,
-        "max_delay": 0.8,
+        "min_delay": 0.2,
+        "max_delay": 1.2,
     }
     assert options["interruption"] == {"enabled": False}
     assert options["preemptive_generation"]["enabled"] is False

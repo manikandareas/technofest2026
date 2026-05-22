@@ -4,13 +4,20 @@ import { signInWithPassword } from "@/app/auth/actions";
 import { AuthForm } from "@/components/auth/auth-form";
 import { GoogleButton } from "@/components/auth/google-button";
 import { Card, CardContent, CardHeader, CardTitle, Separator } from "@/components/ui/8bit";
+import { getPostAuthRedirectPath } from "@/lib/auth/post-auth-redirect";
 import { safeNextQuery } from "@/lib/navigation/safe-next";
+import { redirect } from "next/navigation";
 
 export default async function SignInPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
+  const postAuthPath = await getPostAuthRedirectPath();
+  if (postAuthPath) {
+    redirect(postAuthPath);
+  }
+
   const next = safeNextQuery((await searchParams).next);
   return (
     <main className="grid min-h-dvh place-items-center bg-background px-5 py-10">

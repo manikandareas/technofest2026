@@ -261,37 +261,26 @@ def _known_patient_terms(case: CaseGameplayConfig) -> set[str]:
     return terms
 
 
-def _clinical_tokens(value: str) -> set[str]:
-    guarded = {
+_STRICT_CLINICAL_TOKENS: frozenset[str] = frozenset(
+    {
         "acs",
-        "akut",
-        "alergi",
-        "amlodipine",
-        "asma",
         "bnp",
-        "dada",
-        "diabetes",
         "ecg",
-        "edema",
-        "gagal",
         "gerd",
-        "hipertensi",
         "iskemia",
-        "jantung",
         "kardiomegali",
         "kongesti",
         "murmur",
-        "nyeri",
-        "panic",
-        "panik",
         "ronki",
-        "sesak",
         "stemi",
-        "st",
         "takikardia",
         "troponin",
     }
-    return {term for term in guarded if term in value}
+)
+
+
+def _clinical_tokens(value: str) -> set[str]:
+    return {term for term in _STRICT_CLINICAL_TOKENS if term in value}
 
 
 def calculate_score(

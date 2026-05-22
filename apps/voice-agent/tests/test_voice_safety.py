@@ -35,3 +35,15 @@ def test_validator_accepts_allowed_patient_fact() -> None:
     )
 
     assert result.ok
+
+
+def test_validator_allows_common_indonesian_symptom_language() -> None:
+    result = validate_patient_reply(
+        get_case_config("internal-medicine-dengue-warning-signs"),
+        "Nyeri di dada saya sesak dan terasa panas sejak tadi pagi.",
+        used_fact_keys=set(),
+        completed_exam_keys=set(),
+    )
+
+    assert result.ok
+    assert not any(reason.startswith("invented_clinical_fact") for reason in result.reasons)

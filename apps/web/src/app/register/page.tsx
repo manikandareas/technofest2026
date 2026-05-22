@@ -4,8 +4,10 @@ import { signUpWithPassword } from "@/app/auth/actions";
 import { AuthForm } from "@/components/auth/auth-form";
 import { GoogleButton } from "@/components/auth/google-button";
 import { Card, CardContent, CardHeader, CardTitle, Separator } from "@/components/ui/8bit";
+import { getPostAuthRedirectPath } from "@/lib/auth/post-auth-redirect";
 import { getServerClaims } from "@/lib/supabase/server";
 import { safeNextQuery } from "@/lib/navigation/safe-next";
+import { redirect } from "next/navigation";
 
 export default async function RegisterPage({
   searchParams,
@@ -15,6 +17,12 @@ export default async function RegisterPage({
   const next = safeNextQuery((await searchParams).next);
   const claims = await getServerClaims().catch(() => null);
   const isUpgrade = Boolean(claims?.is_anonymous);
+  if (!isUpgrade) {
+    const postAuthPath = await getPostAuthRedirectPath();
+    if (postAuthPath) {
+      redirect(postAuthPath);
+    }
+  }
   const signupNext = "/app/onboarding";
   return (
     <main className="grid min-h-dvh place-items-center bg-background px-5 py-10">
