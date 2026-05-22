@@ -2,14 +2,28 @@
 
 import { safeNextFromForm } from "@/lib/navigation/safe-next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 type AuthState = {
   error?: string;
 };
 
-function redirectUrl(path: string) {
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+async function getRequestOrigin() {
+  const headerStore = await headers();
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+  const forwardedProto = headerStore.get("x-forwarded-proto");
+
+  if (!host) {
+    return "http://localhost:3000";
+  }
+
+  const protocol = forwardedProto ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${protocol}://${host}`;
+}
+
+async function redirectUrl(path: string) {
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? (await getRequestOrigin());
   return new URL(path, origin).toString();
 }
 
@@ -62,7 +76,7 @@ export async function signUpWithPassword(
         },
       },
       {
-        emailRedirectTo: redirectUrl(
+        emailRedirectTo: await redirectUrl(
           `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
         ),
       },
@@ -83,7 +97,7 @@ export async function signUpWithPassword(
         display_name: displayName,
         avatar_url: avatarUrl,
       },
-      emailRedirectTo: redirectUrl(
+      emailRedirectTo: await redirectUrl(
         `/auth/callback?next=${encodeURIComponent(safeNext(formData, "/app/onboarding"))}`,
       ),
     },
@@ -99,7 +113,7 @@ export async function signUpWithPassword(
 export async function signInWithGoogle(): Promise<void> {
   const supabase = await createSupabaseServerClient();
   const { data: claimsData } = await supabase.auth.getClaims();
-  const redirectTo = redirectUrl("/auth/callback?next=/app");
+  const redirectTo = await redirectUrl("/auth/callback?next=/app");
   const { data, error } = claimsData?.claims?.is_anonymous
     ? await supabase.auth.linkIdentity({
         provider: "google",

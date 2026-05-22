@@ -1,6 +1,28 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/leaderboard",
+  "/offline",
+  "/register",
+  "/sign-in",
+]);
+
+const PUBLIC_PREFIXES = ["/auth/"];
+
+function isPublicRoute(pathname: string) {
+  if (PUBLIC_PATHS.has(pathname)) {
+    return true;
+  }
+
+  if (PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+    return true;
+  }
+
+  return /\.[^/]+$/.test(pathname);
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,7 +49,18 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && !isPublicRoute(request.nextUrl.pathname)) {
+    const signInUrl = request.nextUrl.clone();
+    signInUrl.pathname = "/sign-in";
+    signInUrl.search = "";
+    signInUrl.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(signInUrl);
+  }
+
   return response;
 }
 
