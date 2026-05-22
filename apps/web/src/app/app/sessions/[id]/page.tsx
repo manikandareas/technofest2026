@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { AppHeader } from "@/components/app-header";
-import { getApiClient } from "@/lib/api/server";
+
 import { ConsultationRoom } from "./consultation-room";
+import { getApiClient } from "@/lib/api/server";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +25,5 @@ export default async function SessionPage({
     redirect(`/app/sessions/${id}/result?result=${data.result_id}`);
   }
 
-  return (
-    <main className="min-h-dvh bg-background">
-      <AppHeader />
-      <ConsultationRoom initialSession={data} />
-    </main>
-  );
+  return <ConsultationRoom initialSession={data} />;
 }

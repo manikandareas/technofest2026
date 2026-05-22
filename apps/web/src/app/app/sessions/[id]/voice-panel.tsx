@@ -14,9 +14,7 @@ import {
 import { ConnectionState, Track } from "livekit-client";
 import { Mic, MicOff, RotateCcw, Volume2, WifiOff } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/8bit/button";
 
 export type VoiceToken = {
   token: string;
@@ -50,6 +48,19 @@ type VoicePanelProps = {
   onStateChange: (state: VoiceUiState) => void;
 };
 
+const voiceStateLabels: Record<VoiceUiState, string> = {
+  idle: "Talk",
+  connecting: "Connecting",
+  listening: "Listening",
+  user_speaking: "Speaking",
+  muted: "Muted",
+  patient_thinking: "Thinking",
+  patient_speaking: "Patient",
+  reconnecting: "Reconnect",
+  disconnected: "Reconnect",
+  error: "Retry",
+};
+
 export function VoicePanel({
   token,
   uiState,
@@ -62,83 +73,73 @@ export function VoicePanel({
   onStateChange,
 }: VoicePanelProps) {
   const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || token?.url || "";
-  const label = {
-    idle: "Voice ready",
-    connecting: "Connecting",
-    listening: "Listening",
-    user_speaking: "You are speaking",
-    muted: "Mic muted",
-    patient_thinking: "Patient thinking",
-    patient_speaking: "Patient speaking",
-    reconnecting: "Reconnecting",
-    disconnected: "Disconnected",
-    error: "Voice fallback",
-  }[uiState];
-  const startLabel = uiState === "disconnected" ? "Reconnect voice" : "Start voice";
+  const isActive = Boolean(token);
+  const startLabel =
+    uiState === "disconnected" || uiState === "error" ? "Reconnect voice" : "Start voice";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          {token ? <Mic className="size-4" /> : <MicOff className="size-4" />}
-          Voice consultation
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div aria-live="polite" role="status">
-              <Badge variant={uiState === "error" ? "outline" : "secondary"}>{label}</Badge>
-            </div>
-            {token ? (
-              <p className="mt-2 text-xs text-muted-foreground">
-                AI patient voice is active. Transcript text is stored; raw audio is not stored by
-                PixelAid.
-              </p>
-            ) : (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Voice uses an AI patient with STT and TTS providers. Text consultation remains
-                available if mic, connection, STT, or TTS fails.
-              </p>
-            )}
-          </div>
-          {token ? (
-            <Button variant="outline" onClick={onStop} aria-label="Stop voice consultation">
-              Stop voice
-            </Button>
+    <div className="flex flex-col items-center gap-2">
+      <div aria-live="polite" role="status" className="sr-only">
+        {voiceStateLabels[uiState]}
+      </div>
+
+      {isActive ? (
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          font="retro"
+          className="size-[4.75rem] rounded-full border-4 border-[#2f9e44] bg-[#82c91e] text-white shadow-[0_4px_0_#2f9e44] hover:bg-[#74b816] sm:size-20"
+          aria-label="Stop voice consultation"
+          onClick={onStop}
+        >
+          <MicOff className="size-7 sm:size-8" aria-hidden />
+        </Button>
+      ) : (
+        <Button
+          type="button"
+          size="icon"
+          variant="secondary"
+          font="retro"
+          disabled={isPending || disabled}
+          className="size-[4.75rem] rounded-full border-4 border-[#2f9e44] bg-[#82c91e] text-white shadow-[0_4px_0_#2f9e44] hover:bg-[#74b816] disabled:opacity-70 sm:size-20"
+          aria-label={startLabel}
+          onClick={onStart}
+        >
+          {uiState === "disconnected" || uiState === "error" ? (
+            <RotateCcw className="size-7 sm:size-8" aria-hidden />
           ) : (
-            <Button disabled={isPending || disabled} onClick={onStart} aria-label={startLabel}>
-              {uiState === "disconnected" ? (
-                <RotateCcw className="size-4" />
-              ) : (
-                <Mic className="size-4" />
-              )}
-              {startLabel}
-            </Button>
+            <Mic className="size-7 sm:size-8" aria-hidden />
           )}
-        </div>
-        {error ? (
-          <p className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">
-            {error} Periksa izin mikrofon browser, pastikan input device tersedia, lalu coba
-            reconnect. Text consultation remains available.
-          </p>
-        ) : null}
-        {token && livekitUrl ? (
-          <LiveKitRoom
-            audio
-            connect
-            token={token.token}
-            serverUrl={livekitUrl}
-            onDisconnected={() => onStateChange("disconnected")}
-            onError={(caught) => onError(caught.message)}
-          >
-            <RoomAudioRenderer />
-            <AudioUnlockButton />
-            <VoiceConnectionState onError={onError} onStateChange={onStateChange} />
-          </LiveKitRoom>
-        ) : null}
-      </CardContent>
-    </Card>
+        </Button>
+      )}
+
+      <p className="retro text-xs text-white drop-shadow-[1px_1px_0_#000] sm:text-sm">
+        {voiceStateLabels[uiState]}
+      </p>
+
+      {error ? (
+        <p className="max-w-xs rounded-xl border border-destructive/40 bg-background/90 px-3 py-2 text-center text-xs text-destructive">
+          {error} Periksa izin mikrofon browser, pastikan input device tersedia, lalu coba
+          reconnect. Text consultation remains available.
+        </p>
+      ) : null}
+
+      {token && livekitUrl ? (
+        <LiveKitRoom
+          audio
+          connect
+          token={token.token}
+          serverUrl={livekitUrl}
+          onDisconnected={() => onStateChange("disconnected")}
+          onError={(caught) => onError(caught.message)}
+        >
+          <RoomAudioRenderer />
+          <AudioUnlockButton />
+          <VoiceConnectionState onError={onError} onStateChange={onStateChange} />
+        </LiveKitRoom>
+      ) : null}
+    </div>
   );
 }
 
@@ -151,7 +152,7 @@ function AudioUnlockButton() {
   }
 
   return (
-    <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+    <div className="mt-1 max-w-xs rounded-xl border border-amber-300 bg-amber-50 p-3 text-center text-xs text-amber-950">
       <Button
         type="button"
         variant="outline"
@@ -235,7 +236,7 @@ function VoiceConnectionState({
   }, [agentState, connectionState, effectiveMicEnabled, isUserSpeaking, onStateChange]);
 
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 p-3 text-sm">
+    <div className="mt-1 flex flex-wrap items-center justify-center gap-2 rounded-xl border border-white/20 bg-[rgba(0,24,61,0.55)] p-2 text-xs text-white">
       <Button
         type="button"
         variant="outline"
@@ -246,7 +247,7 @@ function VoiceConnectionState({
         {effectiveMicEnabled ? <Mic className="size-4" /> : <MicOff className="size-4" />}
         {effectiveMicEnabled ? "Mute" : "Unmute"}
       </Button>
-      <span className="flex items-center gap-2 text-xs text-muted-foreground">
+      <span className="flex items-center gap-2 text-white/85">
         {connectionState === ConnectionState.Disconnected ? <WifiOff className="size-4" /> : null}
         {effectiveMicEnabled
           ? "Mic is active for the AI patient."

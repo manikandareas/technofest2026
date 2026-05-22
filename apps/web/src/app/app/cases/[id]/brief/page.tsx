@@ -1,10 +1,7 @@
-import { Clock, Play } from "lucide-react";
-import { AppHeader } from "@/components/app-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CaseBriefScreen } from "@/components/cases/case-brief-screen";
 import { fallbackCases } from "@/lib/api/fallback";
 import { getPublicApiClient } from "@/lib/api/server";
+
 import { startCaseSession } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -24,80 +21,7 @@ export default async function CaseBriefPage({
 }) {
   const { id } = await params;
   const item = await loadCase(id);
+  const startSessionAction = startCaseSession.bind(null, item.id);
 
-  return (
-    <main className="min-h-dvh bg-background">
-      <AppHeader />
-      <section className="mx-auto grid w-full max-w-6xl gap-6 px-5 py-8 lg:grid-cols-[1fr_22rem]">
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <Badge>{item.specialist_name}</Badge>
-              <Badge variant="outline">{item.condition_badge}</Badge>
-            </div>
-            <h1 className="text-3xl font-semibold tracking-tight">
-              {item.patient_name}, {item.patient_age} tahun
-            </h1>
-            <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
-              {item.chief_complaint}
-            </p>
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Clinical brief</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="leading-7">{item.triage_note}</p>
-              <div className="grid gap-3 text-sm sm:grid-cols-3">
-                <div>
-                  <p className="text-muted-foreground">Gender</p>
-                  <p className="font-medium">{item.patient_gender}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Difficulty</p>
-                  <p className="font-medium capitalize">{item.difficulty}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Duration</p>
-                  <p className="flex items-center gap-2 font-medium">
-                    <Clock className="size-4" />
-                    {item.estimated_duration_minutes} menit
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Learning objectives</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3 text-sm leading-6 text-muted-foreground">
-                {(item.learning_objectives ?? []).map((objective) => (
-                  <li key={objective}>{objective}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-        <Card className="h-fit">
-          <CardHeader>
-            <CardTitle>Mulai simulasi</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm leading-6 text-muted-foreground">
-              Mulai dari mode teks yang selalu tersedia. Voice AI bisa dinyalakan
-              di ruang konsultasi bila perangkat dan koneksi siap.
-            </p>
-            <form action={startCaseSession.bind(null, item.id)}>
-              <Button className="w-full" type="submit">
-                <Play className="size-4" />
-                Start session
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </section>
-    </main>
-  );
+  return <CaseBriefScreen item={item} startSessionAction={startSessionAction} />;
 }
