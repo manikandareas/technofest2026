@@ -47,6 +47,8 @@ class TtsProfile(BaseModel):
     voice_id: str
     model: str = "gpt-4o-mini-tts"
     language: str = "id"
+    voice_style: str | None = None
+    speed: float = 1.0
 
 
 class QuizOption(BaseModel):
@@ -113,6 +115,45 @@ class FeedbackInput(BaseModel):
     case_feedback_template: str
 
 
+_FEEDBACK_TOPIC_LABELS = {
+    "associated": "gejala penyerta",
+    "asked_bleeding_warning": "tanda bahaya perdarahan",
+    "character": "karakter keluhan",
+    "ecg": "EKG",
+    "next-best-step": "langkah awal yang paling aman",
+    "next_step": "langkah awal yang paling aman",
+    "ns1": "pemeriksaan NS1",
+    "onset": "waktu mulai keluhan",
+    "ordered_ns1": "pemeriksaan NS1",
+    "physical": "pemeriksaan fisik",
+    "quality": "karakter nyeri",
+    "radiation": "penjalaran nyeri",
+    "red_flag": "tanda bahaya",
+    "risk": "faktor risiko",
+    "safety": "keputusan klinis yang aman",
+    "stimulant": "pemicu seperti kafein atau stimulan",
+    "trigger": "pemicu dan pereda keluhan",
+    "troponin": "pemeriksaan troponin",
+    "vitals": "tanda vital",
+}
+
+
+def user_friendly_feedback_topic(topic: str) -> str:
+    normalized = topic.strip()
+    label = _FEEDBACK_TOPIC_LABELS.get(normalized)
+    if label:
+        return label
+    label = normalized
+    for prefix in ("asked_", "ordered_"):
+        if label.startswith(prefix):
+            label = label.removeprefix(prefix)
+            remapped = _FEEDBACK_TOPIC_LABELS.get(label)
+            if remapped:
+                return remapped
+    label = label.replace("_", " ").replace("-", " ").strip()
+    return label or "area klinis penting"
+
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -145,6 +186,28 @@ class VoiceReplyValidation(BaseModel):
     reasons: list[str] = Field(default_factory=list)
 
 
+ASSISTANT_FORBIDDEN_PHRASES: tuple[str, ...] = (
+    "apa yang bisa saya bantu",
+    "ada yang bisa saya bantu",
+    "bagaimana saya bisa membantu",
+    "silakan sampaikan kebutuhan",
+    "selamat datang",
+)
+
+
+def is_assistant_style_reply(reply: str) -> bool:
+    normalized = reply.casefold()
+    return any(phrase in normalized for phrase in ASSISTANT_FORBIDDEN_PHRASES)
+
+
+def is_meaningful_user_transcript(transcript: str) -> bool:
+    cleaned = transcript.strip()
+    if not cleaned:
+        return False
+    alnum = "".join(character for character in cleaned if character.isalnum())
+    return len(alnum) >= 2
+
+
 def validate_patient_reply(
     case: CaseGameplayConfig,
     reply: str,
@@ -154,6 +217,9 @@ def validate_patient_reply(
 ) -> VoiceReplyValidation:
     normalized = reply.casefold()
     reasons: list[str] = []
+    if is_assistant_style_reply(reply):
+        reasons.append("assistant_style_reply")
+
     allowed_fact_keys = {
         fact.rubric_key for fact in case.patient_facts if fact.rubric_key
     }
@@ -356,14 +422,20 @@ def fallback_feedback(payload: FeedbackInput) -> StructuredFeedback:
             "Kamu sudah menyelesaikan alur konsultasi sampai tahap refleksi hasil."
         )
 
-    if payload.missed_interview:
+    missed_interview = [
+        user_friendly_feedback_topic(topic) for topic in payload.missed_interview
+    ]
+    missed_examinations = [
+        user_friendly_feedback_topic(topic) for topic in payload.missed_examinations
+    ]
+    if missed_interview:
         improvements.append(
-            "Perkuat anamnesis pada area: " + ", ".join(payload.missed_interview) + "."
+            "Perkuat anamnesis pada area: " + ", ".join(missed_interview) + "."
         )
-    if payload.missed_examinations:
+    if missed_examinations:
         improvements.append(
             "Pertimbangkan pemeriksaan yang belum lengkap: "
-            + ", ".join(payload.missed_examinations)
+            + ", ".join(missed_examinations)
             + "."
         )
     if breakdown.quiz < 25:
@@ -377,19 +449,22 @@ def fallback_feedback(payload: FeedbackInput) -> StructuredFeedback:
 
     next_steps.append(payload.case_feedback_template)
     next_steps.append(
-        "Ulangi kasus dengan target menutup satu celah klinis sebelum membuka quiz."
+        "Ulangi kasus dengan target menutup satu celah klinis sebelum membuka kuis."
     )
 
     safety_note = None
     if payload.missed_safety_questions:
-        safety_note = "Ada keputusan safety-critical yang belum aman, sehingga bintang maksimal dibatasi."
+        safety_note = (
+            "Ada keputusan klinis penting yang belum aman, sehingga hasil terbaik "
+            "belum bisa tercapai."
+        )
     elif breakdown.safety > 0:
-        safety_note = "Keputusan safety-critical pada kasus ini sudah aman."
+        safety_note = "Keputusan klinis penting pada kasus ini sudah aman."
 
     return StructuredFeedback(
         summary=(
             f"Hasil {payload.patient_name}: {payload.score}/100 dengan {payload.stars} "
-            "bintang. Feedback ini dibuat dari scoring deterministik."
+            "bintang. Ini ringkasan singkat dari performa konsultasimu."
         ),
         strengths=strengths[:3],
         improvements=improvements[:3],

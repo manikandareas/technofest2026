@@ -532,10 +532,19 @@ def _tts_profile(case_data: dict[str, Any]) -> TtsProfile:
     tts = case_data.get("tts_profile") or {}
     if not isinstance(tts, dict):
         return TtsProfile(voice_id="alloy")
+    speed_raw = tts.get("speed", 1.0)
+    try:
+        speed = float(speed_raw)
+    except (TypeError, ValueError):
+        speed = 1.0
+    voice_style = tts.get("voice_style")
     return TtsProfile(
         provider=str(tts.get("provider") or "openai"),
         voice_id=str(tts.get("voice") or tts.get("voice_id") or "alloy"),
+        model=str(tts.get("model") or "gpt-4o-mini-tts"),
         language=str(tts.get("language") or "id"),
+        voice_style=str(voice_style) if voice_style else None,
+        speed=speed,
     )
 
 

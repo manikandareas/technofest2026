@@ -35,7 +35,7 @@ def resolve_latency_profile(
                     "enabled": False,
                 },
                 "preemptive_generation": {
-                    "enabled": True,
+                    "enabled": False,
                     "preemptive_tts": False,
                     "max_speech_duration": 10.0,
                     "max_retries": 3,

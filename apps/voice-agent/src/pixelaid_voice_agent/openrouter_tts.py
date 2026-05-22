@@ -24,6 +24,7 @@ class OpenRouterTtsOptions:
     base_url: str = "https://openrouter.ai/api/v1"
     response_format: str = "pcm"
     speed: float = 1.0
+    instructions: str | None = None
 
 
 class OpenRouterTTS(tts.TTS):
@@ -82,13 +83,19 @@ class OpenRouterChunkedStream(tts.ChunkedStream):
     async def _run(self, output_emitter: tts.AudioEmitter) -> None:
         options = self._tts._options
         url = f"{options.base_url.rstrip('/')}/audio/speech"
-        payload = {
+        payload: dict[str, object] = {
             "model": options.model,
             "input": self.input_text,
             "voice": options.voice,
             "response_format": options.response_format,
             "speed": options.speed,
         }
+        if options.instructions:
+            payload["provider"] = {
+                "options": {
+                    "google": {"instructions": options.instructions},
+                }
+            }
         headers = {
             "Authorization": f"Bearer {options.api_key}",
             "Content-Type": "application/json",

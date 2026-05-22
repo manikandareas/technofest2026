@@ -2,10 +2,10 @@ from typing import cast
 
 import pytest
 from livekit.agents import llm
+from livekit.agents.llm import StopResponse
 from pixelaid_shared.cases import CASE_CONFIGS
 from pixelaid_shared.gameplay import validate_patient_reply
 from pixelaid_voice_agent.patient_agent import SAFE_FALLBACK_TEXT, PixelAidPatientAgent
-
 
 class SyncEventRecorder:
     def __init__(self) -> None:
@@ -179,6 +179,51 @@ async def test_patient_agent_records_validation_reasons_before_retry(monkeypatch
         in validation_reasons
     )
     assert retry_reasons == validation_reasons
+
+
+@pytest.mark.anyio
+async def test_patient_agent_ignores_empty_user_turn() -> None:
+    agent = PixelAidPatientAgent(
+        context={
+            "case_id": "internal-medicine-dengue-warning-signs",
+            "allowed_facts": [{"key": "onset", "response": "Mulainya dua jam lalu."}],
+            "completed_examinations": [],
+        },
+        instructions="test",
+    )
+
+    with pytest.raises(StopResponse):
+        await agent.on_user_turn_completed(
+            llm.ChatContext.empty(),
+            llm.ChatMessage(role="user", content=[""]),
+        )
+
+
+@pytest.mark.anyio
+async def test_patient_agent_rejects_assistant_style_reply(monkeypatch) -> None:
+    agent = PixelAidPatientAgent(
+        context={
+            "case_id": "internal-medicine-dengue-warning-signs",
+            "allowed_facts": [{"key": "onset", "response": "Mulainya dua jam lalu."}],
+            "completed_examinations": [],
+        },
+        instructions="test",
+    )
+    replies = iter(
+        [
+            "Halo, Bu. Apa yang bisa saya bantu?",
+            "Mulainya dua jam lalu.",
+        ]
+    )
+
+    async def fake_collect(*args: object, **kwargs: object) -> str:
+        return next(replies)
+
+    monkeypatch.setattr(agent, "_collect_reply", fake_collect)
+
+    result = await agent.llm_node(llm.ChatContext.empty(), [], None)  # type: ignore[arg-type]
+
+    assert result == "Mulainya dua jam lalu."
 
 
 def test_voice_guardrails_cover_all_mvp_cases() -> None:

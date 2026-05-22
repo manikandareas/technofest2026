@@ -5,7 +5,13 @@ from pixelaid_voice_agent import latency
 from pixelaid_voice_agent.config import VoiceAgentSettings
 from pixelaid_voice_agent.latency import resolve_latency_profile
 from pixelaid_voice_agent.openrouter_tts import OpenRouterTTS
-from pixelaid_voice_agent.tts_factory import build_llm, build_tts
+from pixelaid_voice_agent.tts_factory import (
+    build_gemini_tts_instructions,
+    build_llm,
+    build_tts,
+    resolve_tts_profile_speed,
+    resolve_tts_profile_value,
+)
 
 
 def test_readiness_without_env_is_degraded() -> None:
@@ -46,6 +52,68 @@ def test_default_tts_provider_uses_openrouter_gemini() -> None:
     assert tts.model == "google/gemini-3.1-flash-tts-preview"
 
 
+def test_build_tts_uses_openrouter_profile_voice_model_speed_and_instructions() -> None:
+    settings = cast(Any, VoiceAgentSettings)(
+        _env_file=None,
+        openrouter_api_key="test-openrouter-key",
+    )
+    context = {
+        "tts_profile": {
+            "provider": "openrouter",
+            "model": "google/gemini-3.1-flash-tts-preview",
+            "voice_id": "Enceladus",
+            "voice_style": "laki-laki muda, lemas, natural",
+            "language": "id-ID",
+            "speed": 0.98,
+        }
+    }
+
+    tts = build_tts(context, settings)
+    options = cast(Any, tts)._options
+
+    assert isinstance(tts, OpenRouterTTS)
+    assert options.model == "google/gemini-3.1-flash-tts-preview"
+    assert options.voice == "Enceladus"
+    assert options.speed == 0.98
+    assert "laki-laki muda, lemas, natural" in options.instructions
+
+
+def test_resolve_tts_profile_value_accepts_legacy_openai_with_openrouter_runtime() -> None:
+    context = {
+        "tts_profile": {
+            "provider": "openai",
+            "voice_id": "Enceladus",
+            "model": "google/gemini-3.1-flash-tts-preview",
+        }
+    }
+
+    assert (
+        resolve_tts_profile_value(
+            context,
+            provider="openrouter",
+            field="voice_id",
+            default="Kore",
+        )
+        == "Enceladus"
+    )
+    assert resolve_tts_profile_speed(context) == 1.0
+    assert "Voice style" not in build_gemini_tts_instructions(context)
+
+
+def test_build_gemini_tts_instructions_uses_voice_style() -> None:
+    context = {
+        "tts_profile": {
+            "provider": "openrouter",
+            "voice_id": "Kore",
+            "voice_style": "perempuan dewasa, jelas, sedikit cemas",
+        }
+    }
+
+    instructions = build_gemini_tts_instructions(context)
+
+    assert "perempuan dewasa, jelas, sedikit cemas" in instructions
+
+
 def test_ptt_latency_profile_is_default_and_disables_interruption() -> None:
     settings = cast(Any, VoiceAgentSettings)(_env_file=None)
     profile = resolve_latency_profile(settings.voice_latency_profile)
@@ -60,7 +128,7 @@ def test_ptt_latency_profile_is_default_and_disables_interruption() -> None:
         "max_delay": 0.8,
     }
     assert options["interruption"] == {"enabled": False}
-    assert options["preemptive_generation"]["enabled"] is True
+    assert options["preemptive_generation"]["enabled"] is False
     assert options["preemptive_generation"]["preemptive_tts"] is False
     assert options["preemptive_generation"]["max_speech_duration"] == 10.0
     assert options["preemptive_generation"]["max_retries"] == 3

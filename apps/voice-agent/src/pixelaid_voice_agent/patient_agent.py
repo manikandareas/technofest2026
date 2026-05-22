@@ -5,6 +5,7 @@ from typing import Any
 
 from livekit import rtc
 from livekit.agents import Agent, ModelSettings, llm
+from livekit.agents.llm import StopResponse
 from pixelaid_shared.cases import get_case_config
 from pixelaid_shared.gameplay import (
     CaseGameplayConfig,
@@ -12,6 +13,7 @@ from pixelaid_shared.gameplay import (
     MedicalRecord,
     PatientFact,
     VoiceReplyValidation,
+    is_meaningful_user_transcript,
     validate_patient_reply,
 )
 from pixelaid_voice_agent.session_telemetry import EventRecorder
@@ -30,6 +32,20 @@ class PixelAidPatientAgent(Agent):
         super().__init__(**kwargs)
         self._context = context
         self._telemetry = telemetry
+
+    async def on_user_turn_completed(
+        self,
+        turn_ctx: llm.ChatContext,
+        new_message: llm.ChatMessage,
+    ) -> None:
+        transcript = new_message.text_content or ""
+        if not is_meaningful_user_transcript(transcript):
+            self._record_event(
+                "ignored_user_turn",
+                "info",
+                {"reason": "empty_or_noise_transcript", "transcript": transcript[:120]},
+            )
+            raise StopResponse()
 
     async def llm_node(
         self,
@@ -56,7 +72,9 @@ class PixelAidPatientAgent(Agent):
         retry_ctx.add_message(
             role="system",
             content=(
-                "Regenerate the patient reply. Use only allowed interview facts. "
+                "Regenerate the patient reply. You are the patient, not an assistant. "
+                "Never say offers of help such as 'Apa yang bisa saya bantu?'. "
+                "Use only allowed interview facts that answer the doctor's question. "
                 "Do not mention diagnosis, test names, or unperformed examination results. "
                 f"If unsure, answer exactly: {SAFE_FALLBACK_TEXT}"
             ),

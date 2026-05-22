@@ -9,7 +9,7 @@
       "docs/implementation-plan.md"
     ],
     "medical_safety_note": "Konten ini hanya untuk simulasi edukatif. Diagnosis ditulis sebagai kecurigaan klinis, bukan keputusan diagnosis nyata.",
-    "tts_default_provider": "openai"
+    "tts_default_provider": "openrouter"
   },
   "specialists": [
     {
@@ -148,8 +148,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "alloy",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Enceladus",
           "voice_style": "laki-laki muda, lemas, natural",
           "language": "id-ID",
           "speed": 0.98
@@ -360,8 +361,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "nova",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Kore",
           "voice_style": "perempuan dewasa, jelas, sedikit cemas",
           "language": "id-ID",
           "speed": 1
@@ -573,8 +575,9 @@
           "cooperativeness": "sedang"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "onyx",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Gacrux",
           "voice_style": "laki-laki paruh baya, napas pendek ringan",
           "language": "id-ID",
           "speed": 0.94
@@ -790,8 +793,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "shimmer",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Achernar",
           "voice_style": "perempuan dewasa, lembut, cemas",
           "language": "id-ID",
           "speed": 0.98
@@ -1006,8 +1010,9 @@
           "cooperativeness": "sedang"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "nova",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Sulafat",
           "voice_style": "perempuan dewasa, nyeri, pelan",
           "language": "id-ID",
           "speed": 0.94
@@ -1215,8 +1220,9 @@
           "cooperativeness": "sedang"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "shimmer",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Leda",
           "voice_style": "perempuan muda, pelan, malu",
           "language": "id-ID",
           "speed": 0.96
@@ -1425,8 +1431,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "nova",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Fenrir",
           "voice_style": "suara ibu muda, cemas",
           "language": "id-ID",
           "speed": 1.02
@@ -1636,8 +1643,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "shimmer",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Vindemiatrix",
           "voice_style": "suara ibu, lembut, khawatir",
           "language": "id-ID",
           "speed": 1
@@ -1847,8 +1855,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "nova",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Laomedeia",
           "voice_style": "suara ibu, cemas, cepat",
           "language": "id-ID",
           "speed": 1.03
@@ -2067,8 +2076,9 @@
           "cooperativeness": "sedang"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "echo",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Orus",
           "voice_style": "laki-laki muda, menahan nyeri",
           "language": "id-ID",
           "speed": 0.96
@@ -2280,8 +2290,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "nova",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Despina",
           "voice_style": "perempuan dewasa, menahan mual",
           "language": "id-ID",
           "speed": 0.98
@@ -2495,8 +2506,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "echo",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Charon",
           "voice_style": "laki-laki dewasa, tenang",
           "language": "id-ID",
           "speed": 1
@@ -2710,8 +2722,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "nova",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Schedar",
           "voice_style": "perempuan dewasa, tenang, sedikit cemas",
           "language": "id-ID",
           "speed": 0.98
@@ -2922,8 +2935,9 @@
           "cooperativeness": "sedang"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "onyx",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Alnilam",
           "voice_style": "laki-laki dewasa, menahan nyeri",
           "language": "id-ID",
           "speed": 0.95
@@ -3132,8 +3146,9 @@
           "cooperativeness": "sedang"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "shimmer",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Puck",
           "voice_style": "perempuan muda, gugup",
           "language": "id-ID",
           "speed": 1.02
@@ -3341,8 +3356,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "nova",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Iapetus",
           "voice_style": "perempuan dewasa, jelas, sedikit risih",
           "language": "id-ID",
           "speed": 1
@@ -3554,8 +3570,9 @@
           "cooperativeness": "sedang"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "onyx",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Rasalgethi",
           "voice_style": "laki-laki tua, nyeri, tegang",
           "language": "id-ID",
           "speed": 0.93
@@ -3768,8 +3785,9 @@
           "cooperativeness": "tinggi"
         },
         "tts_profile": {
-          "provider": "openai",
-          "voice": "echo",
+          "provider": "openrouter",
+          "model": "google/gemini-3.1-flash-tts-preview",
+          "voice": "Achird",
           "voice_style": "laki-laki muda, risih, natural",
           "language": "id-ID",
           "speed": 0.98

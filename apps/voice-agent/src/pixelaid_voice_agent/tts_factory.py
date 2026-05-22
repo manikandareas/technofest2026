@@ -16,15 +16,32 @@ GEMINI_TTS_INSTRUCTIONS = (
     "slightly worried, and concise."
 )
 
+_LEGACY_OPENAI_PROFILE_PROVIDERS = frozenset({"openai", "openrouter"})
+
 
 def parse_tts_profile(context: dict[str, Any]) -> TtsProfile | None:
     raw = context.get("tts_profile")
     if not isinstance(raw, dict):
         return None
+    normalized = dict(raw)
+    if "voice_id" not in normalized and "voice" in normalized:
+        normalized["voice_id"] = normalized["voice"]
     try:
-        return TtsProfile.model_validate(raw)
+        return TtsProfile.model_validate(normalized)
     except ValidationError:
         return None
+
+
+def _profile_matches_runtime(profile: TtsProfile, runtime_provider: str) -> bool:
+    profile_provider = profile.provider.lower()
+    runtime = runtime_provider.lower()
+    if profile_provider == runtime:
+        return True
+    if runtime == "openrouter" and profile_provider in _LEGACY_OPENAI_PROFILE_PROVIDERS:
+        return True
+    if runtime == "gemini" and profile_provider in {"gemini", *_LEGACY_OPENAI_PROFILE_PROVIDERS}:
+        return True
+    return False
 
 
 def resolve_tts_profile_value(
@@ -35,10 +52,28 @@ def resolve_tts_profile_value(
     default: str,
 ) -> str:
     profile = parse_tts_profile(context)
-    if profile is None or profile.provider.lower() != provider.lower():
+    if profile is None or not _profile_matches_runtime(profile, provider):
         return default
     value = profile.model if field == "model" else profile.voice_id
     return value or default
+
+
+def resolve_tts_profile_speed(context: dict[str, Any], *, default: float = 1.0) -> float:
+    profile = parse_tts_profile(context)
+    if profile is None:
+        return default
+    return profile.speed
+
+
+def build_gemini_tts_instructions(context: dict[str, Any]) -> str:
+    profile = parse_tts_profile(context)
+    if profile and profile.voice_style:
+        return (
+            "Speak Indonesian clearly as a simulated patient. "
+            f"Voice style: {profile.voice_style}. "
+            "Keep the tone natural and concise."
+        )
+    return GEMINI_TTS_INSTRUCTIONS
 
 
 def build_stt(settings: VoiceAgentSettings) -> Any:
@@ -64,6 +99,9 @@ def build_llm(settings: VoiceAgentSettings) -> Any:
 
 
 def build_tts(context: dict[str, Any], settings: VoiceAgentSettings) -> Any:
+    instructions = build_gemini_tts_instructions(context)
+    speed = resolve_tts_profile_speed(context)
+
     if settings.tts_provider == "openrouter":
         if not settings.openrouter_api_key:
             raise RuntimeError(
@@ -85,6 +123,8 @@ def build_tts(context: dict[str, Any], settings: VoiceAgentSettings) -> Any:
                     field="voice_id",
                     default=settings.openrouter_tts_voice_name,
                 ),
+                speed=speed,
+                instructions=instructions,
             )
         )
 
@@ -101,7 +141,7 @@ def build_tts(context: dict[str, Any], settings: VoiceAgentSettings) -> Any:
             field="voice_id",
             default=settings.gemini_tts_voice_name,
         ),
-        "instructions": GEMINI_TTS_INSTRUCTIONS,
+        "instructions": instructions,
     }
     if settings.google_api_key:
         tts_kwargs["api_key"] = settings.google_api_key
