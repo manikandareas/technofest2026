@@ -1,16 +1,16 @@
 "use client";
 
 import { ClipboardList } from "lucide-react";
+import { useCallback, useState } from "react";
 
 import { Button } from "@/components/ui/8bit/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 
-import { SessionDrawerHeader } from "./session-drawer-header";
-import { sessionToolbarIconButtonClass } from "./sessions-assets";
+import { SessionResponsivePanel } from "./session-responsive-panel";
+import {
+  sessionToolbarIconButtonClass,
+  sessionToolbarIconClass,
+  sessionToolbarLabelClass,
+} from "./sessions-assets";
 
 type MedicalRecord = {
   summary: string;
@@ -27,6 +27,69 @@ type SessionMedicalRecordDrawerProps = {
   onOpen: () => void;
 };
 
+function MedicalRecordContent({
+  opened,
+  record,
+  isPending,
+}: {
+  opened: boolean;
+  record: MedicalRecord;
+  isPending: boolean;
+}) {
+  if (!opened) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-[1.25rem] border-2 border-foreground/10 bg-white p-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          {isPending ? "Membuka rekam medis..." : "Memuat rekam medis pasien..."}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto rounded-[1.25rem] border-2 border-foreground/10 bg-white p-4 text-sm leading-6 text-[#1a233e] sm:p-5">
+      <div className="space-y-4">
+        <section>
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Ringkasan
+          </h3>
+          <p className="text-base font-semibold leading-7">{record.summary}</p>
+        </section>
+        <section>
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Riwayat
+          </h3>
+          <ul className="list-disc space-y-1 pl-5">
+            {record.history.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+        <section>
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Obat
+          </h3>
+          <ul className="list-disc space-y-1 pl-5">
+            {record.medications.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+        <section>
+          <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Alergi
+          </h3>
+          <ul className="list-disc space-y-1 pl-5">
+            {record.allergies.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
+  );
+}
+
 export function SessionMedicalRecordDrawer({
   opened,
   record,
@@ -34,65 +97,42 @@ export function SessionMedicalRecordDrawer({
   isPending,
   onOpen,
 }: SessionMedicalRecordDrawerProps) {
+  const [panelOpen, setPanelOpen] = useState(false);
+
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      setPanelOpen(nextOpen);
+      if (nextOpen && !opened && !disabled) {
+        onOpen();
+      }
+    },
+    [disabled, onOpen, opened],
+  );
+
+  const trigger = (
+    <Button
+      type="button"
+      size="sm"
+      variant="secondary"
+      font="retro"
+      className={sessionToolbarIconButtonClass}
+      aria-label="Buka rekam medis"
+    >
+      <ClipboardList className={sessionToolbarIconClass} aria-hidden />
+      <span className={sessionToolbarLabelClass}>Record</span>
+    </Button>
+  );
+
   return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          font="retro"
-          className={sessionToolbarIconButtonClass}
-          aria-label="Buka rekam medis"
-        >
-          <ClipboardList className="size-5 sm:size-6" aria-hidden />
-          <span className="text-[0.625rem] leading-none sm:text-[0.6875rem]">
-            Medical Record
-          </span>
-        </Button>
-      </DrawerTrigger>
-
-      <DrawerContent className="max-h-[88dvh] border-foreground bg-[#eef3ff] px-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <SessionDrawerHeader
-          icon={<ClipboardList className="size-4" aria-hidden />}
-          title="Medical Record"
-        />
-
-        <div className="space-y-3 px-3 pb-3 pt-3 sm:px-4">
-          {!opened ? (
-            <Button
-              type="button"
-              font="retro"
-              className="w-full"
-              disabled={isPending || disabled}
-              onClick={onOpen}
-            >
-              Buka rekam medis
-            </Button>
-          ) : null}
-
-          <div className="rounded-[1.25rem] border-2 border-foreground/10 bg-white p-4 text-sm leading-6 text-[#1a233e]">
-            {opened ? (
-              <div className="space-y-3">
-                <p className="font-semibold">{record.summary}</p>
-                <p>
-                  <span className="font-medium">Riwayat:</span> {record.history.join(", ")}
-                </p>
-                <p>
-                  <span className="font-medium">Obat:</span> {record.medications.join(", ")}
-                </p>
-                <p>
-                  <span className="font-medium">Alergi:</span> {record.allergies.join(", ")}
-                </p>
-              </div>
-            ) : (
-              <p className="text-muted-foreground">
-                Rekam medis belum dibuka. Buka rekam medis untuk melihat riwayat pasien.
-              </p>
-            )}
-          </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+    <SessionResponsivePanel
+      trigger={trigger}
+      title="Medical Record"
+      icon={<ClipboardList className="size-4" aria-hidden />}
+      open={panelOpen}
+      onOpenChange={handleOpenChange}
+      bodyClassName="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-4"
+    >
+      <MedicalRecordContent opened={opened} record={record} isPending={isPending} />
+    </SessionResponsivePanel>
   );
 }

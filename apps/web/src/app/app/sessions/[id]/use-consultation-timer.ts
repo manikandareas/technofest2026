@@ -50,6 +50,10 @@ export function useConsultationTimer({
     if (!isConsultationActive) {
       return;
     }
+
+    const hasPendingExams = session.examinations.some((exam) => exam.status === "pending");
+    const pollInterval = hasPendingExams ? 1000 : 5000;
+
     const interval = window.setInterval(() => {
       if (refreshInFlight.current) {
         return;
@@ -68,9 +72,9 @@ export function useConsultationTimer({
         .finally(() => {
           refreshInFlight.current = false;
         });
-    }, 5000);
+    }, pollInterval);
     return () => window.clearInterval(interval);
-  }, [applySession, isConsultationActive, onRefreshError, session.id]);
+  }, [applySession, isConsultationActive, onRefreshError, session.examinations, session.id]);
 
   useEffect(() => {
     if (!isConsultationActive || session.is_paused || displaySeconds <= 0) {

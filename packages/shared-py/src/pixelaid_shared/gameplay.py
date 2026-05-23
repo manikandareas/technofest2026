@@ -162,6 +162,15 @@ def due_at(delay_seconds: int, now: datetime | None = None) -> datetime:
     return (now or utc_now()) + timedelta(seconds=delay_seconds)
 
 
+EXAMINATION_RESULT_DELAY_CAP_SECONDS = 2
+
+
+def effective_examination_delay(delay_seconds: int) -> int:
+    if delay_seconds <= 0:
+        return 0
+    return min(delay_seconds, EXAMINATION_RESULT_DELAY_CAP_SECONDS)
+
+
 def exam_status(
     resulted_at: datetime | None, now: datetime | None = None
 ) -> ExamStatus:

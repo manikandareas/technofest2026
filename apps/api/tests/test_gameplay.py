@@ -155,7 +155,7 @@ def test_imaging_examination_asset_is_returned_after_delay(
     assert pending_exam["result"] is None
     assert pending_exam["asset"] is None
 
-    patch_utc_now(monkeypatch, now + timedelta(seconds=21))
+    patch_utc_now(monkeypatch, now + timedelta(seconds=2))
     resulted = client.get(f"/api/case-sessions/{session_id}", headers=ANON_AUTH)
     assert resulted.status_code == 200
     resulted_exam = resulted.json()["examinations"][0]

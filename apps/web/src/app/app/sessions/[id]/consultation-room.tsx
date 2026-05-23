@@ -13,7 +13,7 @@ import { SessionMessageDrawer } from "@/components/sessions/session-message-draw
 import { SessionPatientHud } from "@/components/sessions/session-patient-hud";
 import { SessionQuizPanel } from "@/components/sessions/session-quiz-panel";
 import { SessionTimerControls } from "@/components/sessions/session-timer-controls";
-import { sessionToolbarIconButtonClass } from "@/components/sessions/sessions-assets";
+import { sessionToolbarIconButtonClass, sessionToolbarIconClass, sessionToolbarLabelClass } from "@/components/sessions/sessions-assets";
 import { Button } from "@/components/ui/8bit/button";
 import * as AlertDialog from "@/components/ui/alert-dialog";
 import type { ActionResult } from "@/lib/api/action-result";
@@ -377,10 +377,8 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
                             disabled={isPending || session.status !== "in_consultation"}
                             aria-label="Akhiri konsultasi"
                           >
-                            <DoorOpen className="size-5 sm:size-6" aria-hidden />
-                            <span className="text-[0.625rem] leading-none sm:text-[0.6875rem]">
-                              End
-                            </span>
+                            <DoorOpen className={sessionToolbarIconClass} aria-hidden />
+                            <span className={sessionToolbarLabelClass}>End</span>
                           </Button>
                         </AlertDialog.Trigger>
                         <AlertDialog.Portal>
