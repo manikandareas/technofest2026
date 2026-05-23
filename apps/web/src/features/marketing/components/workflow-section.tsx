@@ -8,9 +8,16 @@ import {
   TechnicalCrosshairFrame,
   TechnicalFrameHorizontalRule,
 } from "@/features/marketing/components/technical-crosshair-frame";
-import { WorkflowCodePanel } from "@/features/marketing/components/workflow-code-panel";
 import { WorkflowCopyBlock } from "@/features/marketing/components/workflow-copy-block";
 import { WorkflowDiagram } from "@/features/marketing/components/workflow-diagram";
+import {
+  WorkflowCaseBriefPreview,
+  WorkflowScorePreview,
+} from "@/features/marketing/components/workflow-preview-panel";
+import {
+  DEMO_CASE,
+  MARKETING_ASSETS,
+} from "@/features/marketing/marketing-assets";
 
 const workflowTitleParts = ["Brief", "konsultasi", "quiz"] as const;
 
@@ -109,11 +116,11 @@ export function WorkflowSection() {
                   >
                     <WorkflowCopyBlock
                       title="1. Brief kasus"
-                      body="Kamu dapat keluhan dan triase — tanpa spoiler diagnosis. Detail penting kamu cari sendiri."
+                      body="Baca keluhan dan triase pasien — tanpa spoiler diagnosis. Detail penting kamu gali lewat Talk dan rekam medis."
                       items={[
                         ["Keluhan", "Gambaran awal pasien"],
-                        ["Triase", "Seberapa urgent"],
-                        ["Mulai", "Timer jalan"],
+                        ["Triase", "Konteks klinis singkat"],
+                        ["Mulai", "Timer konsultasi langsung jalan"],
                       ]}
                     />
                   </motion.div>
@@ -128,32 +135,14 @@ export function WorkflowSection() {
                       delay: reduce ? 0 : 0.08,
                     }}
                   >
-                    <WorkflowCodePanel
-                      lines={[
-                        <>
-                          <span className="text-[#F05252]">pasien</span> ={" "}
-                          <span className="text-[#315BA8]">&quot;Maya, 34 thn&quot;</span>
-                        </>,
-                        <>
-                          <span className="text-[#F05252]">keluhan</span> ={" "}
-                          <span className="text-[#315BA8]">
-                            &quot;Nyeri dada sejak 2 jam&quot;
-                          </span>
-                        </>,
-                        <>
-                          <span className="text-[#F05252]">spesialis</span> ={" "}
-                          <span className="text-[#315BA8]">&quot;Kardiologi&quot;</span>
-                        </>,
-                        <>
-                          <span className="text-muted-foreground">
-                            {"// detail → lewat Talk & RM"}
-                          </span>
-                        </>,
-                        <>
-                          <span className="text-[#F05252]">mulai</span>
-                          <span className="text-[#315BA8]">_konsultasi</span>()
-                        </>,
-                      ]}
+                    <WorkflowCaseBriefPreview
+                      avatarSrc={MARKETING_ASSETS.demoPatientAvatar}
+                      patientName={DEMO_CASE.patientName}
+                      patientAge={DEMO_CASE.patientAge}
+                      specialist={DEMO_CASE.specialist}
+                      chiefComplaint={DEMO_CASE.chiefComplaint}
+                      triageNote={DEMO_CASE.triageNote}
+                      difficulty={DEMO_CASE.difficulty}
                     />
                   </motion.div>
                 </div>
@@ -176,11 +165,11 @@ export function WorkflowSection() {
                   >
                     <WorkflowCopyBlock
                       title="2. Konsultasi"
-                      body="Ini inti permainannya: ngobrol, periksa, baca RM, lalu putuskan kapan selesai."
+                      body="Kamu jadi dokter virtual: ngobrol pakai suara, pilih pemeriksaan, buka rekam medis, lalu akhiri saat siap."
                       items={[
-                        ["Talk", "Tekan sekali, langsung ngobrol"],
-                        ["Examine", "Pilih pemeriksaan yang tepat"],
-                        ["Timer", "Waktu terbatas, bisa perpanjang 1×"],
+                        ["Talk", "Tekan sekali, bicara seperti di klinik"],
+                        ["Examine", "Pilih pemeriksaan yang masuk akal"],
+                        ["Timer", "Waktu terbatas, bisa perpanjang sekali"],
                       ]}
                     />
                   </motion.div>
@@ -218,11 +207,11 @@ export function WorkflowSection() {
                   >
                     <WorkflowCopyBlock
                       title="3. Quiz & hasil"
-                      body="Jawab diagnosis, lihat skor, dan tahu apa yang bisa kamu perbaiki berikutnya."
+                      body="Tebak diagnosis, dapat skor dan feedback. Daftar untuk simpan XP, riwayat, dan naik leaderboard."
                       items={[
-                        ["Quiz", "Tebak diagnosis setelah konsultasi"],
-                        ["Skor", "Anamnesis, pemeriksaan, RM, waktu"],
-                        ["Progress", "XP, riwayat, leaderboard"],
+                        ["Quiz", "Jawab diagnosis setelah konsultasi"],
+                        ["Skor", "Anamnesis, pemeriksaan, RM, dan waktu"],
+                        ["Progress", "XP, riwayat kasus, leaderboard"],
                       ]}
                     />
                   </motion.div>
@@ -246,34 +235,12 @@ export function WorkflowSection() {
                       delay: reduce ? 0 : 0.09,
                     }}
                   >
-                    <WorkflowCodePanel
-                      lines={[
-                        <>
-                          <span className="text-[#F05252]">akhiri</span>
-                          <span className="text-[#315BA8]">_konsultasi</span>()
-                        </>,
-                        <>
-                          <span className="text-[#F05252]">jawab</span>
-                          <span className="text-[#315BA8]">_quiz</span>(
-                          <span className="text-[#315BA8]">&quot;STEMI suspect&quot;</span>)
-                        </>,
-                        <>
-                          <span className="text-[#F05252]">hasil</span> = {"{"}
-                        </>,
-                        <>
-                          {"  "}xp: <span className="text-[#315BA8]">+120</span>,
-                        </>,
-                        <>
-                          {"  "}bintang: <span className="text-[#315BA8]">3</span>,
-                        </>,
-                        <>
-                          {"  "}feedback:{" "}
-                          <span className="text-[#315BA8]">
-                            &quot;Cek alergi lebih awal&quot;
-                          </span>
-                        </>,
-                        <>{"}"}</>,
-                      ]}
+                    <WorkflowScorePreview
+                      xp="+120 XP"
+                      stars="★★★☆"
+                      feedback="Gali riwayat asma dan alergi lebih sistematis sebelum penilaian risiko anestesi."
+                      iconStarsSrc={MARKETING_ASSETS.iconStars}
+                      iconTrophySrc={MARKETING_ASSETS.iconTrophy}
                     />
                   </motion.div>
                 </div>

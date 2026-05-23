@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DemoFeatureGrid } from "@/features/marketing/components/demo-feature-grid";
 
-const DEMO_TITLE = "Ngobrol dengan pasien seperti di klinik";
+const DEMO_TITLE = "Ngobrol dengan pasien seperti di ruang konsultasi";
 const demoWords = DEMO_TITLE.split(" ");
 
 export function LandingDemoSection() {
@@ -103,7 +103,7 @@ export function LandingDemoSection() {
               variants={eyebrowVariants}
               style={{ transformOrigin: "0% 50%" }}
             >
-              Suara pasien langsung
+              Konsultasi interaktif
             </motion.p>
             <motion.h2
               className="retro mt-3 max-w-[34rem] text-base leading-relaxed text-foreground sm:mt-4 sm:text-lg lg:text-xl"
@@ -127,14 +127,13 @@ export function LandingDemoSection() {
               whileTap={reduce ? undefined : { scale: 0.98 }}
             >
               <Button asChild className="h-14 rounded-full px-7 text-base">
-                <Link href="/app/cases/demo/brief">Mulai tanpa akun</Link>
+                <Link href="/app/cases/demo/brief">Main demo Maya</Link>
               </Button>
             </motion.div>
           </motion.div>
           <motion.div className="min-w-0" variants={rightColVariants}>
             <p className="text-pretty text-lg leading-snug text-foreground/85 sm:text-xl sm:leading-snug lg:max-w-[26rem]">
-              Tekan Talk sekali, lalu bicara seperti biasa. Pasien jawab pakai suara
-              dan chat — sesuai kasus yang kamu mainkan.
+              Tekan Talk, lalu bicara seperti biasa. Pasien jawab pakai suara dan chat sesuai kasus — riwayat, alergi, dan gejala kamu gali sendiri.
             </p>
           </motion.div>
         </motion.div>

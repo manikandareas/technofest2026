@@ -1,37 +1,38 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
 import {
   ClipboardList,
   FileHeart,
   Mic,
-  Sparkles,
   Stethoscope,
-  Trophy,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { DEMO_CASE, MARKETING_ASSETS } from "@/features/marketing/marketing-assets";
 
 const demoFeatureTiles = [
   {
     icon: Mic,
     title: "Talk",
-    body: "Tekan Talk, bicara seperti biasa. Pasien jawab langsung.",
+    body: "Tekan Talk, bicara seperti di klinik. Pasien jawab langsung pakai suara.",
   },
   {
     icon: Stethoscope,
     title: "Examine",
-    body: "Pilih pemeriksaan yang masuk akal. Timer tetap jalan.",
+    body: "Pilih pemeriksaan yang relevan. Timer konsultasi tetap berjalan.",
   },
   {
     icon: FileHeart,
     title: "Rekam medis",
-    body: "Buka data pasien kalau perlu. Detail penting tidak dispoiler di awal.",
+    body: "Buka data pasien saat perlu. Detail penting tidak dispoiler di awal.",
   },
   {
     icon: ClipboardList,
     title: "Quiz",
-    body: "Selesai konsultasi → tebak diagnosis → dapat skor & tips.",
+    body: "Akhiri konsultasi, tebak diagnosis, dapat skor dan tips perbaikan.",
   },
 ];
 
@@ -137,15 +138,23 @@ export function DemoFeatureGrid() {
           <div className="grid min-h-[180px] grid-cols-[1fr_0.38fr] border-b border-border sm:min-h-[200px]">
             <div className="space-y-3 p-5 text-sm leading-relaxed text-muted-foreground sm:text-base sm:leading-snug">
               <p className="text-foreground">
-                Maya, 34 — nyeri dada. Gali riwayat, cek ECG & troponin, perhatikan
-                alergi.
+                {DEMO_CASE.patientName}, {DEMO_CASE.patientAge} — evaluasi praoperasi
+                asma. Gali riwayat, cek alergi, nilai risiko anestesi.
               </p>
               <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm sm:leading-snug">
-                Demo gratis. Login untuk kasus Budi & Siti.
+                Demo gratis tanpa akun. Login untuk buka 18 kasus lainnya.
               </p>
             </div>
-            <div className="border-l border-border p-4 sm:p-5">
-              <div className="h-full min-h-[120px] rounded-lg bg-[linear-gradient(145deg,#E9F2FF,#FFF1EB_62%,#FFD3C4)] sm:min-h-[140px]" />
+            <div className="relative border-l border-border p-4 sm:p-5">
+              <div className="relative mx-auto aspect-square w-full max-w-[140px] overflow-hidden rounded-xl border border-border bg-muted">
+                <Image
+                  src={MARKETING_ASSETS.demoConsultationAvatar}
+                  alt={`Pasien ${DEMO_CASE.patientName} di ruang konsultasi`}
+                  fill
+                  className="object-cover pixelated"
+                  sizes="140px"
+                />
+              </div>
             </div>
           </div>
           <div className="p-4 sm:p-5">
@@ -159,10 +168,10 @@ export function DemoFeatureGrid() {
             </div>
             <div className="grid grid-cols-[1fr_72px] gap-2 sm:grid-cols-[1fr_76px] sm:gap-3">
               <div className="truncate rounded-lg border border-border bg-card px-3 py-2 text-xs leading-snug text-muted-foreground shadow-sm sm:px-4 sm:py-2.5 sm:text-sm">
-                Pasien: &quot;Nyeri terasa menekan...&quot;
+                Pasien: &quot;Saya cemas soal operasi minggu ini...&quot;
               </div>
               <div className="flex items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm">
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
             </div>
           </div>
@@ -172,8 +181,8 @@ export function DemoFeatureGrid() {
             Satu ruang, semua alat
           </h3>
           <p className="mt-3 max-w-2xl text-pretty text-sm leading-snug text-white/90 sm:mt-4 sm:text-base sm:leading-snug">
-            Talk, periksa, baca RM, dan akhiri konsultasi — di HP, tablet, atau
-            laptop.
+            Talk, pemeriksaan, rekam medis, dan akhiri konsultasi — di HP, tablet,
+            atau laptop.
           </p>
         </div>
       </motion.article>
@@ -190,20 +199,32 @@ export function DemoFeatureGrid() {
           variants={card2InnerVariants}
         >
           <p className="text-pretty text-sm leading-snug text-foreground sm:text-base sm:leading-snug">
-            Diagnosis, pemeriksaan, dan rekam medis dinilai.{" "}
+            Anamnesis, pemeriksaan, dan rekam medis dinilai.{" "}
             <span className="text-muted-foreground">
-              Dapat XP, bintang, dan tips apa yang bisa diperbaiki.
+              Dapat XP, bintang, dan feedback apa yang perlu diperbaiki.
             </span>
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-7 sm:gap-4">
-            <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-foreground sm:px-4 sm:py-2 sm:text-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs text-foreground sm:px-4 sm:py-2 sm:text-sm">
+              <span className="relative size-4">
+                <Image
+                  src={MARKETING_ASSETS.iconStars}
+                  alt=""
+                  fill
+                  className="object-contain pixelated"
+                  sizes="16px"
+                />
+              </span>
               +120 XP
             </span>
             <span className="rounded-full bg-muted px-3 py-1.5 text-xs text-foreground sm:px-4 sm:py-2 sm:text-sm">
               ★★★☆
             </span>
-            <Button className="ml-auto h-11 rounded-full px-5 text-sm sm:h-12 sm:px-6 sm:text-base">
-              Lihat hasil
+            <Button
+              asChild
+              className="ml-auto h-11 rounded-full px-5 text-sm sm:h-12 sm:px-6 sm:text-base"
+            >
+              <Link href="/register">Simpan skor</Link>
             </Button>
           </div>
         </motion.div>
@@ -212,8 +233,8 @@ export function DemoFeatureGrid() {
             Skor & leaderboard
           </h3>
           <p className="mt-3 max-w-2xl text-pretty text-sm leading-snug text-muted-foreground sm:mt-4 sm:text-base sm:leading-snug">
-            Daftar untuk simpan riwayat, naik level, dan bandingkan skor dengan
-            teman.
+            Daftar untuk simpan riwayat, kumpulkan XP, dan bandingkan skor di
+            leaderboard.
           </p>
         </div>
       </motion.article>
@@ -272,15 +293,23 @@ export function DemoFeatureGrid() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground sm:h-12 sm:w-12">
-              <Trophy className="h-5 w-5" />
+              <div className="relative size-6 sm:size-7">
+                <Image
+                  src={MARKETING_ASSETS.iconTrophy}
+                  alt=""
+                  fill
+                  className="object-contain pixelated"
+                  sizes="28px"
+                />
+              </div>
             </div>
             <div>
               <h3 className="retro text-sm leading-relaxed text-foreground sm:text-base">
                 Tahu apa yang perlu diperbaiki
               </h3>
               <p className="mt-2 max-w-3xl text-pretty text-sm leading-snug text-muted-foreground sm:text-base">
-                Setiap sesi kasih skor jelas. Ini simulasi belajar — bukan saran medis
-                untuk pasien nyata.
+                Setiap sesi kasih skor jelas. PixelAid hanya simulasi edukatif — bukan
+                saran medis untuk pasien nyata.
               </p>
             </div>
           </div>

@@ -52,8 +52,8 @@ export function BottomCtaSection() {
                   Siap latihan kasus pertamamu?
                 </motion.h2>
                 <p className="max-w-xl text-sm leading-snug text-muted-foreground sm:text-base">
-                  Demo Maya gratis tanpa akun. Daftar kalau mau simpan skor dan buka
-                  kasus Budi & Siti. Simulasi belajar — bukan diagnosis pasien nyata.
+                  Demo Maya gratis tanpa akun. Daftar untuk simpan skor, buka semua kasus,
+                  dan naik leaderboard. Simulasi belajar — bukan diagnosis pasien nyata.
                 </p>
               </div>
               <motion.div

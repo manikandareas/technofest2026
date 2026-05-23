@@ -81,7 +81,7 @@ export function LandingHeroSection() {
             animate={{ opacity: 1, y: 0, letterSpacing: "0em" }}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           >
-            Latihan kasus klinis
+            Simulasi kasus klinis PixelAid
           </motion.p>
           <div className="grid gap-10 sm:gap-12 lg:grid-cols-2 lg:items-start lg:gap-x-14 xl:gap-x-20">
             <div className="min-w-0 max-w-xl lg:max-w-none">
@@ -101,7 +101,7 @@ export function LandingHeroSection() {
               >
                 <motion.div variants={buttonItem(reduce)}>
                   <Button asChild className="h-14 rounded-full px-7 text-base">
-                    <Link href="/register">Simpan skorku</Link>
+                    <Link href="/app/cases/demo/brief">Coba demo gratis</Link>
                   </Button>
                 </motion.div>
                 <motion.div variants={buttonItem(reduce)}>
@@ -110,7 +110,7 @@ export function LandingHeroSection() {
                     variant="outline"
                     className="h-14 rounded-full border-border/80 bg-card px-7 text-base text-card-foreground shadow-sm hover:bg-muted"
                   >
-                    <Link href="/app/cases/demo/brief">Main kasus Maya</Link>
+                    <Link href="/register">Daftar & simpan skor</Link>
                   </Button>
                 </motion.div>
               </motion.div>
@@ -130,8 +130,7 @@ export function LandingHeroSection() {
               }}
             >
               <p className="text-pretty text-lg leading-snug text-foreground/85 sm:text-xl sm:leading-snug lg:max-w-[26rem]">
-                Kamu jadi dokter virtual: ngobrol pakai suara, periksa pasien, buka
-                rekam medis, lalu quiz. Untuk belajar — bukan untuk diagnosis nyata.
+                Jadi dokter virtual — ngobrol pakai suara, periksa pasien, baca rekam medis, lalu quiz. Simulasi belajar untuk mahasiswa kedokteran, bukan alat diagnosis nyata.
               </p>
             </motion.div>
           </div>

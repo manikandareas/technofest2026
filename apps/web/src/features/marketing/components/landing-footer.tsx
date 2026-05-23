@@ -19,16 +19,16 @@ const footerColumns = [
     ],
   },
   {
-    heading: "Kasus MVP",
+    heading: "Spesialis",
     links: [
+      "Penyakit Dalam",
+      "OBGYN",
+      "Kesehatan Anak",
+      "Bedah Umum",
+      "Anestesi",
+      "Kesehatan Mata",
       "Maya (demo)",
-      "Budi",
-      "Siti",
-      "Kardiologi",
-      "General Medicine",
-      "Neurologi",
-      "Pediatrics",
-      "Dentistry",
+      "Pilih kasus",
     ],
   },
   {
@@ -54,11 +54,15 @@ function footerHrefFor(label: string) {
     return "/app/cases/demo/brief";
   }
 
-  if (label === "Budi" || label === "Siti") {
-    return "/app/specialists";
-  }
-
-  if (label === "Kardiologi" || label === "General Medicine" || label === "Neurologi") {
+  if (
+    label === "Penyakit Dalam" ||
+    label === "OBGYN" ||
+    label === "Kesehatan Anak" ||
+    label === "Bedah Umum" ||
+    label === "Anestesi" ||
+    label === "Kesehatan Mata" ||
+    label === "Pilih kasus"
+  ) {
     return "/app/specialists";
   }
 
@@ -129,7 +133,8 @@ export function LandingFooter() {
               </Link>
             </motion.div>
             <p className="mt-4 max-w-xs text-sm leading-snug text-muted-foreground">
-              Latihan kasus untuk mahasiswa kedokteran. Bukan alat diagnosis.
+              Simulasi kasus klinis untuk mahasiswa kedokteran. Bukan alat diagnosis
+              pasien nyata.
             </p>
           </motion.div>
 
