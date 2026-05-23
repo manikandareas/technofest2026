@@ -2,6 +2,7 @@
 
 import { safePostAuthNextFromForm } from "@/lib/navigation/safe-next";
 import { apiCatchMessage } from "@/lib/api/action-result";
+import { GOOGLE_AUTH_ENABLED } from "@/lib/auth/google-auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -170,6 +171,10 @@ export async function signUpWithPassword(
 }
 
 export async function signInWithGoogle(formData: FormData): Promise<void> {
+  if (!GOOGLE_AUTH_ENABLED) {
+    redirect("/sign-in?error=google_oauth_unavailable");
+  }
+
   const next = safeNext(formData, "/app");
   const result = await createSupabaseServerClient()
     .then(async (supabase) => {
