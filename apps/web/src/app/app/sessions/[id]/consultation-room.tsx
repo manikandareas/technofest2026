@@ -377,8 +377,8 @@ export function ConsultationRoom({ initialSession }: { initialSession: CaseSessi
                             disabled={isPending || session.status !== "in_consultation"}
                             aria-label="Akhiri konsultasi"
                           >
-                            <DoorOpen aria-hidden />
-                            <span className="text-[0.5625rem] leading-tight sm:text-[0.6875rem]">
+                            <DoorOpen className="size-5 sm:size-6" aria-hidden />
+                            <span className="text-[0.625rem] leading-none sm:text-[0.6875rem]">
                               End
                             </span>
                           </Button>

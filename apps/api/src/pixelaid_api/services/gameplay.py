@@ -53,6 +53,7 @@ from pixelaid_shared.gameplay import (
     calculate_score,
     calculate_retry_xp,
     calculate_xp,
+    due_at,
     exam_status,
     FeedbackInput,
     fallback_feedback,
@@ -210,7 +211,7 @@ def select_examination(
             "asset": exam.asset,
             "score_key": exam.score_key,
             "requested_at": _iso(now),
-            "resulted_at": _iso(now),
+            "resulted_at": _iso(due_at(exam.delay_seconds, now)),
         },
     )
     return get_session(session_id, actor, auto_start=False)

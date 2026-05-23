@@ -8,17 +8,6 @@ const homeBgmRuntimeCaching: RuntimeCaching = {
   handler: new NetworkOnly(),
 };
 
-/** Never cache App Router RSC payloads; stale entries caused intermittent 404 on client nav. */
-const appRouterRuntimeCaching: RuntimeCaching = {
-  matcher: ({ request, url: { pathname }, sameOrigin }) =>
-    sameOrigin &&
-    !pathname.startsWith("/api/") &&
-    (request.headers.get("RSC") === "1" ||
-      request.headers.get("Next-Router-Prefetch") === "1" ||
-      request.headers.get("Next-Router-State-Tree") != null),
-  handler: new NetworkOnly(),
-};
-
 const documentRuntimeCaching: RuntimeCaching = {
   matcher: ({ request }) => request.mode === "navigate" || request.destination === "document",
   handler: async ({ request }) => {
@@ -55,12 +44,7 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: [
-    documentRuntimeCaching,
-    appRouterRuntimeCaching,
-    homeBgmRuntimeCaching,
-    ...defaultCache,
-  ],
+  runtimeCaching: [documentRuntimeCaching, homeBgmRuntimeCaching, ...defaultCache],
   fallbacks: {
     entries: [
       {

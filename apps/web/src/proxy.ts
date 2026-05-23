@@ -23,15 +23,7 @@ function isPublicRoute(pathname: string) {
   return /\.[^/]+$/.test(pathname);
 }
 
-function isStaticAsset(pathname: string) {
-  return /\.[^/]+$/.test(pathname);
-}
-
 export async function proxy(request: NextRequest) {
-  if (isStaticAsset(request.nextUrl.pathname)) {
-    return NextResponse.next({ request });
-  }
-
   let response = NextResponse.next({ request });
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
@@ -75,7 +67,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|_next/data|favicon.ico|sw.js|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?|mp3|mp4|webmanifest)$).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };
